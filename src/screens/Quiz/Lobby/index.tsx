@@ -3,6 +3,10 @@ import React, { useState } from "react";
 import firebase from "firebase";
 import "firebase/firestore";
 
+import Button from "../../../components/Button";
+
+import "./styles.css";
+
 const db = firebase.firestore();
 
 interface Quiz {
@@ -62,7 +66,7 @@ export default function Lobby({ quiz, user }: Props) {
 
   if (!quiz) {
     return (
-      <div className="App">
+      <div className="lobby">
         <p>Loading...</p>
       </div>
     );
@@ -78,14 +82,13 @@ export default function Lobby({ quiz, user }: Props) {
   const isYou = (id: string) => user && user.uid === id;
 
   return (
-    <div className="App">
+    <div className="lobby">
       <h1>Map Quiz by {host.name}</h1>
-      <p>We are now in the lobby and waiting for people to join.</p>
+      <p>We are now in the lobby, waiting for people to join.</p>
       <h2>Host</h2>
       <div
         style={{
           display: "flex",
-          justifyContent: "center",
           alignItems: "center",
         }}
       >
@@ -97,13 +100,15 @@ export default function Lobby({ quiz, user }: Props) {
         {host.name}
       </div>
       <h2>Participants</h2>
+      {!participants.length ? (
+        <p>None yet! Share the URL with your friends to invite them.</p>
+      ) : null}
       <ul>
         {participants.map((participant) => (
           <li
             key={participant.uid}
             style={{
               display: "flex",
-              justifyContent: "center",
               alignItems: "center",
             }}
           >
@@ -136,12 +141,12 @@ export default function Lobby({ quiz, user }: Props) {
               onChange={(e) => setName(e.target.value)}
             />
           </label>
-          <button type="submit">Join</button>
+          <Button type="submit">Join</Button>
         </form>
       ) : null}
 
       {isHost ? (
-        <button onClick={() => startQuiz(quiz.id)}>Start Quiz</button>
+        <Button onClick={() => startQuiz(quiz.id)}>Start Quiz</Button>
       ) : null}
     </div>
   );

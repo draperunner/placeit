@@ -4,11 +4,10 @@ import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import "firebase";
 import "firebase/firestore";
 
-import "./App.css";
-
 import { useAnonymousLogin, UserContext } from "./auth";
 
 import Home from "./screens/Home";
+import Host from "./screens/Host";
 import Quiz from "./screens/Quiz";
 
 function App() {
@@ -20,6 +19,9 @@ function App() {
           <Switch>
             <Route path="/q/:id">
               <Quiz />
+            </Route>
+            <Route path="/host">
+              <Host />
             </Route>
             <Route path="/">
               <Home />

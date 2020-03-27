@@ -1,0 +1,9 @@
+.host {
+    max-width: 50%;
+    margin: auto;
+}
+
+.host__submit-button {
+    display: block;
+    margin-top: 2rem;
+}

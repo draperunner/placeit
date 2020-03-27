@@ -1,0 +1,15 @@
+.button {
+    padding: 1rem;
+    cursor: pointer;
+    background-color: skyblue;
+    border: 0;
+    border-radius: 4px;
+    color: black;
+    display: inline-block;
+    font-size: 1rem;
+    text-decoration: none;
+}
+
+.button:hover {
+    background-color: rgb(138, 221, 253);
+}
