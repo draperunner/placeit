@@ -5,6 +5,7 @@ import { Map, TileLayer, Marker, Polygon, Tooltip } from "react-leaflet";
 import "firebase/firestore";
 
 import { QuizSession, User } from "../../interfaces";
+import Button from "../../components/Button";
 
 function usePrevious<T>(value: T): T | void {
   const ref = useRef<T | void>();
@@ -202,7 +203,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       helpText = "Click the map to place a marker.";
     }
 
-    if (answerSubmitted || !countDown) {
+    if (answerSubmitted || countDown === 0) {
       helpText = "Answer submitted! Waiting for the next question...";
     }
 
@@ -228,10 +229,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
         }}
       >
         <p>{question}</p>
-        <p>{helpText}</p>
-        {correctAnswer && results && isHost ? (
-          <button onClick={nextQuestion}>Next Question</button>
-        ) : null}
+        <p style={{ fontSize: 14, color: "dimgray" }}>{helpText}</p>
         {correctAnswer && results ? <ol>{renderResults()}</ol> : null}
         {countDown ? (
           <div
@@ -242,6 +240,9 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
           >
             {countDown}
           </div>
+        ) : null}
+        {correctAnswer && results && isHost ? (
+          <Button onClick={nextQuestion}>Next Question</Button>
         ) : null}
       </div>
     );
