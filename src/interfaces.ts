@@ -2,6 +2,15 @@ import firebase from "firebase";
 
 export interface Quiz {
   id: string;
+  name: string;
+  questions: Array<{
+    id: string;
+    text: string;
+  }>;
+}
+
+export interface QuizSession {
+  id: string;
   host: {
     uid: string;
     name: string;

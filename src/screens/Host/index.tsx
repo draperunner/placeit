@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 
 import firebase from "firebase";
@@ -6,6 +6,7 @@ import "firebase/firestore";
 
 import Button from "../../components/Button";
 
+import { Quiz } from "../../interfaces";
 import { useUser } from "../../auth";
 
 import "./styles.css";
@@ -27,22 +28,38 @@ async function createQuizSession(user: any, hostName: string) {
   return docRef.id;
 }
 
+async function fetchQuizzes(): Promise<void | { quizzes: Quiz[] }> {
+  const currentUser = firebase.auth().currentUser;
+  if (!currentUser) {
+    console.log("No current user");
+    return;
+  }
+  return currentUser.getIdToken().then((token) => {
+    return fetch(
+      "https://europe-west1-mapquiz-app.cloudfunctions.net/quizzes/",
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    ).then((res) => res.json());
+  });
+}
+
 export default function Host() {
   const user = useUser();
   const history = useHistory();
   const [name, setName] = useState<string>("");
+  const [quizzes, setQuizzes] = useState<Quiz[] | undefined>();
   const [quiz, setQuiz] = useState<string | undefined>();
 
-  const quizzes = [
-    {
-      name: "Kongsquizzen",
-      id: "skfsoi3920sdkjnf091238lskdf",
-      author: {
-        uid: "923i19023i",
-        name: "The Maker",
-      },
-    },
-  ];
+  useEffect(() => {
+    fetchQuizzes().then((result) => {
+      if (!result) return;
+      setQuizzes(result?.quizzes || []);
+    });
+  }, [user]);
 
   const onCreateQuiz = useCallback(
     (event) => {
@@ -70,7 +87,7 @@ export default function Host() {
           />
         </label>
 
-        {quizzes.map((quiz) => (
+        {(quizzes || []).map((quiz) => (
           <label>
             <input
               type="radio"

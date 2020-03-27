@@ -99,7 +99,7 @@ export default function Lobby({ quiz, user }: Props) {
         />
         {host.name}
       </div>
-      <h2>Participants</h2>
+      <h2>Partici👖</h2>
       {!participants.length ? (
         <p>None yet! Share the URL with your friends to invite them.</p>
       ) : null}
@@ -137,11 +137,13 @@ export default function Lobby({ quiz, user }: Props) {
               type="text"
               autoFocus
               value={name}
-              style={{ maxWidth: 100, alignSelf: "center" }}
+              style={{ maxWidth: 100 }}
               onChange={(e) => setName(e.target.value)}
             />
           </label>
-          <Button type="submit">Join</Button>
+          <Button type="submit" style={{ marginTop: 20 }}>
+            Join
+          </Button>
         </form>
       ) : null}
 

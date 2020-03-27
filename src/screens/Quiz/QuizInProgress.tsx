@@ -4,7 +4,7 @@ import firebase from "firebase";
 import { Map, TileLayer, Marker, Polygon, Tooltip } from "react-leaflet";
 import "firebase/firestore";
 
-import { Quiz, User } from "../../interfaces";
+import { QuizSession, User } from "../../interfaces";
 
 function usePrevious<T>(value: T): T | void {
   const ref = useRef<T | void>();
@@ -19,7 +19,7 @@ function usePrevious<T>(value: T): T | void {
 type LatLng = { lat: number; lng: number };
 
 interface Props {
-  quiz: Quiz;
+  quiz: QuizSession;
   user: User | null;
 }
 
@@ -42,7 +42,7 @@ function randomLatLng(): LatLng {
 const DEFAULT_POSITION: [number, number] = [0, 0];
 const DEFAULT_ZOOM = 2;
 
-export default function QuizInProgress({ quiz, user }: Props) {
+export default function QuizSessionInProgress({ quiz, user }: Props) {
   const [position, setPosition] = useState<[number, number]>(DEFAULT_POSITION);
   const [zoom, setZoom] = useState<number>(DEFAULT_ZOOM);
 
@@ -69,9 +69,9 @@ export default function QuizInProgress({ quiz, user }: Props) {
       console.log("No current user");
       return;
     }
-    currentUser.getIdToken().then((token) => {
-      fetch(
-        `https://europe-west1-mapquiz-app.cloudfunctions.net/quiz/${quiz.id}/answer`,
+    currentUser.getIdToken().then((token: string) => {
+      return fetch(
+        `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions/${quiz.id}/answer`,
         {
           method: "POST",
           headers: {
@@ -95,7 +95,7 @@ export default function QuizInProgress({ quiz, user }: Props) {
     }
     currentUser.getIdToken().then((token) => {
       fetch(
-        `https://europe-west1-mapquiz-app.cloudfunctions.net/quiz/${quiz.id}/next-question`,
+        `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions/${quiz.id}/next-question`,
         {
           method: "POST",
           headers: {
