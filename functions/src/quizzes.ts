@@ -24,8 +24,6 @@ app.get(
   verifyToken,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("Get quizzes  ");
-
       const snapshot = await db.collection(Collections.QUIZZES).get();
 
       const allQuizzes: Array<Quiz & { id: string }> = [];
@@ -47,6 +45,45 @@ app.get(
 
       res.json({
         quizzes: sensoredQuizzes,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+app.post(
+  "/",
+  verifyToken,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.body) {
+        throw new Error("Invalid body");
+      }
+
+      const { name, description, questions } = req.body;
+
+      if (typeof name !== "string") {
+        throw new Error("`name` is not string");
+      }
+
+      if (!Array.isArray(questions) || !questions.length) {
+        throw new Error("No questions passed. A quiz needs its questions.");
+      }
+
+      const ref = await db.collection(Collections.QUIZZES).add({
+        name,
+        description,
+        questions,
+      });
+
+      const createdQuiz = await db
+        .collection(Collections.QUIZZES)
+        .doc(ref.id)
+        .get();
+
+      res.status(201).json({
+        quiz: createdQuiz.data(),
       });
     } catch (error) {
       next(error);

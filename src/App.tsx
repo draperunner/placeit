@@ -9,6 +9,7 @@ import { useAnonymousLogin, UserContext } from "./auth";
 import Home from "./screens/Home";
 import Host from "./screens/Host";
 import Quiz from "./screens/Quiz";
+import Create from "./screens/Create";
 
 function App() {
   const { user } = useAnonymousLogin();
@@ -22,6 +23,9 @@ function App() {
             </Route>
             <Route path="/host">
               <Host />
+            </Route>
+            <Route path="/create">
+              <Create />
             </Route>
             <Route path="/">
               <Home />

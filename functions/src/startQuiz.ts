@@ -39,6 +39,8 @@ export const startQuiz = functions
       return;
     }
 
+    const now = admin.firestore.Timestamp.now();
+
     // Slottsquizzen
     const quizRef = await db
       .collection(Collections.QUIZZES)
@@ -69,6 +71,7 @@ export const startQuiz = functions
     db.collection(Collections.QUIZ_SESSIONS)
       .doc(context.params.id)
       .update({
+        startedAt: now,
         currentQuestion: {
           id: firstQuestion.id,
           text: firstQuestion.text,

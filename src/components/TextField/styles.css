@@ -1,0 +1,14 @@
+.text-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.text-field > input {
+    border: 1px solid lightgray;
+    padding: 8px;
+    border-radius: 2px;
+}
+
+.text-field > input:focus {
+    border: 1px solid skyblue;
+}

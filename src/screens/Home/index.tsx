@@ -13,6 +13,9 @@ export default function Home() {
       <Button as={Link} to="/host" style={{ marginTop: 100 }}>
         Host a quiz!
       </Button>
+      <Button as={Link} to="/create" style={{ marginTop: 100 }}>
+        Create a quiz!
+      </Button>
     </div>
   );
 }
