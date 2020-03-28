@@ -1,5 +1,5 @@
 .host {
-    max-width: 50%;
+    max-width: 800px;
     margin: auto;
 }
 
@@ -36,14 +36,12 @@
 }
 
 .map-radio-group {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
 }
 
 .map-radio {
     cursor: pointer;
-    display: flex;
-    flex-direction: column;
     margin: 0.5rem;
 }
 

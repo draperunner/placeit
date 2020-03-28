@@ -17,7 +17,10 @@ export interface QuizSession {
     description: string;
     numberOfQuestions: number;
   };
-  map: string;
+  map: {
+    url: string;
+    attribution: string;
+  };
   host: {
     uid: string;
     name: string;

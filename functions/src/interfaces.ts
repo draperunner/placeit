@@ -38,7 +38,10 @@ export interface QuizSession {
   }>;
   createdAt: admin.firestore.Timestamp;
   startedAt: admin.firestore.Timestamp;
-  map: string;
+  map: {
+    url: string;
+    attribution: string;
+  };
   quizDetails: {
     id: string;
     name: string;

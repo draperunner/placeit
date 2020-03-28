@@ -19,16 +19,82 @@ enum Collections {
 
 enum Map {
   STANDARD = "STANDARD",
-  NO_LABELS = "NO_LABELS",
+  DARK_MATTER = "DARK_MATTER",
+  WATERCOLOR = "WATERCOLOR",
+  TONER_LITE = "TONER_LITE",
+  VOYAGER = "VOYAGER",
+  VOYAGER_NO_LABELS = "VOYAGER_NO_LABELS",
 }
 
-function getMapUrl(map: string): string {
+interface MapData {
+  name: string;
+  author: string;
+  url: string;
+  attribution: string;
+}
+
+function getMapData(map: string): MapData {
   switch (map) {
-    case Map.NO_LABELS:
-      return "http://{s}.tiles.wmflabs.org/osm-no-labels/{z}/{x}/{y}.png";
+    case Map.WATERCOLOR: {
+      return {
+        name: "Watercolor",
+        author: "Stamen",
+        attribution:
+          'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        url:
+          "https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg",
+      };
+    }
+    case Map.VOYAGER: {
+      return {
+        name: "Voyager",
+        author: "CARTO",
+        url:
+          "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      };
+    }
+    case Map.VOYAGER_NO_LABELS: {
+      return {
+        name: "Voyager No Labels",
+        author: "CARTO",
+        url:
+          "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      };
+    }
+    case Map.DARK_MATTER: {
+      return {
+        name: "Dark Matter",
+        author: "CARTO",
+        attribution:
+          'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+      };
+    }
+
+    case Map.TONER_LITE: {
+      return {
+        name: "Toner Lite",
+        author: "Stamen",
+        attribution:
+          'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        url:
+          "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}.png",
+      };
+    }
+
     case Map.STANDARD:
     default:
-      return "https://{s}.tile.osm.org/{z}/{x}/{y}.png";
+      return {
+        name: "Mapnik",
+        author: "OpenStreetMap",
+        url: "https://{s}.tile.osm.org/{z}/{x}/{y}.png",
+        attribution:
+          '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+      };
   }
 }
 
@@ -321,7 +387,7 @@ app.post("/", verifyToken, async (req, res, next) => {
       quizDetails,
       participants: [],
       state: "lobby",
-      map: getMapUrl(map),
+      map: getMapData(map),
     });
 
     res.status(201).json({

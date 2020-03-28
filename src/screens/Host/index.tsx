@@ -15,18 +15,64 @@ import "./styles.css";
 
 enum Map {
   STANDARD = "STANDARD",
-  NO_LABELS = "NO_LABELS",
+  DARK_MATTER = "DARK_MATTER",
+  WATERCOLOR = "WATERCOLOR",
+  TONER_LITE = "TONER_LITE",
+  VOYAGER = "VOYAGER",
+  VOYAGER_NO_LABELS = "VOYAGER_NO_LABELS",
 }
 
-function getMapUrl(map: Map): string {
-  switch (map) {
-    case Map.NO_LABELS:
-      return "http://a.tiles.wmflabs.org/osm-no-labels/5/15/12.png";
-    case Map.STANDARD:
-    default:
-      return "https://a.tile.osm.org/5/15/12.png";
-  }
-}
+const MAPS = [
+  {
+    id: Map.STANDARD,
+    name: "Mapnik",
+    author: "OpenStreetMap",
+    url: "https://a.tile.osm.org/5/15/12.png",
+    attribution:
+      '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+  },
+  {
+    id: Map.VOYAGER,
+    name: "Voyager",
+    author: "CARTO",
+    url: "https://a.basemaps.cartocdn.com/rastertiles/voyager/5/15/12.png",
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  },
+  {
+    id: Map.VOYAGER_NO_LABELS,
+    name: "Voyager No Labels",
+    author: "CARTO",
+    url:
+      "https://a.basemaps.cartocdn.com/rastertiles/voyager_nolabels/5/15/12.png",
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  },
+  {
+    id: Map.DARK_MATTER,
+    name: "Dark Matter",
+    author: "CARTO",
+    attribution:
+      'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    url: "https://a.basemaps.cartocdn.com/dark_all/5/15/12.png",
+  },
+  {
+    id: Map.WATERCOLOR,
+    name: "Watercolor",
+    author: "Stamen",
+    attribution:
+      'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    url: "https://stamen-tiles-a.a.ssl.fastly.net/watercolor/5/15/12.jpg",
+  },
+  {
+    id: Map.TONER_LITE,
+    name: "Toner Lite",
+    author: "Stamen",
+    attribution:
+      'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    url: "https://stamen-tiles-a.a.ssl.fastly.net/toner-lite/5/15/12.png",
+  },
+];
 
 async function createQuizSession(hostName: string, quizId: string, map: Map) {
   const { session } = await post(
@@ -123,37 +169,21 @@ export default function Host() {
 
         <h2>Map Type</h2>
         <div className="map-radio-group">
-          <label
-            className={`map-radio ${
-              map === Map.STANDARD ? "map-radio__selected" : ""
-            }`}
-          >
-            <input
-              type="radio"
-              name="pick-map"
-              checked={map === Map.STANDARD}
-              value={Map.STANDARD}
-              onChange={() => setMap(Map.STANDARD)}
-            />
-            Standard
-            <img src={getMapUrl(Map.STANDARD)} alt="" />
-          </label>
-
-          <label
-            className={`map-radio ${
-              map === Map.NO_LABELS ? "map-radio__selected" : ""
-            }`}
-          >
-            <input
-              type="radio"
-              name="pick-map"
-              checked={map === Map.NO_LABELS}
-              value={Map.NO_LABELS}
-              onChange={() => setMap(Map.NO_LABELS)}
-            />
-            No labels
-            <img src={getMapUrl(Map.NO_LABELS)} alt="" />
-          </label>
+          {MAPS.map(({ id, name, url, author }) => (
+            <label
+              className={`map-radio ${map === id ? "map-radio__selected" : ""}`}
+            >
+              <input
+                type="radio"
+                name="pick-map"
+                checked={map === id}
+                value={id}
+                onChange={() => setMap(id)}
+              />
+              {name} by {author}
+              <img src={url} alt="" />
+            </label>
+          ))}
         </div>
 
         <Button type="submit" className="host__submit-button">
