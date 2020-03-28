@@ -208,9 +208,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     }
 
     if (correctAnswer) {
-      helpText = `The correct answer was of course ${JSON.stringify(
-        correctAnswer
-      )}`;
+      helpText = `The correct answer was of course at the blue marker.`;
     }
 
     return (
