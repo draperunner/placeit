@@ -2,6 +2,7 @@ import * as admin from "firebase-admin";
 
 export interface Quiz {
   name: string;
+  description: string;
   questions: Array<{
     id: string;
     text: string;

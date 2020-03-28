@@ -9,24 +9,36 @@ import TextField from "../../components/TextField";
 
 import { Quiz } from "../../interfaces";
 import { useUser } from "../../auth";
+import { post } from "../../http";
 
 import "./styles.css";
 
-const db = firebase.firestore();
+enum Map {
+  STANDARD = "STANDARD",
+  NO_LABELS = "NO_LABELS",
+}
 
-async function createQuizSession(user: any, hostName: string) {
-  if (!user) return;
+function getMapUrl(map: Map): string {
+  switch (map) {
+    case Map.NO_LABELS:
+      return "http://a.tiles.wmflabs.org/osm-no-labels/5/15/12.png";
+    case Map.STANDARD:
+    default:
+      return "https://a.tile.osm.org/5/15/12.png";
+  }
+}
 
-  const docRef = await db.collection("quiz-sessions").add({
-    host: {
-      uid: user.uid,
-      name: hostName,
-    },
-    participants: [],
-    state: "lobby",
-  });
+async function createQuizSession(hostName: string, quizId: string, map: Map) {
+  const { session } = await post(
+    "http://localhost:5001/mapquiz-app/europe-west1/sessions",
+    {
+      hostName,
+      quizId,
+      map,
+    }
+  );
 
-  return docRef.id;
+  return session.id;
 }
 
 async function fetchQuizzes(): Promise<void | { quizzes: Quiz[] }> {
@@ -54,6 +66,7 @@ export default function Host() {
   const [name, setName] = useState<string>("");
   const [quizzes, setQuizzes] = useState<Quiz[] | undefined>();
   const [quiz, setQuiz] = useState<string | undefined>();
+  const [map, setMap] = useState<Map>(Map.STANDARD);
 
   useEffect(() => {
     fetchQuizzes().then((result) => {
@@ -66,36 +79,82 @@ export default function Host() {
     (event) => {
       event.preventDefault();
       if (!name || !quiz) return alert("You need to fill out the form!");
-      createQuizSession(user, name).then((id) => {
+      createQuizSession(name, quiz, map).then((id) => {
         history.push(`/q/${id}`);
       });
     },
-    [history, name, quiz, user]
+    [history, map, name, quiz]
   );
 
   return (
     <div className="host">
       <h1>Host a new Quiz Session</h1>
+
       <form onSubmit={onCreateQuiz}>
+        <h2>You</h2>
         <TextField
+          autoFocus
           label="Your nickname"
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
 
+        <h2>Quiz</h2>
         {!quizzes ? <p>Loading quizzes...</p> : null}
 
-        {(quizzes || []).map((quiz) => (
-          <label>
+        <div className="quiz-radio-group">
+          {(quizzes || []).map((q) => (
+            <label
+              className={`quiz-radio ${
+                quiz === q.id ? "quiz-radio__selected" : ""
+              }`}
+            >
+              <input
+                type="radio"
+                name="pick-quiz"
+                value={q.name}
+                onChange={() => setQuiz(q.id)}
+              />
+              <b>{q.name}</b>
+              <p>{q.description}</p>
+            </label>
+          ))}
+        </div>
+
+        <h2>Map Type</h2>
+        <div className="map-radio-group">
+          <label
+            className={`map-radio ${
+              map === Map.STANDARD ? "map-radio__selected" : ""
+            }`}
+          >
             <input
               type="radio"
-              name="pick-quiz"
-              value={quiz.name}
-              onChange={() => setQuiz(quiz.id)}
+              name="pick-map"
+              checked={map === Map.STANDARD}
+              value={Map.STANDARD}
+              onChange={() => setMap(Map.STANDARD)}
             />
-            {quiz.name}
+            Standard
+            <img src={getMapUrl(Map.STANDARD)} alt="" />
           </label>
-        ))}
+
+          <label
+            className={`map-radio ${
+              map === Map.NO_LABELS ? "map-radio__selected" : ""
+            }`}
+          >
+            <input
+              type="radio"
+              name="pick-map"
+              checked={map === Map.NO_LABELS}
+              value={Map.NO_LABELS}
+              onChange={() => setMap(Map.NO_LABELS)}
+            />
+            No labels
+            <img src={getMapUrl(Map.NO_LABELS)} alt="" />
+          </label>
+        </div>
 
         <Button type="submit" className="host__submit-button">
           Host it!

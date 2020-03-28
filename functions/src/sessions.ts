@@ -17,6 +17,21 @@ enum Collections {
   QUIZ_STATES = "quiz-states",
 }
 
+enum Map {
+  STANDARD = "STANDARD",
+  NO_LABELS = "NO_LABELS",
+}
+
+function getMapUrl(map: string): string {
+  switch (map) {
+    case Map.NO_LABELS:
+      return "http://{s}.tiles.wmflabs.org/osm-no-labels/{z}/{x}/{y}.png";
+    case Map.STANDARD:
+    default:
+      return "https://{s}.tile.osm.org/{z}/{x}/{y}.png";
+  }
+}
+
 app.use(cors());
 
 async function getQuizSession(id: string): Promise<QuizSession | null> {
@@ -264,9 +279,58 @@ app.post("/:id/next-question", verifyToken, async (req, res, next) => {
   }
 });
 
-app.post("/", verifyToken, (req, res) => {
-  // TODO: create session here instead of using firestore directly from client
-  res.status(404).json({ message: "Not Found" });
+app.post("/", verifyToken, async (req, res, next) => {
+  try {
+    const { hostName, quizId, map } = req.body;
+
+    if (!hostName || typeof hostName !== "string") {
+      throw new Error("`hostName` is invalid.");
+    }
+
+    if (!map || typeof map !== "string") {
+      throw new Error("`map` is invalid.");
+    }
+
+    // @ts-ignore
+    const uid = req.user.uid;
+
+    const quizRef = await db.collection(Collections.QUIZZES).doc(quizId).get();
+
+    if (!quizRef || !quizRef.exists) {
+      throw new Error("Could not find quiz with this ID.");
+    }
+
+    const quiz = quizRef.data() as Quiz;
+
+    if (!quiz) {
+      throw new Error("Could not find quiz with this ID.");
+    }
+
+    const quizDetails = {
+      name: quiz.name,
+      description: quiz.description,
+      numberOfQuestions: quiz.questions.length,
+    };
+
+    const docRef = await db.collection("quiz-sessions").add({
+      host: {
+        uid,
+        name: hostName,
+      },
+      quizDetails,
+      participants: [],
+      state: "lobby",
+      map: getMapUrl(map),
+    });
+
+    res.status(201).json({
+      session: {
+        id: docRef.id,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.use("*", (req, res) => {

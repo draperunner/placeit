@@ -2,6 +2,7 @@ import firebase from "firebase";
 
 export interface Quiz {
   id: string;
+  description: string;
   name: string;
   questions: Array<{
     id: string;
