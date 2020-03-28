@@ -141,7 +141,7 @@ function getDeadline(): admin.firestore.Timestamp {
   return admin.firestore.Timestamp.fromMillis(deadline);
 }
 
-app.post("/:id/answer", verifyToken, async (req, res, next) => {
+app.post("/:id/answer", verifyToken(), async (req, res, next) => {
   try {
     const now = new Date();
     const id = req.params.id;
@@ -274,7 +274,7 @@ app.post("/:id/answer", verifyToken, async (req, res, next) => {
   }
 });
 
-app.post("/:id/next-question", verifyToken, async (req, res, next) => {
+app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
   try {
     const id = req.params.id;
 
@@ -345,7 +345,7 @@ app.post("/:id/next-question", verifyToken, async (req, res, next) => {
   }
 });
 
-app.post("/", verifyToken, async (req, res, next) => {
+app.post("/", verifyToken(), async (req, res, next) => {
   try {
     const { hostName, quizId, map, hostParticipates } = req.body;
 

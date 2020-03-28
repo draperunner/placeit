@@ -21,7 +21,7 @@ enum Collections {
 
 app.get(
   "/",
-  verifyToken,
+  verifyToken(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const snapshot = await db.collection(Collections.QUIZZES).get();
@@ -54,7 +54,7 @@ app.get(
 
 app.post(
   "/",
-  verifyToken,
+  verifyToken({ forbidAnonymous: true }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.body) {
