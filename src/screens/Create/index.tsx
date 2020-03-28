@@ -67,8 +67,7 @@ export default function Create() {
     localStorage.removeItem("quiz-draft");
     currentUser.getIdToken().then((token: string) => {
       return fetch(
-        // `https://europe-west1-mapquiz-app.cloudfunctions.net/quizzes`,
-        `http://localhost:5001/mapquiz-app/europe-west1/quizzes`,
+        `https://europe-west1-mapquiz-app.cloudfunctions.net/quizzes`,
         {
           method: "POST",
           headers: {

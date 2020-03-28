@@ -30,7 +30,7 @@ function getMapUrl(map: Map): string {
 
 async function createQuizSession(hostName: string, quizId: string, map: Map) {
   const { session } = await post(
-    "http://localhost:5001/mapquiz-app/europe-west1/sessions",
+    "https://europe-west1-mapquiz-app.cloudfunctions.net/sessions",
     {
       hostName,
       quizId,

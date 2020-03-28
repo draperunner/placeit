@@ -261,7 +261,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       >
         <TileLayer
           attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.osm.org/{z}/{x}/{y}.png"
+          url={quiz.map || "https://{s}.tile.osm.org/{z}/{x}/{y}.png"}
         />
         {answerMarker && !correctAnswer ? (
           <Marker

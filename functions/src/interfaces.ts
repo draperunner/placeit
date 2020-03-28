@@ -38,6 +38,13 @@ export interface QuizSession {
   }>;
   createdAt: admin.firestore.Timestamp;
   startedAt: admin.firestore.Timestamp;
+  map: string;
+  quizDetails: {
+    id: string;
+    name: string;
+    description: string;
+    numberOfQuestions: number;
+  };
 }
 
 export interface QuizState {

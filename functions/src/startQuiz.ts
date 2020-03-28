@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
-import { Quiz } from "./interfaces";
+import { Quiz, QuizSession } from "./interfaces";
 
 const db = admin.firestore();
 
@@ -22,17 +22,13 @@ export const startQuiz = functions
   .region("europe-west1")
   .firestore.document("quiz-sessions/{id}")
   .onUpdate(async (change, context) => {
-    const newValue = change.after.data();
-    const previousValue = change.before.data();
+    const newValue = change.after.data() as QuizSession;
+    const previousValue = change.before.data() as QuizSession;
 
     if (!newValue || !previousValue) {
       console.log("Either newValue or previousValue is undefined");
       return;
     }
-
-    /**
-     * TODO: When host clicks "next", update currentQuestion or finish quiz and add results to session
-     */
 
     if (previousValue.state !== "lobby" || newValue.state !== "in-progress") {
       console.log("Not the change we are looking for...");
@@ -41,11 +37,9 @@ export const startQuiz = functions
 
     const now = admin.firestore.Timestamp.now();
 
-    // Slottsquizzen
-    const quizRef = await db
-      .collection(Collections.QUIZZES)
-      .doc("6Rpw5hUeVFrMYErSQnIb")
-      .get();
+    const quizId = newValue.quizDetails.id;
+
+    const quizRef = await db.collection(Collections.QUIZZES).doc(quizId).get();
 
     const quiz = quizRef.data() as Quiz;
 
@@ -59,7 +53,7 @@ export const startQuiz = functions
     db.collection(Collections.QUIZ_STATES)
       .doc(context.params.id)
       .set({
-        quiz: "quizzes/6Rpw5hUeVFrMYErSQnIb",
+        quiz: quizId,
         givenAnswers: [],
         currentCorrectAnswer: {
           questionId: firstQuestion.id,

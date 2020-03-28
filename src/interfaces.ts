@@ -12,6 +12,12 @@ export interface Quiz {
 
 export interface QuizSession {
   id: string;
+  quizDetails: {
+    name: string;
+    description: string;
+    numberOfQuestions: number;
+  };
+  map: string;
   host: {
     uid: string;
     name: string;

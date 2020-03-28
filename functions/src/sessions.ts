@@ -228,7 +228,7 @@ app.post("/:id/next-question", verifyToken, async (req, res, next) => {
     // Slottsquizzen
     const quizRef = await db
       .collection(Collections.QUIZZES)
-      .doc("6Rpw5hUeVFrMYErSQnIb")
+      .doc(quizSession.quizDetails.id)
       .get();
 
     const quiz = quizRef.data() as Quiz;
@@ -307,6 +307,7 @@ app.post("/", verifyToken, async (req, res, next) => {
     }
 
     const quizDetails = {
+      id: quizId,
       name: quiz.name,
       description: quiz.description,
       numberOfQuestions: quiz.questions.length,

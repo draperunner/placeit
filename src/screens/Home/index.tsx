@@ -10,10 +10,10 @@ export default function Home() {
     <div className="home">
       <h1>Map Quiz</h1>
       <p>Get closest to the right answer – in meters!</p>
-      <Button as={Link} to="/host" style={{ marginTop: 100 }}>
+      <Button as={Link} to="/host" style={{ margin: 10, marginTop: 100 }}>
         Host a quiz!
       </Button>
-      <Button as={Link} to="/create" style={{ marginTop: 100 }}>
+      <Button as={Link} to="/create" style={{ margin: 10, marginTop: 100 }}>
         Create a quiz!
       </Button>
     </div>

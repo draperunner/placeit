@@ -74,7 +74,10 @@ app.post(
       const ref = await db.collection(Collections.QUIZZES).add({
         name,
         description,
-        questions,
+        questions: questions.map((question, index) => ({
+          ...question,
+          id: `${index}`,
+        })),
       });
 
       const createdQuiz = await db

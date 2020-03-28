@@ -6,6 +6,7 @@ import "firebase/firestore";
 import { useParams } from "react-router-dom";
 
 import { useUser } from "../../auth";
+import { QuizSession } from "../../interfaces";
 
 import Lobby from "./Lobby";
 import QuizInProgress from "./QuizInProgress";
@@ -14,37 +15,11 @@ import "./styles.css";
 
 const db = firebase.firestore();
 
-interface Quiz {
-  id: string;
-  host: {
-    uid: string;
-    name: string;
-  };
-  participants: Array<{
-    uid: string;
-    name: string;
-  }>;
-  state: "lobby" | "in-progress" | "over";
-  currentQuestion?: {
-    id: string;
-    text: string;
-    correctAnswer?: {
-      latitude: number;
-      longitude: number;
-    };
-  };
-  results: Array<{
-    participantId: string;
-    distance: number;
-    name: string;
-  }>;
-}
-
 export default function Quiz() {
   const { id } = useParams();
   const user = useUser();
 
-  const [quiz, setQuiz] = useState<Quiz | undefined>();
+  const [quiz, setQuiz] = useState<QuizSession | undefined>();
 
   useEffect(() => {
     if (!id) return;
@@ -52,7 +27,7 @@ export default function Quiz() {
       .collection("quiz-sessions")
       .doc(id)
       .onSnapshot((doc) => {
-        const quizData = doc.data() as Quiz;
+        const quizData = doc.data() as QuizSession;
 
         if (!quizData) {
           return;

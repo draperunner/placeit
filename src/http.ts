@@ -1,8 +1,5 @@
 import firebase from "firebase";
 
-// `https://europe-west1-mapquiz-app.cloudfunctions.net/quizzes`,
-// `http://localhost:5001/mapquiz-app/europe-west1/quizzes`,
-
 export async function post(url: string, data: any): Promise<any> {
   const currentUser = firebase.auth().currentUser;
   if (!currentUser) {
