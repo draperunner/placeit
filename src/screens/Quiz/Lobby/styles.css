@@ -1,4 +1,11 @@
 .lobby {
     max-width: 50%;
+    padding: 1rem;
     margin: auto;
+}
+
+@media (max-width: 800px) {
+    .lobby {
+        max-width: unset;
+    }
 }

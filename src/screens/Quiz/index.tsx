@@ -22,7 +22,7 @@ export default function Quiz() {
   const [quiz, setQuiz] = useState<QuizSession | undefined>();
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !user) return;
     const unsubscribe = db
       .collection("quiz-sessions")
       .doc(id)
@@ -36,7 +36,7 @@ export default function Quiz() {
         setQuiz({ ...quizData, id });
       });
     return unsubscribe;
-  }, [id]);
+  }, [id, user]);
 
   if (!id || !quiz) {
     return (

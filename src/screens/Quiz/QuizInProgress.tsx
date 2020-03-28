@@ -212,42 +212,32 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     }
 
     return (
-      <div
-        className="question"
-        style={{
-          position: "absolute",
-          padding: 32,
-          borderRadius: 4,
-          backgroundColor: "white",
-          top: 100,
-          left: 60,
-          zIndex: 500,
-          textAlign: "left",
-          maxWidth: 300,
-        }}
-      >
-        <p>{question}</p>
-        <p style={{ fontSize: 14, color: "dimgray" }}>{helpText}</p>
-        {correctAnswer && results ? <ol>{renderResults()}</ol> : null}
-        {countDown ? (
-          <div
-            style={{
-              fontSize: 120,
-              color: countDown > 5 ? "black" : "red",
-            }}
-          >
-            {countDown}
+      <div className="quiz-panel">
+        <div className="quiz-panel__top">
+          <div>
+            <p>{question}</p>
+            <p style={{ fontSize: 14, color: "dimgray" }}>{helpText}</p>
           </div>
-        ) : null}
+          <div>
+            {countDown ? (
+              <div
+                className="deadline"
+                style={{
+                  color: countDown > 5 ? "black" : "red",
+                }}
+              >
+                {countDown}
+              </div>
+            ) : null}
+          </div>
+        </div>
+        {correctAnswer && results ? <ol>{renderResults()}</ol> : null}
         {correctAnswer && results && isHost ? (
           <Button onClick={nextQuestion}>Next Question</Button>
         ) : null}
       </div>
     );
   };
-
-  // Standard: https://{s}.tile.osm.org/{z}/{x}/{y}.png
-  // No labels: http://{s}.tiles.wmflabs.org/osm-no-labels/{z}/{x}/{y}.png
 
   return (
     <div className="App">
@@ -256,6 +246,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
         zoom={zoom}
         style={{ height: "100vh" }}
         onClick={onMapClick}
+        zoomControl={false}
       >
         <TileLayer
           attribution={
@@ -287,7 +278,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
           />
         ) : null}
         {givenAnswers
-          ? givenAnswers.map(({ participantId, answer, distance }) => (
+          ? givenAnswers.map(({ participantId, answer }) => (
               <>
                 {correctAnswer ? (
                   <Polygon

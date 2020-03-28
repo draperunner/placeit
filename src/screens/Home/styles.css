@@ -1,4 +1,11 @@
 .home {
     max-width: 50%;
     margin: auto;
+    padding: 1rem;
+}
+
+@media (max-width: 800px) {
+    .home {
+        max-width: unset;
+    }
 }

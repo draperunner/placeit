@@ -98,10 +98,10 @@ export default function Lobby({ quiz, user }: Props) {
           alt=""
           style={{ borderRadius: 20, marginRight: 10 }}
         />
-        {host.name}
+        {`${host.name}${isHost ? " (you)" : ""}`}
       </div>
       <h2>Partici👖</h2>
-      {!participants.length ? (
+      {isHost && !participants.length ? (
         <p>None yet! Share the URL with your friends to invite them.</p>
       ) : null}
       <ul>

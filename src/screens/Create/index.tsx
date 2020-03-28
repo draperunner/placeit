@@ -112,8 +112,8 @@ export default function Create() {
           padding: 32,
           borderRadius: 4,
           backgroundColor: "white",
-          top: 100,
-          left: 60,
+          top: 0,
+          left: 0,
           zIndex: 500,
           textAlign: "left",
           width: 300,
@@ -186,6 +186,7 @@ export default function Create() {
         zoom={2}
         style={{ height: "100vh" }}
         onClick={onMapClick}
+        zoomControl={false}
       >
         <TileLayer
           attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'

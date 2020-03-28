@@ -1,3 +1,37 @@
 .map-user-icon {
     border-radius: 20px;
 }
+
+.quiz-panel {
+    position: absolute;
+    padding: 2rem;
+    background-color: white;
+    border-bottom-right-radius: 4px;
+    top: 0;
+    left: 0;
+    z-index: 500;
+    text-align: left;
+    max-width: 300px;
+}
+
+.deadline {
+    font-size: 120px;
+}
+
+@media (max-width: 800px) {
+    .quiz-panel {
+        max-width: unset;
+        padding: 1rem;
+        width: calc(100vw - 2rem);
+    }
+    .quiz-panel__top {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .deadline {
+        font-size: 60px;
+        margin-left: 1rem;
+    }
+}
