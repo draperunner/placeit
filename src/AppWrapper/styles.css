@@ -1,0 +1,31 @@
+.app-wrapper nav {
+    background-color: white;
+    padding: 0.5rem;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    z-index: 410;
+}
+
+.app-wrapper__children {
+    max-width: 800px;
+    margin: auto;
+    padding: 4rem 1rem;
+}
+
+.profile-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+}
+
+@media (max-width: 800px) {
+    .app-wrapper__children {
+        max-width: unset;
+    }
+}

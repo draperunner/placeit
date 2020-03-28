@@ -3,10 +3,12 @@ import React, { useState } from "react";
 import firebase from "firebase";
 import "firebase/firestore";
 
+import AppWrapper from "../../../AppWrapper";
+
 import Button from "../../../components/Button";
 import TextField from "../../../components/TextField";
 
-import { QuizSession } from "../../../interfaces";
+import { QuizSession, User } from "../../../interfaces";
 
 import "./styles.css";
 
@@ -39,10 +41,6 @@ function startQuiz(quizId: string) {
   db.collection("quiz-sessions").doc(quizId).update({
     state: "in-progress",
   });
-}
-
-interface User {
-  uid: string;
 }
 
 interface Props {
@@ -78,7 +76,7 @@ export default function Lobby({ quiz, user }: Props) {
   const isYou = (id: string) => user && user.uid === id;
 
   return (
-    <div className="lobby">
+    <AppWrapper>
       <h1>Map Quiz by {host.name}</h1>
       <p>We are now in the lobby, waiting for people to join.</p>
       <div className="lobby__grid">
@@ -170,6 +168,6 @@ export default function Lobby({ quiz, user }: Props) {
             : "Start it!"}
         </Button>
       ) : null}
-    </div>
+    </AppWrapper>
   );
 }

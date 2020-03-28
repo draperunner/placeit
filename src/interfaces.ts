@@ -57,6 +57,4 @@ export interface QuizSession {
   }>;
 }
 
-export interface User {
-  uid: string;
-}
+export type User = firebase.User;

@@ -4,6 +4,8 @@ import * as firebase from "firebase/app";
 import "firebase/analytics";
 import "firebase/auth";
 
+import { User } from "./interfaces";
+
 const firebaseConfig = {
   apiKey: "AIzaSyBNbMx3Ms2tVig-TyK68lUfJ9s0Q9SYr-o",
   authDomain: "mapquiz-app.firebaseapp.com",
@@ -23,24 +25,17 @@ export function useAnonymousLogin() {
   const [token, setToken] = useState<string | null>();
 
   useEffect(() => {
-    firebase.auth().signInAnonymously().catch(console.error);
-  }, []);
-
-  useEffect(() => {
     firebase.auth().onAuthStateChanged(function (user) {
       if (!user) {
         setUser(null);
         setToken(null);
+        firebase.auth().signInAnonymously().catch(console.error);
         return;
       }
 
       setUser(user);
 
-      const { currentUser } = firebase.auth();
-
-      if (!currentUser) return;
-
-      currentUser.getIdToken().then(setToken).catch(console.error);
+      user.getIdToken().then(setToken).catch(console.error);
     });
   }, []);
 
@@ -48,10 +43,6 @@ export function useAnonymousLogin() {
     user,
     token,
   };
-}
-
-interface User {
-  uid: string;
 }
 
 export const UserContext = createContext<User | null>(null);

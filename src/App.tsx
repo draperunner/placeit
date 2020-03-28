@@ -6,10 +6,14 @@ import "firebase/firestore";
 
 import { useAnonymousLogin, UserContext } from "./auth";
 
+import AppWrapper from "./AppWrapper";
+
 import Home from "./screens/Home";
 import Host from "./screens/Host";
 import Quiz from "./screens/Quiz";
+import Login from "./screens/Login";
 import Create from "./screens/Create";
+import Profile from "./screens/Profile";
 
 function App() {
   const { user } = useAnonymousLogin();
@@ -22,13 +26,27 @@ function App() {
               <Quiz />
             </Route>
             <Route path="/host">
-              <Host />
+              <AppWrapper>
+                <Host />
+              </AppWrapper>
             </Route>
             <Route path="/create">
               <Create />
             </Route>
+            <Route path="/login">
+              <AppWrapper>
+                <Login />
+              </AppWrapper>
+            </Route>
+            <Route path="/profile">
+              <AppWrapper>
+                <Profile />
+              </AppWrapper>
+            </Route>
             <Route path="/">
-              <Home />
+              <AppWrapper>
+                <Home />
+              </AppWrapper>
             </Route>
           </Switch>
         </div>

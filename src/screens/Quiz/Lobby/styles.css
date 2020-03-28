@@ -1,9 +1,3 @@
-.lobby {
-    max-width: 50%;
-    padding: 1rem;
-    margin: auto;
-}
-
 .lobby__grid {
     display: flex;
     flex-direction: row;
@@ -16,10 +10,6 @@
 
 
 @media (max-width: 800px) {
-    .lobby {
-        max-width: unset;
-    }
-
     .lobby__grid {
         flex-direction: column;
     }

@@ -1,7 +1,10 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Map, TileLayer, Marker, Tooltip } from "react-leaflet";
+import { useHistory } from "react-router-dom";
 import firebase from "firebase";
 import "firebase/firestore";
+
+import { useUser } from "../../auth";
 
 import Button from "../../components/Button";
 import TextField from "../../components/TextField";
@@ -24,6 +27,17 @@ function newQuestion(): Question {
 }
 
 export default function Create() {
+  const user = useUser();
+  const history = useHistory();
+
+  useEffect(() => {
+    const isAnonymous = user && user.isAnonymous;
+    if (isAnonymous) {
+      history.push("/login");
+    }
+    console.log(user);
+  }, [history, user]);
+
   const draft = localStorage.getItem("quiz-draft");
 
   const draftQuiz = draft ? JSON.parse(draft) : {};
@@ -112,7 +126,7 @@ export default function Create() {
           padding: 32,
           borderRadius: 4,
           backgroundColor: "white",
-          top: 0,
+          top: 40,
           left: 0,
           zIndex: 500,
           textAlign: "left",
@@ -175,9 +189,6 @@ export default function Create() {
       </div>
     );
   };
-
-  // Standard: https://{s}.tile.osm.org/{z}/{x}/{y}.png
-  // No labels: http://{s}.tiles.wmflabs.org/osm-no-labels/{z}/{x}/{y}.png
 
   return (
     <div className="create">

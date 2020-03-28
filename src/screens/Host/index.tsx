@@ -10,6 +10,7 @@ import TextField from "../../components/TextField";
 import { Quiz } from "../../interfaces";
 import { useUser } from "../../auth";
 import { post } from "../../http";
+import { usePrevious } from "../../utils";
 
 import "./styles.css";
 
@@ -115,12 +116,20 @@ async function fetchQuizzes(): Promise<void | { quizzes: Quiz[] }> {
 export default function Host() {
   const user = useUser();
   const history = useHistory();
-  const [name, setName] = useState<string>("");
+  const [name, setName] = useState<string>(user?.displayName || "");
   const [quizzes, setQuizzes] = useState<Quiz[] | undefined>();
   const [quiz, setQuiz] = useState<string | undefined>();
   const [map, setMap] = useState<Map>(Map.STANDARD);
   const [hostParticipates, setHostParticipates] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
+
+  const previousUser = usePrevious(user);
+
+  useEffect(() => {
+    if (!previousUser && user) {
+      setName(user.displayName || "");
+    }
+  }, [previousUser, user]);
 
   useEffect(() => {
     fetchQuizzes().then((result) => {
