@@ -4,8 +4,23 @@
     margin: auto;
 }
 
+.lobby__grid {
+    display: flex;
+    flex-direction: row;
+}
+
+.lobby__grid > div {
+    flex: 1;
+    margin: 0.5rem;
+}
+
+
 @media (max-width: 800px) {
     .lobby {
         max-width: unset;
+    }
+
+    .lobby__grid {
+        flex-direction: column;
     }
 }

@@ -347,7 +347,7 @@ app.post("/:id/next-question", verifyToken, async (req, res, next) => {
 
 app.post("/", verifyToken, async (req, res, next) => {
   try {
-    const { hostName, quizId, map } = req.body;
+    const { hostName, quizId, map, hostParticipates } = req.body;
 
     if (!hostName || typeof hostName !== "string") {
       throw new Error("`hostName` is invalid.");
@@ -385,7 +385,14 @@ app.post("/", verifyToken, async (req, res, next) => {
         name: hostName,
       },
       quizDetails,
-      participants: [],
+      participants: hostParticipates
+        ? [
+            {
+              uid,
+              name: hostName,
+            },
+          ]
+        : [],
       state: "lobby",
       map: getMapData(map),
     });

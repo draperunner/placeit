@@ -10,6 +10,13 @@ export interface Quiz {
   }>;
 }
 
+interface MapData {
+  name: string;
+  author: string;
+  url: string;
+  attribution: string;
+}
+
 export interface QuizSession {
   id: string;
   quizDetails: {
@@ -17,10 +24,7 @@ export interface QuizSession {
     description: string;
     numberOfQuestions: number;
   };
-  map: {
-    url: string;
-    attribution: string;
-  };
+  map: MapData;
   host: {
     uid: string;
     name: string;

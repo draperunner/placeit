@@ -6,34 +6,22 @@ import "firebase/firestore";
 import Button from "../../../components/Button";
 import TextField from "../../../components/TextField";
 
+import { QuizSession } from "../../../interfaces";
+
 import "./styles.css";
 
 const db = firebase.firestore();
 
-interface Quiz {
-  id: string;
-  host: {
-    uid: string;
-    name: string;
-  };
-  participants: Array<{
-    uid: string;
-    name: string;
-  }>;
-  state: "lobby" | "in-progress" | "over";
-  currentQuestion?: {
-    id: string;
-    text: string;
-    correctAnswer?: {
-      latitude: number;
-      longitude: number;
-    };
-  };
-  results: Array<{
-    participantId: string;
-    distance: number;
-    name: string;
-  }>;
+function getMapPreview(url: string): string {
+  const s = "a";
+  const z = 5;
+  const x = 15;
+  const y = 12;
+  return url
+    .replace("{s}", s)
+    .replace("{z}", "" + z)
+    .replace("{x}", "" + x)
+    .replace("{y}", "" + y);
 }
 
 function join(quizId: string, uid: string, name: string) {
@@ -58,7 +46,7 @@ interface User {
 }
 
 interface Props {
-  quiz: Quiz;
+  quiz: QuizSession;
   user: User | null;
 }
 
@@ -76,9 +64,16 @@ export default function Lobby({ quiz, user }: Props) {
   const joined =
     !!user && quiz.participants.some(({ uid }) => uid === user.uid);
 
-  const { host, participants = [] } = quiz;
+  const { host, quizDetails, map } = quiz;
+
+  const participants = (quiz.participants || []).filter(
+    ({ uid }) => uid !== host.uid
+  );
 
   const isHost = user && host && user.uid === host.uid;
+  const hostIsParticipating = (quiz.participants || []).some(
+    ({ uid }) => uid === host.uid
+  );
 
   const isYou = (id: string) => user && user.uid === id;
 
@@ -86,66 +81,94 @@ export default function Lobby({ quiz, user }: Props) {
     <div className="lobby">
       <h1>Map Quiz by {host.name}</h1>
       <p>We are now in the lobby, waiting for people to join.</p>
-      <h2>Host</h2>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
-        <img
-          src={`https://api.adorable.io/avatars/40/${host.uid}.png`}
-          alt=""
-          style={{ borderRadius: 20, marginRight: 10 }}
-        />
-        {`${host.name}${isHost ? " (you)" : ""}`}
-      </div>
-      <h2>Partici👖</h2>
-      {isHost && !participants.length ? (
-        <p>None yet! Share the URL with your friends to invite them.</p>
-      ) : null}
-      <ul>
-        {participants.map((participant) => (
-          <li
-            key={participant.uid}
+      <div className="lobby__grid">
+        <div>
+          <h2>Host</h2>
+          <div
             style={{
               display: "flex",
               alignItems: "center",
             }}
           >
             <img
-              src={`https://api.adorable.io/avatars/40/${participant.uid}.png`}
+              src={`https://api.adorable.io/avatars/40/${host.uid}.png`}
               alt=""
               style={{ borderRadius: 20, marginRight: 10 }}
             />
-            {`${participant.name}${isYou(participant.uid) ? " (you)" : ""}`}
-          </li>
-        ))}
-      </ul>
+            {`${host.name}${hostIsParticipating ? " (participating)" : ""}`}
+          </div>
+          <h2>
+            Partici
+            <span role="img" aria-label="pants">
+              👖
+            </span>
+          </h2>
+          {!participants.length ? (
+            <p>None yet! Share the URL with your friends to invite them.</p>
+          ) : null}
+          <ul>
+            {participants.map((participant) => (
+              <li
+                key={participant.uid}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <img
+                  src={`https://api.adorable.io/avatars/40/${participant.uid}.png`}
+                  alt=""
+                  style={{ borderRadius: 20, marginRight: 10 }}
+                />
+                {`${participant.name}${isYou(participant.uid) ? " (you)" : ""}`}
+              </li>
+            ))}
+          </ul>
 
-      {!isHost && !joined ? (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (user) {
-              return join(quiz.id, user.uid, name);
-            }
-          }}
-        >
-          <TextField
-            label="Nickname"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoFocus
+          {!isHost && !joined ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (user) {
+                  return join(quiz.id, user.uid, name);
+                }
+              }}
+            >
+              <TextField
+                label="Nickname"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+              />
+              <Button type="submit" style={{ marginTop: 20 }}>
+                Join
+              </Button>
+            </form>
+          ) : null}
+        </div>
+        <div>
+          <h2>Quiz Details</h2>
+          <h3>{quizDetails.name}</h3>
+          <p>{quizDetails.description}</p>
+          <p>{quizDetails.numberOfQuestions} questions.</p>
+          <p>15 seconds per question.</p>
+          <h3>Map Style:</h3>
+          <p style={{ display: "block", flexDirection: "column" }}>
+            {map.name} by {map.author}
+          </p>
+          <img
+            src={getMapPreview(map.url)}
+            alt={`${map.name} by ${map.author}`}
           />
-          <Button type="submit" style={{ marginTop: 20 }}>
-            Join
-          </Button>
-        </form>
-      ) : null}
+        </div>
+      </div>
 
       {isHost ? (
-        <Button onClick={() => startQuiz(quiz.id)}>Start Quiz</Button>
+        <Button onClick={() => startQuiz(quiz.id)}>
+          {hostIsParticipating && !participants.length
+            ? "Go solo!"
+            : "Start it!"}
+        </Button>
       ) : null}
     </div>
   );

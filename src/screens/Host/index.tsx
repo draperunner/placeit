@@ -74,13 +74,19 @@ const MAPS = [
   },
 ];
 
-async function createQuizSession(hostName: string, quizId: string, map: Map) {
+async function createQuizSession(
+  hostName: string,
+  quizId: string,
+  map: Map,
+  hostParticipates: boolean
+) {
   const { session } = await post(
     "https://europe-west1-mapquiz-app.cloudfunctions.net/sessions",
     {
       hostName,
       quizId,
       map,
+      hostParticipates,
     }
   );
 
@@ -113,6 +119,8 @@ export default function Host() {
   const [quizzes, setQuizzes] = useState<Quiz[] | undefined>();
   const [quiz, setQuiz] = useState<string | undefined>();
   const [map, setMap] = useState<Map>(Map.STANDARD);
+  const [hostParticipates, setHostParticipates] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     fetchQuizzes().then((result) => {
@@ -125,11 +133,13 @@ export default function Host() {
     (event) => {
       event.preventDefault();
       if (!name || !quiz) return alert("You need to fill out the form!");
-      createQuizSession(name, quiz, map).then((id) => {
+      setLoading(true);
+      createQuizSession(name, quiz, map, hostParticipates).then((id) => {
         history.push(`/q/${id}`);
+        setLoading(false);
       });
     },
-    [history, map, name, quiz]
+    [history, hostParticipates, map, name, quiz]
   );
 
   return (
@@ -144,6 +154,15 @@ export default function Host() {
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
+
+        <label style={{ display: "block", marginTop: 20 }}>
+          <input
+            type="checkbox"
+            checked={hostParticipates}
+            onChange={() => setHostParticipates((prev) => !prev)}
+          />
+          Participate yourself?
+        </label>
 
         <h2>Quiz</h2>
         {!quizzes ? <p>Loading quizzes...</p> : null}
@@ -186,9 +205,13 @@ export default function Host() {
           ))}
         </div>
 
-        <Button type="submit" className="host__submit-button">
-          Host it!
-        </Button>
+        {loading ? (
+          <p>Wait for it ...</p>
+        ) : (
+          <Button type="submit" className="host__submit-button">
+            Host it!
+          </Button>
+        )}
       </form>
     </div>
   );

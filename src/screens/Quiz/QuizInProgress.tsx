@@ -177,8 +177,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       typeof previousCountDown === "number" &&
       previousCountDown > 0 &&
       countDown === 0 &&
-      !answerSubmitted &&
-      !isHost
+      !answerSubmitted
     ) {
       submitAnswer();
     }
