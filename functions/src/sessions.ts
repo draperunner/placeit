@@ -175,6 +175,10 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
       );
     }
 
+    const gameOver =
+      quizSession.quizDetails.numberOfQuestions ===
+      Number.parseInt(currentQuestion.id) + 1;
+
     const quizState = await getQuizState(id);
 
     if (!quizState) {
@@ -240,6 +244,7 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
             ...givenAnswersForThisQuestion,
             givenAnswer,
           ],
+          state: gameOver ? "over" : "in-progress",
           results: quizSession.participants
             .map((parti) => {
               let distanceForThisQuestion = 0;
