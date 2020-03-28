@@ -264,6 +264,11 @@ app.post("/:id/next-question", verifyToken, async (req, res, next) => {
   }
 });
 
+app.post("/", verifyToken, (req, res) => {
+  // TODO: create session here instead of using firestore directly from client
+  res.status(404).json({ message: "Not Found" });
+});
+
 app.use("*", (req, res) => {
   res.status(404).json({ message: "Not Found" });
 });

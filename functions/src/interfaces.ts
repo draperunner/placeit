@@ -18,7 +18,7 @@ export interface QuizSession {
     uid: string;
     name: string;
   }>;
-  state: "lobby" | "in-progress";
+  state: "lobby" | "in-progress" | "over";
   currentQuestion: null | {
     id: string;
     text: string;
@@ -35,6 +35,8 @@ export interface QuizSession {
     distance: number;
     name: string;
   }>;
+  createdAt: admin.firestore.Timestamp;
+  startedAt: admin.firestore.Timestamp;
 }
 
 export interface QuizState {

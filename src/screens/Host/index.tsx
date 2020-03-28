@@ -5,6 +5,7 @@ import firebase from "firebase";
 import "firebase/firestore";
 
 import Button from "../../components/Button";
+import TextField from "../../components/TextField";
 
 import { Quiz } from "../../interfaces";
 import { useUser } from "../../auth";
@@ -76,16 +77,13 @@ export default function Host() {
     <div className="host">
       <h1>Host a new Quiz Session</h1>
       <form onSubmit={onCreateQuiz}>
-        <label
-          style={{ display: "flex", flexDirection: "column", marginBottom: 20 }}
-        >
-          Your nickname
-          <input
-            type="text"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </label>
+        <TextField
+          label="Your nickname"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+
+        {!quizzes ? <p>Loading quizzes...</p> : null}
 
         {(quizzes || []).map((quiz) => (
           <label>
@@ -93,7 +91,7 @@ export default function Host() {
               type="radio"
               name="pick-quiz"
               value={quiz.name}
-              onChange={(event) => setQuiz(quiz.id)}
+              onChange={() => setQuiz(quiz.id)}
             />
             {quiz.name}
           </label>

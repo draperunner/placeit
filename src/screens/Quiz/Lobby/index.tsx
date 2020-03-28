@@ -4,6 +4,7 @@ import firebase from "firebase";
 import "firebase/firestore";
 
 import Button from "../../../components/Button";
+import TextField from "../../../components/TextField";
 
 import "./styles.css";
 
@@ -131,16 +132,12 @@ export default function Lobby({ quiz, user }: Props) {
             }
           }}
         >
-          <label style={{ display: "flex", flexDirection: "column" }}>
-            Nickname
-            <input
-              type="text"
-              autoFocus
-              value={name}
-              style={{ maxWidth: 100 }}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </label>
+          <TextField
+            label="Nickname"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoFocus
+          />
           <Button type="submit" style={{ marginTop: 20 }}>
             Join
           </Button>
