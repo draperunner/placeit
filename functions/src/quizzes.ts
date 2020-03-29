@@ -24,34 +24,46 @@ app.get(
   verifyToken(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const snapshot = await db.collection(Collections.QUIZZES).get();
+      const [publicQuizzes, personalQuizzes] = await Promise.all([
+        db
+          .collection(Collections.QUIZZES)
+          .where("isPrivate", "==", false)
+          .get(),
+        db
+          .collection(Collections.QUIZZES)
+          // @ts-ignore
+          .where("author.uid", "==", req.user.uid)
+          .get(),
+      ]);
 
       const allQuizzes: Array<Quiz & { id: string }> = [];
 
-      snapshot.forEach((doc) => {
+      publicQuizzes.forEach((doc) => {
         const quiz = doc.data() as Quiz;
-        console.log(doc.id, quiz);
+        allQuizzes.push({ ...quiz, id: doc.id });
+      });
 
+      personalQuizzes.forEach((doc) => {
+        if (allQuizzes.some((q) => q.id === doc.id)) return;
+        const quiz = doc.data() as Quiz;
         allQuizzes.push({ ...quiz, id: doc.id });
       });
 
       const sensoredQuizzes = await Promise.all(
-        allQuizzes
-          .filter((q) => !q.isPrivate)
-          .map(async (quiz) => {
-            const author = await admin.auth().getUser(quiz.author.uid);
-            return {
-              ...quiz,
-              questions: quiz.questions.map((question) => ({
-                ...question,
-                correctAnswer: undefined,
-              })),
-              author: {
-                uid: author.uid,
-                name: author.displayName || "nameless person",
-              },
-            };
-          })
+        allQuizzes.map(async (quiz) => {
+          const author = await admin.auth().getUser(quiz.author.uid);
+          return {
+            ...quiz,
+            questions: quiz.questions.map((question) => ({
+              ...question,
+              correctAnswer: undefined,
+            })),
+            author: {
+              uid: author.uid,
+              name: author.displayName || "nameless person",
+            },
+          };
+        })
       );
 
       res.json({

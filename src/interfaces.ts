@@ -5,6 +5,7 @@ export interface Quiz {
   description: string;
   name: string;
   language: string;
+  isPrivate: boolean;
   questions: Array<{
     id: string;
     text: string;

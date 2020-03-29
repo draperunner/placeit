@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useHistory } from "react-router-dom";
 
 import firebase from "firebase";
@@ -151,12 +151,24 @@ export default function Host() {
     [history, hostParticipates, map, name, quiz]
   );
 
+  const personalQuizzes = useMemo(
+    () =>
+      quizzes?.filter(({ author }) => user && author.uid === user.uid) || [],
+    [quizzes, user]
+  );
+
+  const publicQuizzes = useMemo(
+    () =>
+      quizzes?.filter(({ author }) => user && author.uid !== user.uid) || [],
+    [quizzes, user]
+  );
+
   return (
     <div className="host">
       <h1>Host a new Quiz Session</h1>
 
       <form onSubmit={onCreateQuiz}>
-        <h2>You</h2>
+        <h2>About you</h2>
         <TextField
           autoFocus
           label="Your nickname"
@@ -173,29 +185,61 @@ export default function Host() {
           Participate yourself?
         </label>
 
-        <h2>Quiz</h2>
+        <h2>Select a Quiz</h2>
         {!quizzes ? <p>Loading quizzes...</p> : null}
 
-        <div className="quiz-radio-group">
-          {(quizzes || []).map((q) => (
-            <label
-              className={`quiz-radio ${
-                quiz === q.id ? "quiz-radio__selected" : ""
-              }`}
-            >
-              <input
-                type="radio"
-                name="pick-quiz"
-                value={q.name}
-                onChange={() => setQuiz(q.id)}
-              />
-              <b>{q.name}</b>
-              <i>by {q.author.name}</i>
-              <p>{q.description}</p>
-              <p>Language: {getLanguageName(q.language)}</p>
-            </label>
-          ))}
-        </div>
+        {personalQuizzes.length ? (
+          <>
+            <h3>Your quizzes</h3>
+            <div className="quiz-radio-group">
+              {personalQuizzes.map((q) => (
+                <label
+                  className={`quiz-radio ${
+                    quiz === q.id ? "quiz-radio__selected" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="pick-quiz"
+                    value={q.name}
+                    onChange={() => setQuiz(q.id)}
+                  />
+                  <b>{q.name}</b>
+                  <i>by {q.author.name}</i>
+                  <p>{q.description}</p>
+                  <p>Language: {getLanguageName(q.language)}</p>
+                  <p>{q.isPrivate ? "Private." : "Public."}</p>
+                </label>
+              ))}
+            </div>
+          </>
+        ) : null}
+
+        {publicQuizzes.length ? (
+          <>
+            <h3>Public quizzes</h3>
+            <div className="quiz-radio-group">
+              {(publicQuizzes || []).map((q) => (
+                <label
+                  className={`quiz-radio ${
+                    quiz === q.id ? "quiz-radio__selected" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="pick-quiz"
+                    value={q.name}
+                    onChange={() => setQuiz(q.id)}
+                  />
+                  <b>{q.name}</b>
+                  <i>by {q.author.name}</i>
+                  <p>{q.description}</p>
+                  <p>Language: {getLanguageName(q.language)}</p>
+                </label>
+              ))}
+            </div>
+          </>
+        ) : null}
 
         <h2>Map Type</h2>
         <div className="map-radio-group">
