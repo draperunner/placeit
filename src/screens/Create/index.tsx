@@ -154,7 +154,13 @@ export default function Create() {
 
           {questions.map((question, index) => (
             <div key={question.text} style={{ marginBottom: 10 }}>
-              <p>{`Question ${index + 1}: ${question.text}`}</p>
+              <p
+                style={{
+                  textOverflow: "ellipsis",
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                }}
+              >{`Q${index + 1}: ${question.text}`}</p>
             </div>
           ))}
 
