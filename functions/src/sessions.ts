@@ -6,6 +6,7 @@ import haversine from "haversine";
 
 import { Quiz, QuizSession, QuizState } from "./interfaces";
 import { verifyToken } from "./auth";
+import { ANSWER_TIME_LIMIT } from "./constants";
 
 const app = express();
 
@@ -133,8 +134,6 @@ function calculateDistance(
     { unit: "meter" }
   );
 }
-
-const ANSWER_TIME_LIMIT = 15 * 1000;
 
 function getDeadline(): admin.firestore.Timestamp {
   const deadline = new Date().getTime() + ANSWER_TIME_LIMIT;

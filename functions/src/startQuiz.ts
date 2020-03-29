@@ -2,6 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
 import { Quiz, QuizSession } from "./interfaces";
+import { ANSWER_TIME_LIMIT } from "./constants";
 
 const db = admin.firestore();
 
@@ -10,8 +11,6 @@ enum Collections {
   QUIZ_SESSIONS = "quiz-sessions",
   QUIZ_STATES = "quiz-states",
 }
-
-const ANSWER_TIME_LIMIT = 15 * 1000;
 
 function getDeadline(): admin.firestore.Timestamp {
   const deadline = new Date().getTime() + ANSWER_TIME_LIMIT;
