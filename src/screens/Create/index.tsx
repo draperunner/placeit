@@ -53,6 +53,7 @@ export default function Create() {
     draftQuiz.questions || []
   );
 
+  const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question>(
     newQuestion()
   );
@@ -96,6 +97,7 @@ export default function Create() {
             description,
             questions,
             language,
+            isPrivate,
           }),
         }
       ).then(() => localStorage.removeItem("quiz-draft"));
@@ -169,6 +171,15 @@ export default function Create() {
               label: `${name} (${native})`,
             }))}
           />
+
+          <label style={{ display: "block", marginTop: 20 }}>
+            <input
+              type="checkbox"
+              checked={isPrivate}
+              onChange={() => setIsPrivate((prev) => !prev)}
+            />
+            Make it private?
+          </label>
 
           <h3>Questions</h3>
 

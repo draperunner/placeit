@@ -12,6 +12,7 @@ export interface Quiz {
   author: {
     uid: string;
   };
+  isPrivate: boolean;
 }
 
 export interface QuizSession {

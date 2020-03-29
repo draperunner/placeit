@@ -36,20 +36,22 @@ app.get(
       });
 
       const sensoredQuizzes = await Promise.all(
-        allQuizzes.map(async (quiz) => {
-          const author = await admin.auth().getUser(quiz.author.uid);
-          return {
-            ...quiz,
-            questions: quiz.questions.map((question) => ({
-              ...question,
-              correctAnswer: undefined,
-            })),
-            author: {
-              uid: author.uid,
-              name: author.displayName || "nameless person",
-            },
-          };
-        })
+        allQuizzes
+          .filter((q) => !q.isPrivate)
+          .map(async (quiz) => {
+            const author = await admin.auth().getUser(quiz.author.uid);
+            return {
+              ...quiz,
+              questions: quiz.questions.map((question) => ({
+                ...question,
+                correctAnswer: undefined,
+              })),
+              author: {
+                uid: author.uid,
+                name: author.displayName || "nameless person",
+              },
+            };
+          })
       );
 
       res.json({
@@ -70,7 +72,7 @@ app.post(
         throw new Error("Invalid body");
       }
 
-      const { name, description, questions, language } = req.body;
+      const { name, description, questions, language, isPrivate } = req.body;
 
       // @ts-ignore
       const { uid } = req.user;
@@ -94,6 +96,7 @@ app.post(
         author: {
           uid,
         },
+        isPrivate,
       });
 
       const createdQuiz = await db
