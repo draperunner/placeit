@@ -174,10 +174,6 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
       );
     }
 
-    const gameOver =
-      quizSession.quizDetails.numberOfQuestions ===
-      Number.parseInt(currentQuestion.id) + 1;
-
     const quizState = await getQuizState(id);
 
     if (!quizState) {
@@ -223,54 +219,6 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
         givenAnswers: admin.firestore.FieldValue.arrayUnion(givenAnswer),
       });
 
-    const haveAllParticipantsAnswered = quizSession.participants.every(
-      (participant) => {
-        return (
-          participant.uid === currentUserUid ||
-          participantsThatHaveAnswered.includes(participant.uid)
-        );
-      }
-    );
-
-    if (haveAllParticipantsAnswered) {
-      db.collection(Collections.QUIZ_SESSIONS)
-        .doc(id)
-        .update({
-          "currentQuestion.correctAnswer":
-            quizState.currentCorrectAnswer.correctAnswer,
-          "currentQuestion.givenAnswers": [
-            ...givenAnswersForThisQuestion,
-            givenAnswer,
-          ],
-          state: gameOver ? "over" : "in-progress",
-          results: quizSession.participants
-            .map((parti) => {
-              let distanceForThisQuestion = 0;
-
-              if (currentUserUid === parti.uid) {
-                distanceForThisQuestion = distance;
-              } else {
-                distanceForThisQuestion =
-                  givenAnswersForThisQuestion.find(
-                    ({ participantId }) => participantId === parti.uid
-                  )?.distance || 0;
-              }
-
-              const accumulatedDistance = givenAnswers
-                .filter(({ questionId }) => questionId !== currentQuestion.id)
-                .filter(({ participantId }) => participantId === parti.uid)
-                .map((gans) => gans.distance || 0)
-                .reduce((a, b) => a + b, 0);
-
-              return {
-                name: parti.name,
-                participantId: parti.uid,
-                distance: accumulatedDistance + distanceForThisQuestion,
-              };
-            })
-            .sort((a, b) => a.distance - b.distance),
-        });
-    }
     res.json({});
   } catch (error) {
     next(error);

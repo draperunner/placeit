@@ -4,4 +4,5 @@ admin.initializeApp();
 
 export { sessions } from "./sessions";
 export { quizzes } from "./quizzes";
-export { startQuiz } from "./startQuiz";
+export { onSessionChange } from "./onSessionChange";
+export { onStateChange } from "./onStateChange";
