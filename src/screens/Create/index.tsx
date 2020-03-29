@@ -107,6 +107,12 @@ export default function Create() {
     setCurrentQuestion(newQuestion());
   };
 
+  const removeQuestion = (index: number) => {
+    setQuestions((prevQuestions) =>
+      prevQuestions.filter((_, i) => i !== index)
+    );
+  };
+
   useEffect(() => {
     const quiz = {
       name,
@@ -167,7 +173,15 @@ export default function Create() {
           <h3>Questions</h3>
 
           {questions.map((question, index) => (
-            <div key={question.text} style={{ marginBottom: 10 }}>
+            <div
+              key={question.text}
+              style={{
+                marginBottom: 10,
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
               <p
                 style={{
                   textOverflow: "ellipsis",
@@ -175,6 +189,7 @@ export default function Create() {
                   whiteSpace: "nowrap",
                 }}
               >{`Q${index + 1}: ${question.text}`}</p>
+              <button onClick={() => removeQuestion(index)}>X</button>
             </div>
           ))}
 
