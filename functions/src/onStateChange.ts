@@ -50,7 +50,10 @@ async function checkIfAllAnswersGiven(quizState: QuizState, id: string) {
     (participant) => participantsThatHaveAnswered.includes(participant.uid)
   );
 
-  if (!haveAllParticipantsAnswered) return;
+  if (!haveAllParticipantsAnswered) {
+    console.log("Not all participants have answered yet.");
+    return;
+  }
 
   const gameOver =
     quizSession.quizDetails.numberOfQuestions ===
@@ -89,6 +92,11 @@ export const onStateChange = functions
 
     if (!newValue || !previousValue) {
       console.log("Either newValue or previousValue is undefined");
+      return;
+    }
+
+    if (newValue.givenAnswers.length === previousValue.givenAnswers.length) {
+      console.log("Same number of given answers.");
       return;
     }
 
