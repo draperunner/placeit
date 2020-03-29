@@ -35,13 +35,22 @@ app.get(
         allQuizzes.push({ ...quiz, id: doc.id });
       });
 
-      const sensoredQuizzes = allQuizzes.map((quiz) => ({
-        ...quiz,
-        questions: quiz.questions.map((question) => ({
-          ...question,
-          correctAnswer: undefined,
-        })),
-      }));
+      const sensoredQuizzes = await Promise.all(
+        allQuizzes.map(async (quiz) => {
+          const author = await admin.auth().getUser(quiz.author.uid);
+          return {
+            ...quiz,
+            questions: quiz.questions.map((question) => ({
+              ...question,
+              correctAnswer: undefined,
+            })),
+            author: {
+              uid: author.uid,
+              name: author.displayName || "nameless person",
+            },
+          };
+        })
+      );
 
       res.json({
         quizzes: sensoredQuizzes,
@@ -63,6 +72,9 @@ app.post(
 
       const { name, description, questions } = req.body;
 
+      // @ts-ignore
+      const { uid } = req.user;
+
       if (typeof name !== "string") {
         throw new Error("`name` is not string");
       }
@@ -78,6 +90,9 @@ app.post(
           ...question,
           id: `${index}`,
         })),
+        author: {
+          uid,
+        },
       });
 
       const createdQuiz = await db

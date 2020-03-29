@@ -8,6 +8,10 @@ export interface Quiz {
     text: string;
     correctAnswer: admin.firestore.GeoPoint;
   }>;
+  author: {
+    uid: string;
+    name: string;
+  };
 }
 
 export interface QuizSession {

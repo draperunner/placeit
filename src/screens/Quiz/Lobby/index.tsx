@@ -147,6 +147,7 @@ export default function Lobby({ quiz, user }: Props) {
         <div>
           <h2>Quiz Details</h2>
           <h3>{quizDetails.name}</h3>
+          <i>by {quizDetails.author.name}</i>
           <p>{quizDetails.description}</p>
           <p>{quizDetails.numberOfQuestions} questions.</p>
           <p>15 seconds per question.</p>

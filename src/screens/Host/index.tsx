@@ -190,6 +190,7 @@ export default function Host() {
                 onChange={() => setQuiz(q.id)}
               />
               <b>{q.name}</b>
+              <i>by {q.author.name}</i>
               <p>{q.description}</p>
             </label>
           ))}

@@ -8,6 +8,10 @@ export interface Quiz {
     id: string;
     text: string;
   }>;
+  author: {
+    uid: string;
+    name: string;
+  };
 }
 
 interface MapData {
@@ -31,6 +35,10 @@ export interface QuizSession {
     name: string;
     description: string;
     numberOfQuestions: number;
+    author: {
+      uid: string;
+      name: string;
+    };
   };
   map: MapData;
   host: {

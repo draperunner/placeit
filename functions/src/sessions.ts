@@ -375,11 +375,17 @@ app.post("/", verifyToken(), async (req, res, next) => {
       throw new Error("Could not find quiz with this ID.");
     }
 
+    const quizAuthor = await admin.auth().getUser(quiz.author.uid);
+
     const quizDetails = {
       id: quizId,
       name: quiz.name,
       description: quiz.description,
       numberOfQuestions: quiz.questions.length,
+      author: {
+        uid: quizAuthor.uid,
+        name: quizAuthor.displayName,
+      },
     };
 
     const docRef = await db.collection("quiz-sessions").add({
