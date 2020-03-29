@@ -10,7 +10,7 @@ import TextField from "../../components/TextField";
 import { Quiz } from "../../interfaces";
 import { useUser } from "../../auth";
 import { post } from "../../http";
-import { usePrevious } from "../../utils";
+import { usePrevious, getLanguageName } from "../../utils";
 
 import "./styles.css";
 
@@ -192,6 +192,7 @@ export default function Host() {
               <b>{q.name}</b>
               <i>by {q.author.name}</i>
               <p>{q.description}</p>
+              <p>Language: {getLanguageName(q.language)}</p>
             </label>
           ))}
         </div>

@@ -4,6 +4,7 @@ export interface Quiz {
   id: string;
   description: string;
   name: string;
+  language: string;
   questions: Array<{
     id: string;
     text: string;
@@ -34,6 +35,7 @@ export interface QuizSession {
   quizDetails: {
     name: string;
     description: string;
+    language: string;
     numberOfQuestions: number;
     author: {
       uid: string;

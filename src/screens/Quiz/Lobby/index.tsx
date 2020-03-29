@@ -9,6 +9,7 @@ import Button from "../../../components/Button";
 import TextField from "../../../components/TextField";
 
 import { QuizSession, User } from "../../../interfaces";
+import { getLanguageName } from "../../../utils";
 
 import "./styles.css";
 
@@ -150,6 +151,7 @@ export default function Lobby({ quiz, user }: Props) {
           <i>by {quizDetails.author.name}</i>
           <p>{quizDetails.description}</p>
           <p>{quizDetails.numberOfQuestions} questions.</p>
+          <p>Language: {getLanguageName(quizDetails.language)}.</p>
           <p>15 seconds per question.</p>
           <h3>Map Style:</h3>
           <p style={{ display: "block", flexDirection: "column" }}>

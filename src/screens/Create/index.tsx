@@ -8,6 +8,9 @@ import { useUser } from "../../auth";
 
 import Button from "../../components/Button";
 import TextField from "../../components/TextField";
+import Dropdown from "../../components/Dropdown";
+
+import languages from "../../languages";
 
 type LatLng = { lat: number; lng: number };
 
@@ -46,6 +49,7 @@ export default function Create() {
   const [description, setDescription] = useState<string>(
     draftQuiz.description || ""
   );
+  const [language, setLanguage] = useState<string>("en");
   const [questions, setQuestions] = useState<Question[]>(
     draftQuiz.questions || []
   );
@@ -92,6 +96,7 @@ export default function Create() {
             name,
             description,
             questions,
+            language,
           }),
         }
       ).then(() => localStorage.removeItem("quiz-draft"));
@@ -148,6 +153,16 @@ export default function Create() {
             label="Description"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
+          />
+
+          <Dropdown
+            label="Language"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            options={languages.map(({ code, name, native }) => ({
+              value: code,
+              label: `${name} (${native})`,
+            }))}
           />
 
           <h3>Questions</h3>

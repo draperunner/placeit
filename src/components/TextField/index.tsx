@@ -13,7 +13,7 @@ export default function TextField(props: Props) {
   const { label } = props;
   return (
     <label className="text-field">
-      {props.label}
+      {label}
       <input type="text" {...props} />
     </label>
   );

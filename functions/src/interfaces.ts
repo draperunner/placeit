@@ -3,6 +3,7 @@ import * as admin from "firebase-admin";
 export interface Quiz {
   name: string;
   description: string;
+  language: string;
   questions: Array<{
     id: string;
     text: string;
@@ -10,7 +11,6 @@ export interface Quiz {
   }>;
   author: {
     uid: string;
-    name: string;
   };
 }
 

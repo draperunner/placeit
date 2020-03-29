@@ -70,7 +70,7 @@ app.post(
         throw new Error("Invalid body");
       }
 
-      const { name, description, questions } = req.body;
+      const { name, description, questions, language } = req.body;
 
       // @ts-ignore
       const { uid } = req.user;
@@ -86,6 +86,7 @@ app.post(
       const ref = await db.collection(Collections.QUIZZES).add({
         name,
         description,
+        language,
         questions: questions.map((question, index) => ({
           ...question,
           id: `${index}`,

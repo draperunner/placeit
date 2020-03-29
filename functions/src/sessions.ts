@@ -381,6 +381,7 @@ app.post("/", verifyToken(), async (req, res, next) => {
       id: quizId,
       name: quiz.name,
       description: quiz.description,
+      language: quiz.language,
       numberOfQuestions: quiz.questions.length,
       author: {
         uid: quizAuthor.uid,
