@@ -17,6 +17,14 @@ interface MapData {
   attribution: string;
 }
 
+export interface GivenAnswer {
+  questionId: string;
+  participantId: string;
+  answer: firebase.firestore.GeoPoint;
+  distance: number;
+  timestamp: firebase.firestore.Timestamp;
+}
+
 export interface QuizSession {
   id: string;
   quizDetails: {
@@ -41,13 +49,7 @@ export interface QuizSession {
       latitude: number;
       longitude: number;
     };
-    givenAnswers?: Array<{
-      questionId: string;
-      participantId: string;
-      answer: firebase.firestore.GeoPoint;
-      distance: number;
-      timestamp: firebase.firestore.Timestamp;
-    }>;
+    givenAnswers?: GivenAnswer[];
     deadline?: firebase.firestore.Timestamp;
   };
   results: Array<{

@@ -109,6 +109,8 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     });
   }, [quiz.id]);
 
+  const gameOver = quiz.state === "over";
+
   const { correctAnswer, givenAnswers, deadline } = quiz.currentQuestion || {};
 
   const previousCorrectAnswer = usePrevious(correctAnswer);
@@ -231,7 +233,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
           </div>
         </div>
         {correctAnswer && results ? <ol>{renderResults()}</ol> : null}
-        {correctAnswer && results && isHost ? (
+        {!gameOver && correctAnswer && results && isHost ? (
           <Button onClick={nextQuestion}>Next Question</Button>
         ) : null}
       </div>
@@ -246,6 +248,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
         style={{ height: "100vh" }}
         onClick={onMapClick}
         zoomControl={false}
+        useFlyTo
       >
         <TileLayer
           attribution={

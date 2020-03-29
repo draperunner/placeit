@@ -228,7 +228,6 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
       (participant) => {
         return (
           participant.uid === currentUserUid ||
-          // participant.uid === quizSession.host.uid ||
           participantsThatHaveAnswered.includes(participant.uid)
         );
       }
@@ -296,7 +295,6 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
       throw new Error("Only the host can go to next question");
     }
 
-    // Slottsquizzen
     const quizRef = await db
       .collection(Collections.QUIZZES)
       .doc(quizSession.quizDetails.id)

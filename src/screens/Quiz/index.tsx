@@ -10,6 +10,7 @@ import { QuizSession } from "../../interfaces";
 
 import Lobby from "./Lobby";
 import QuizInProgress from "./QuizInProgress";
+import GameOver from "./GameOver";
 
 import "./styles.css";
 
@@ -52,6 +53,10 @@ export default function Quiz() {
 
   if (quiz.state === "in-progress") {
     return <QuizInProgress quiz={quiz} user={user} />;
+  }
+
+  if (quiz.state === "over") {
+    return <GameOver quiz={quiz} user={user} />;
   }
 
   return null;
