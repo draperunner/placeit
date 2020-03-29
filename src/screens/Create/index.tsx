@@ -38,7 +38,6 @@ export default function Create() {
     if (isAnonymous) {
       history.push("/login");
     }
-    console.log(user);
   }, [history, user]);
 
   const draft = localStorage.getItem("quiz-draft");

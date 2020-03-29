@@ -41,13 +41,9 @@ export default function Profile() {
         displayName: name,
         photoURL: null,
       })
-      .then(function (asdf) {
-        // Update successful.
-        console.log("success!", asdf);
-      })
+      .then(function () {})
       .catch(function (error) {
         console.error(error);
-        // An error happened.
       });
   };
 
