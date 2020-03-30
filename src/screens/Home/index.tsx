@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 
 import Button from "../../components/Button";
 
+import image from "./mapquiz.jpg";
+
 import "./styles.css";
 
 export default function Home() {
@@ -16,6 +18,8 @@ export default function Home() {
       <Button as={Link} to="/create" style={{ margin: 10, marginTop: 100 }}>
         Create a quiz!
       </Button>
+
+      <img className="cover-photo" src={image} alt="Cover" />
     </div>
   );
 }
