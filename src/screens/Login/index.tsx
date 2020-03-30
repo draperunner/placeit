@@ -1,17 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import firebase from "firebase";
 
 import Button from "../../components/Button";
 import TextField from "../../components/TextField";
 
+import { usePrevious } from "../../utils";
+
 import "./styles.css";
+
+async function sendVerificationEmail(user: firebase.User | null) {
+  try {
+    if (!user) return;
+    await user.sendEmailVerification();
+    console.log("sendEmailVerification success");
+  } catch (error) {
+    console.log("sendEmailVerification error");
+    console.error(error);
+  }
+}
 
 export default function Login() {
   const history = useHistory();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [needsVerification, setNeedsVerification] = useState<boolean>(false);
+
+  const [user, setUser] = useState<firebase.User | null>(null);
+  const previousUser = usePrevious(user);
+
+  useEffect(() => {
+    if (!previousUser && user && user.email && !user.emailVerified) {
+      setNeedsVerification(true);
+    }
+  }, [previousUser, user]);
+
+  const onLoginSuccess = (usr: firebase.User | null) => {
+    if (!usr) return;
+
+    setUser(usr);
+
+    if (!usr.emailVerified) {
+      setNeedsVerification(true);
+      sendVerificationEmail(usr);
+      return;
+    }
+
+    history.push("/profile");
+  };
 
   const upgradeUser = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -34,8 +71,8 @@ export default function Login() {
 
     currentUser
       .linkWithCredential(credential)
-      .then((usercred) => {
-        history.push("/profile");
+      .then(({ user }) => {
+        onLoginSuccess(user);
       })
       .catch(function (error) {
         if (
@@ -46,7 +83,7 @@ export default function Login() {
             .auth()
             .signInWithEmailAndPassword(email, password)
             .then(({ user }) => {
-              history.push("/profile");
+              onLoginSuccess(user);
             })
             .catch((err) => {
               setError(err.code);
@@ -57,6 +94,21 @@ export default function Login() {
         }
       });
   };
+
+  if (needsVerification) {
+    return (
+      <div className="login">
+        <h1>Please verify your email.</h1>
+        <p>
+          We sent an email to {user?.email}. You need to verify your email
+          before you can start using your account.
+        </p>
+        <Button onClick={() => sendVerificationEmail(user)}>
+          Resend verification email
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <form className="login" onSubmit={upgradeUser}>

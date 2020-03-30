@@ -10,6 +10,8 @@ import Button from "../../components/Button";
 import TextField from "../../components/TextField";
 import Dropdown from "../../components/Dropdown";
 
+import Navbar from "../../Navbar";
+
 import languages from "../../languages";
 
 type LatLng = { lat: number; lng: number };
@@ -34,8 +36,7 @@ export default function Create() {
   const history = useHistory();
 
   useEffect(() => {
-    const isAnonymous = user && user.isAnonymous;
-    if (isAnonymous) {
+    if (user && (user.isAnonymous || !user.emailVerified)) {
       history.push("/login");
     }
   }, [history, user]);
@@ -60,6 +61,8 @@ export default function Create() {
 
   const [answerMarker, setAnswerMarker] = useState<LatLng | void>();
 
+  const [submitting, setSubmitting] = useState<boolean>(false);
+
   const onMapClick = useCallback((event) => {
     const { latlng } = event;
 
@@ -72,6 +75,7 @@ export default function Create() {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setSubmitting(true);
     if (!isValid()) {
       return alert(
         "You need to fill out name, description and add at least one question!"
@@ -82,7 +86,7 @@ export default function Create() {
       console.log("No current user");
       return;
     }
-    localStorage.removeItem("quiz-draft");
+
     currentUser.getIdToken().then((token: string) => {
       return fetch(
         `https://europe-west1-mapquiz-app.cloudfunctions.net/quizzes`,
@@ -100,7 +104,12 @@ export default function Create() {
             isPrivate,
           }),
         }
-      ).then(() => localStorage.removeItem("quiz-draft"));
+      )
+        .then(() => {
+          localStorage.removeItem("quiz-draft");
+          setSubmitting(false);
+        })
+        .catch(() => setSubmitting(false));
     });
   };
 
@@ -228,7 +237,7 @@ export default function Create() {
             Add question
           </Button>
 
-          <Button type="submit" style={{ marginTop: 32 }}>
+          <Button disabled={submitting} type="submit" style={{ marginTop: 32 }}>
             Submit Quiz!
           </Button>
         </form>
@@ -238,6 +247,7 @@ export default function Create() {
 
   return (
     <div className="create">
+      <Navbar />
       <Map
         center={[0, 0]}
         zoom={2}
@@ -252,6 +262,7 @@ export default function Create() {
         {answerMarker ? <Marker position={answerMarker} /> : null}
         {questions.map(({ correctAnswer }, index) => (
           <Marker
+            key={index}
             position={{
               lat: correctAnswer.latitude,
               lng: correctAnswer.longitude,

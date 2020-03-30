@@ -248,7 +248,6 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
         style={{ height: "100vh" }}
         onClick={onMapClick}
         zoomControl={false}
-        useFlyTo
       >
         <TileLayer
           attribution={

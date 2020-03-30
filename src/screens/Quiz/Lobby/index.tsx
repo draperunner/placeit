@@ -158,6 +158,7 @@ export default function Lobby({ quiz, user }: Props) {
             {map.name} by {map.author}
           </p>
           <img
+            style={{ borderRadius: 4 }}
             src={getMapPreview(map.url)}
             alt={`${map.name} by ${map.author}`}
           />
