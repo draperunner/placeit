@@ -46,6 +46,9 @@ const DEFAULT_ZOOM = 2;
 export default function QuizSessionInProgress({ quiz, user }: Props) {
   const [position, setPosition] = useState<[number, number]>(DEFAULT_POSITION);
   const [zoom, setZoom] = useState<number>(DEFAULT_ZOOM);
+  const [loadingNextQuestion, setLoadingNextQuestion] = useState<boolean>(
+    false
+  );
 
   const [answerMarker, setAnswerMarker] = useState<LatLng>(randomLatLng());
   const [answerSubmitted, setAnswerSubmitted] = useState<boolean>(false);
@@ -94,6 +97,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       console.log("No current user");
       return;
     }
+    setLoadingNextQuestion(true);
     currentUser.getIdToken().then((token) => {
       fetch(
         `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions/${quiz.id}/next-question`,
@@ -105,7 +109,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
           },
           body: JSON.stringify({}),
         }
-      );
+      ).then(() => setLoadingNextQuestion(false));
     });
   }, [quiz.id]);
 
@@ -249,7 +253,9 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
         </div>
         {correctAnswer && results ? <ol>{renderResults()}</ol> : null}
         {!gameOver && correctAnswer && results && isHost ? (
-          <Button onClick={nextQuestion}>Next Question</Button>
+          <Button loading={loadingNextQuestion} onClick={nextQuestion}>
+            Next Question
+          </Button>
         ) : null}
       </div>
     );

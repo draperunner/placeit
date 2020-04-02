@@ -260,13 +260,9 @@ export default function Host() {
           ))}
         </div>
 
-        {loading ? (
-          <p>Wait for it ...</p>
-        ) : (
-          <Button type="submit" className="host__submit-button">
-            Host it!
-          </Button>
-        )}
+        <Button loading={loading} type="submit" className="host__submit-button">
+          Host it!
+        </Button>
       </form>
     </div>
   );

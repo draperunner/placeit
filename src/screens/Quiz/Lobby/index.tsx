@@ -38,19 +38,14 @@ function join(quizId: string, uid: string, name: string) {
     });
 }
 
-function startQuiz(quizId: string) {
-  db.collection("quiz-sessions").doc(quizId).update({
-    state: "in-progress",
-  });
-}
-
 interface Props {
   quiz: QuizSession;
   user: User | null;
 }
 
 export default function Lobby({ quiz, user }: Props) {
-  const [name, setName] = useState<string>("");
+  const [name, setName] = useState<string>(user?.displayName || "");
+  const [loading, setLoading] = useState<boolean>(false);
 
   if (!quiz) {
     return (
@@ -75,6 +70,16 @@ export default function Lobby({ quiz, user }: Props) {
   );
 
   const isYou = (id: string) => user && user.uid === id;
+
+  const startQuiz = () => {
+    setLoading(true);
+    db.collection("quiz-sessions")
+      .doc(quiz.id)
+      .update({
+        state: "in-progress",
+      })
+      .then(() => setLoading(false));
+  };
 
   return (
     <AppWrapper>
@@ -166,7 +171,7 @@ export default function Lobby({ quiz, user }: Props) {
       </div>
 
       {isHost ? (
-        <Button onClick={() => startQuiz(quiz.id)}>
+        <Button loading={loading} onClick={startQuiz}>
           {hostIsParticipating && !participants.length
             ? "Go solo!"
             : "Start it!"}

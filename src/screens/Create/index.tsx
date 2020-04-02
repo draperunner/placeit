@@ -9,6 +9,7 @@ import { useUser } from "../../auth";
 import Button from "../../components/Button";
 import TextField from "../../components/TextField";
 import Dropdown from "../../components/Dropdown";
+import Modal from "../../components/Modal";
 
 import Navbar from "../../Navbar";
 
@@ -24,10 +25,15 @@ interface Question {
   };
 }
 
-function newQuestion(): Question {
+interface IncompleteQuestion {
+  text: string;
+  correctAnswer: undefined;
+}
+
+function newQuestion(): IncompleteQuestion {
   return {
     text: "",
-    correctAnswer: { latitude: 0, longitude: 0 },
+    correctAnswer: undefined,
   };
 }
 
@@ -54,14 +60,17 @@ export default function Create() {
     draftQuiz.questions || []
   );
 
-  const [isPrivate, setIsPrivate] = useState<boolean>(false);
-  const [currentQuestion, setCurrentQuestion] = useState<Question>(
-    newQuestion()
+  const [isPrivate, setIsPrivate] = useState<boolean>(
+    draftQuiz.isPrivate || false
   );
+  const [currentQuestion, setCurrentQuestion] = useState<
+    IncompleteQuestion | Question
+  >(draftQuiz.currentQuestion || newQuestion());
 
   const [answerMarker, setAnswerMarker] = useState<LatLng | void>();
 
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [submitted, setSubmitted] = useState<boolean>(false);
 
   const onMapClick = useCallback((event) => {
     const { latlng } = event;
@@ -108,14 +117,23 @@ export default function Create() {
         .then(() => {
           localStorage.removeItem("quiz-draft");
           setSubmitting(false);
+          setSubmitted(true);
         })
         .catch(() => setSubmitting(false));
     });
   };
 
   const addQuestion = () => {
-    setQuestions((prevQuestions) => [...prevQuestions, currentQuestion]);
-    setCurrentQuestion(newQuestion());
+    if (!currentQuestion.text) {
+      alert("Your question needs text!");
+    }
+
+    if (currentQuestion.correctAnswer) {
+      setQuestions((prevQuestions) => [...prevQuestions, currentQuestion]);
+      setCurrentQuestion(newQuestion());
+    } else {
+      alert("You need to specify coordinates for your question.");
+    }
   };
 
   const removeQuestion = (index: number) => {
@@ -124,15 +142,25 @@ export default function Create() {
     );
   };
 
+  const reset = () => {
+    setName("");
+    setDescription("");
+    setQuestions([]);
+    setCurrentQuestion(newQuestion());
+    setSubmitted(false);
+  };
+
   useEffect(() => {
     const quiz = {
       name,
       description,
+      isPrivate,
       questions,
+      currentQuestion,
     };
 
     localStorage.setItem("quiz-draft", JSON.stringify(quiz));
-  }, [name, description, questions]);
+  }, [name, description, questions, isPrivate, currentQuestion]);
 
   const isValid = (): boolean => {
     return Boolean(name?.length && description?.length && questions.length);
@@ -160,7 +188,7 @@ export default function Create() {
 
         <form onSubmit={onSubmit}>
           <TextField
-            label="Name"
+            label="Quiz Name"
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
@@ -226,8 +254,16 @@ export default function Create() {
           />
 
           <p>Correct answer: </p>
-          <div>{`Latitude: ${currentQuestion.correctAnswer?.latitude}`}</div>
-          <div>{`Longitude: ${currentQuestion.correctAnswer?.longitude}`}</div>
+          <div>{`Latitude: ${
+            typeof currentQuestion.correctAnswer === "undefined"
+              ? "?"
+              : currentQuestion.correctAnswer.latitude
+          }`}</div>
+          <div>{`Longitude: ${
+            typeof currentQuestion.correctAnswer === "undefined"
+              ? "?"
+              : currentQuestion.correctAnswer.longitude
+          }`}</div>
 
           <Button
             type="button"
@@ -237,7 +273,12 @@ export default function Create() {
             Add question
           </Button>
 
-          <Button disabled={submitting} type="submit" style={{ marginTop: 32 }}>
+          <Button
+            loading={submitting}
+            disabled={submitting}
+            type="submit"
+            style={{ marginTop: 32 }}
+          >
             Submit Quiz!
           </Button>
         </form>
@@ -275,6 +316,13 @@ export default function Create() {
         ))}
       </Map>
       {renderLeftMargin()}
+      <Modal visible={submitted}>
+        <h2>Hooray!</h2>
+        <p>Your quiz "{name}" has been successfully created.</p>
+        <Button onClick={reset} type="submit" style={{ marginTop: 32 }}>
+          Nice.
+        </Button>
+      </Modal>
     </div>
   );
 }
