@@ -121,9 +121,12 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       return;
     }
     const interval = setInterval(() => {
-      const secondsLeft = Math.round(
-        (deadline.toDate().getTime() - new Date().getTime()) / 1000
-      );
+      const now = new Date().getTime();
+      const secondsLeft = Math.round((deadline.toMillis() - now) / 1000);
+      console.log("Deadline:", deadline);
+      console.log("Now:", now);
+      console.log("Seconds until deadline:", secondsLeft);
+
       setCountDown(Math.max(0, secondsLeft));
     }, 1000);
     return () => clearInterval(interval);
