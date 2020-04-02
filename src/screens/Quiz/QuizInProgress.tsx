@@ -40,6 +40,12 @@ function randomLatLng(): LatLng {
   return { lat: randomLatitude, lng: randomLongitude };
 }
 
+function calculateCountDown(deadline: firebase.firestore.Timestamp): number {
+  let now = new Date().getTime();
+  let secondsLeft = Math.round((deadline.toMillis() - now) / 1000);
+  return Math.max(0, secondsLeft);
+}
+
 const DEFAULT_POSITION: [number, number] = [0, 0];
 const DEFAULT_ZOOM = 2;
 
@@ -120,14 +126,21 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       setCountDown(undefined);
       return;
     }
-    const interval = setInterval(() => {
-      const now = new Date().getTime();
-      const secondsLeft = Math.round((deadline.toMillis() - now) / 1000);
-      console.log("Deadline:", deadline);
-      console.log("Now:", now);
-      console.log("Seconds until deadline:", secondsLeft);
 
-      setCountDown(Math.max(0, secondsLeft));
+    let countDown = calculateCountDown(deadline);
+    setCountDown(countDown);
+
+    if (countDown === 0) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      countDown = calculateCountDown(deadline);
+      setCountDown(countDown);
+
+      if (countDown === 0) {
+        clearInterval(interval);
+      }
     }, 1000);
     return () => clearInterval(interval);
   }, [deadline]);
