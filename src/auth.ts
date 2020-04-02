@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import * as firebase from "firebase/app";
+import firebase from "firebase/app";
 
 import "firebase/analytics";
 import "firebase/auth";

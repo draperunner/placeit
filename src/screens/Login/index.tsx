@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
-import firebase from "firebase";
+import firebase from "firebase/app";
 
 import Button from "../../components/Button";
 import TextField from "../../components/TextField";

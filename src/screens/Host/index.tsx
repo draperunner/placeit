@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useHistory } from "react-router-dom";
 
-import firebase from "firebase";
+import firebase from "firebase/app";
 import "firebase/firestore";
 
 import Button from "../../components/Button";

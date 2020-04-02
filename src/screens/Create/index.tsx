@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Map, TileLayer, Marker, Tooltip } from "react-leaflet";
 import { useHistory } from "react-router-dom";
-import firebase from "firebase";
+import firebase from "firebase/app";
 import "firebase/firestore";
 
 import { useUser } from "../../auth";

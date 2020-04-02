@@ -1,4 +1,4 @@
-import firebase from "firebase";
+import firebase from "firebase/app";
 
 export async function post(url: string, data: any): Promise<any> {
   const currentUser = firebase.auth().currentUser;

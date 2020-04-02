@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import Leaflet from "leaflet";
-import firebase from "firebase";
+import firebase from "firebase/app";
 import { Map, TileLayer, Marker, Polygon, Tooltip } from "react-leaflet";
 import "firebase/firestore";
 
