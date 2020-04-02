@@ -6,7 +6,7 @@ import haversine from "haversine";
 
 import { Quiz, QuizSession, QuizState } from "./interfaces";
 import { verifyToken } from "./auth";
-import { ANSWER_TIME_LIMIT } from "./constants";
+import { ANSWER_TIME_LIMIT, ANSWER_TIME_SLACK } from "./constants";
 
 const app = express();
 
@@ -138,7 +138,7 @@ function calculateDistance(
 function getDeadline(
   answerTimeLimit = ANSWER_TIME_LIMIT
 ): admin.firestore.Timestamp {
-  const deadline = new Date().getTime() + answerTimeLimit;
+  const deadline = new Date().getTime() + answerTimeLimit * 1000;
   return admin.firestore.Timestamp.fromMillis(deadline);
 }
 
@@ -176,9 +176,9 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
       );
     }
 
-    const slack = 5000;
-    if (currentQuestion.deadline.toMillis() - now.getTime() < -slack) {
-      throw new Error("Answered too late");
+    const diff = currentQuestion.deadline.toMillis() - now.getTime();
+    if (diff < ANSWER_TIME_SLACK * -1000) {
+      throw new Error(`Answered too late: ${diff} ms`);
     }
 
     const quizState = await getQuizState(id);
@@ -403,8 +403,6 @@ app.post("/:id/join", verifyToken(), async (req, res, next) => {
 app.post("/:id/start", verifyToken(), async (req, res, next) => {
   try {
     const { id } = req.params;
-    // @ts-ignore
-    const { uid } = req.user;
 
     await db.collection("quiz-sessions").doc(id).update({
       state: "in-progress",

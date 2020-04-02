@@ -15,7 +15,7 @@ enum Collections {
 function getDeadline(
   answerTimeLimit = ANSWER_TIME_LIMIT
 ): admin.firestore.Timestamp {
-  const deadline = new Date().getTime() + answerTimeLimit;
+  const deadline = new Date().getTime() + answerTimeLimit * 1000;
   return admin.firestore.Timestamp.fromMillis(deadline);
 }
 
