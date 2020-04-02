@@ -176,6 +176,11 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
       );
     }
 
+    const slack = 5000;
+    if (currentQuestion.deadline.toMillis() - now.getTime() < -slack) {
+      throw new Error("Answered too late");
+    }
+
     const quizState = await getQuizState(id);
 
     if (!quizState) {

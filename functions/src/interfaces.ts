@@ -36,6 +36,7 @@ export interface QuizSession {
       answer: admin.firestore.GeoPoint;
       distance: number;
     }>;
+    deadline: admin.firestore.Timestamp;
   };
   results: Array<{
     participantId: string;
