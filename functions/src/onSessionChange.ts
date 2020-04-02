@@ -12,8 +12,10 @@ enum Collections {
   QUIZ_STATES = "quiz-states",
 }
 
-function getDeadline(): admin.firestore.Timestamp {
-  const deadline = new Date().getTime() + ANSWER_TIME_LIMIT;
+function getDeadline(
+  answerTimeLimit = ANSWER_TIME_LIMIT
+): admin.firestore.Timestamp {
+  const deadline = new Date().getTime() + answerTimeLimit;
   return admin.firestore.Timestamp.fromMillis(deadline);
 }
 
@@ -50,7 +52,7 @@ async function startSession(newValue: QuizSession, id: string): Promise<void> {
       currentQuestion: {
         id: firstQuestion.id,
         text: firstQuestion.text,
-        deadline: getDeadline(),
+        deadline: getDeadline(newValue.answerTimeLimit),
       },
     });
 }

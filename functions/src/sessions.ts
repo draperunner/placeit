@@ -135,8 +135,10 @@ function calculateDistance(
   );
 }
 
-function getDeadline(): admin.firestore.Timestamp {
-  const deadline = new Date().getTime() + ANSWER_TIME_LIMIT;
+function getDeadline(
+  answerTimeLimit = ANSWER_TIME_LIMIT
+): admin.firestore.Timestamp {
+  const deadline = new Date().getTime() + answerTimeLimit;
   return admin.firestore.Timestamp.fromMillis(deadline);
 }
 
@@ -285,7 +287,7 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
         currentQuestion: {
           id: nextQuestion.id,
           text: nextQuestion.text,
-          deadline: getDeadline(),
+          deadline: getDeadline(quizSession.answerTimeLimit),
         },
       });
 
@@ -297,7 +299,13 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
 
 app.post("/", verifyToken(), async (req, res, next) => {
   try {
-    const { hostName, quizId, map, hostParticipates } = req.body;
+    const {
+      hostName,
+      quizId,
+      map,
+      hostParticipates,
+      answerTimeLimit = 20,
+    } = req.body;
 
     if (!hostName || typeof hostName !== "string") {
       throw new Error("`hostName` is invalid.");
@@ -352,6 +360,7 @@ app.post("/", verifyToken(), async (req, res, next) => {
         : [],
       state: "lobby",
       map: getMapData(map),
+      answerTimeLimit,
     });
 
     res.status(201).json({

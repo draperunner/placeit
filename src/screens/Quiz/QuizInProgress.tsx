@@ -40,12 +40,6 @@ function randomLatLng(): LatLng {
   return { lat: randomLatitude, lng: randomLongitude };
 }
 
-function calculateCountDown(deadline: firebase.firestore.Timestamp): number {
-  let now = new Date().getTime();
-  let secondsLeft = Math.round((deadline.toMillis() - now) / 1000);
-  return Math.max(0, secondsLeft);
-}
-
 const DEFAULT_POSITION: [number, number] = [0, 0];
 const DEFAULT_ZOOM = 2;
 
@@ -120,30 +114,35 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   const { correctAnswer, givenAnswers, deadline } = quiz.currentQuestion || {};
 
   const previousCorrectAnswer = usePrevious(correctAnswer);
+  const previousDeadline = usePrevious(deadline);
 
+  // Init count down on new deadline
   useEffect(() => {
     if (!deadline) {
       setCountDown(undefined);
       return;
     }
 
-    let countDown = calculateCountDown(deadline);
-    setCountDown(countDown);
-
-    if (countDown === 0) {
+    if (previousDeadline && deadline.isEqual(previousDeadline)) {
       return;
     }
 
-    const interval = setInterval(() => {
-      countDown = calculateCountDown(deadline);
-      setCountDown(countDown);
+    const newCountDown = quiz.answerTimeLimit;
+    setCountDown(newCountDown);
+  }, [deadline, previousDeadline, quiz.answerTimeLimit]);
 
-      if (countDown === 0) {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (typeof countDown === "undefined" || countDown === 0) {
         clearInterval(interval);
+        return;
       }
+
+      const newCountDown = countDown - 1;
+      setCountDown(newCountDown);
     }, 1000);
     return () => clearInterval(interval);
-  }, [deadline]);
+  }, [countDown, deadline, quiz.answerTimeLimit]);
 
   useEffect(() => {
     if (!previousCorrectAnswer && correctAnswer) {

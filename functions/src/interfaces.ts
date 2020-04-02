@@ -25,6 +25,7 @@ export interface QuizSession {
     name: string;
   }>;
   state: "lobby" | "in-progress" | "over";
+  answerTimeLimit: number;
   currentQuestion: null | {
     id: string;
     text: string;

@@ -44,6 +44,7 @@ export interface QuizSession {
     };
   };
   map: MapData;
+  answerTimeLimit: number;
   host: {
     uid: string;
     name: string;
