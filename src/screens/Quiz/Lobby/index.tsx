@@ -1,8 +1,5 @@
 import React, { useState } from "react";
 
-import firebase from "firebase/app";
-import "firebase/firestore";
-
 import AppWrapper from "../../../AppWrapper";
 
 import Button from "../../../components/Button";
@@ -11,9 +8,9 @@ import TextField from "../../../components/TextField";
 import { QuizSession, User } from "../../../interfaces";
 import { getLanguageName } from "../../../utils";
 
-import "./styles.css";
+import { post } from "../../../http";
 
-const db = firebase.firestore();
+import "./styles.css";
 
 function getMapPreview(url: string): string {
   const s = "a";
@@ -27,15 +24,20 @@ function getMapPreview(url: string): string {
     .replace("{y}", "" + y);
 }
 
-function join(quizId: string, uid: string, name: string) {
-  db.collection("quiz-sessions")
-    .doc(quizId)
-    .update({
-      participants: firebase.firestore.FieldValue.arrayUnion({
-        uid,
-        name,
-      }),
-    });
+function join(quizId: string, name: string) {
+  return post(
+    `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions/${quizId}/join`,
+    {
+      name,
+    }
+  );
+}
+
+function start(quizId: string) {
+  return post(
+    `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions/${quizId}/start`,
+    {}
+  );
 }
 
 interface Props {
@@ -73,12 +75,7 @@ export default function Lobby({ quiz, user }: Props) {
 
   const startQuiz = () => {
     setLoading(true);
-    db.collection("quiz-sessions")
-      .doc(quiz.id)
-      .update({
-        state: "in-progress",
-      })
-      .then(() => setLoading(false));
+    start(quiz.id).then(() => setLoading(false));
   };
 
   return (
@@ -134,7 +131,7 @@ export default function Lobby({ quiz, user }: Props) {
               onSubmit={(e) => {
                 e.preventDefault();
                 if (user) {
-                  return join(quiz.id, user.uid, name);
+                  return join(quiz.id, name);
                 }
               }}
             >

@@ -378,6 +378,43 @@ app.post("/", verifyToken(), async (req, res, next) => {
   }
 });
 
+app.post("/:id/join", verifyToken(), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    // @ts-ignore
+    const { uid } = req.user;
+    const { name } = req.body;
+
+    await db
+      .collection("quiz-sessions")
+      .doc(id)
+      .update({
+        participants: admin.firestore.FieldValue.arrayUnion({
+          uid,
+          name,
+        }),
+      });
+    res.json({});
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/:id/start", verifyToken(), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    // @ts-ignore
+    const { uid } = req.user;
+
+    await db.collection("quiz-sessions").doc(id).update({
+      state: "in-progress",
+    });
+    res.json({});
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.use("*", (req, res) => {
   res.status(404).json({ message: "Not Found" });
 });
