@@ -101,7 +101,8 @@ export default function Lobby({ quiz, user }: Props) {
     start(quiz.id).then(() => setLoading(false));
   };
 
-  const postChat = () => {
+  const postChat = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!chatMessage) {
       return;
     }
@@ -238,7 +239,8 @@ export default function Lobby({ quiz, user }: Props) {
             </div>
           ))}
           {joined && !chatSent ? (
-            <div
+            <form
+              onSubmit={postChat}
               style={{
                 display: "flex",
                 flexDirection: "row",
@@ -252,12 +254,12 @@ export default function Lobby({ quiz, user }: Props) {
                 style={{ flex: 1 }}
               />
               <Button
+                type="submit"
                 style={{ height: 33, margin: "0.5rem", padding: "0.5rem" }}
-                onClick={postChat}
               >
                 Send
               </Button>
-            </div>
+            </form>
           ) : null}
           {!joined ? <p>You need to join before you can chat.</p> : null}
         </div>
