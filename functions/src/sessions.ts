@@ -366,6 +366,9 @@ app.post("/", verifyToken(), async (req, res, next) => {
       state: "lobby",
       map: getMapData(map),
       answerTimeLimit,
+      chat: {
+        messages: [],
+      },
     });
 
     res.status(201).json({
@@ -407,6 +410,54 @@ app.post("/:id/start", verifyToken(), async (req, res, next) => {
     await db.collection("quiz-sessions").doc(id).update({
       state: "in-progress",
     });
+    res.json({});
+  } catch (error) {
+    next(error);
+  }
+});
+
+function getMessage(message: string, authorName: string): string {
+  if (Math.random() < 0.1) return message;
+
+  const MESSAGES = [
+    "Hello friends! 👋",
+    "I AM ZORG, THE MAP QUIZ GOD OF THE PLANET XTURGOTH 3000. I WILL CRUSH YOU IN THIS SILLY HUMAN GAME.",
+    `Hi! I am "${authorName}". That's not my real name, though. My real name is actually Flompy Flompwaters. Maybe you knew that already.`,
+    "Howdy partners! 🤠",
+    "Oh, baby don't hurt me.",
+    "Hey! 👋 I am ready!",
+    "Hello. I am very familiar with maps. In fact, my father was a map.",
+    "OMG. A chat. All games have chats. Why do I need to chat?! 🤮",
+    `Hi everyone! This is your President ${authorName}. I have arrived!`,
+    `The following message is presented by Acme Inc: "${message}".`,
+    message.toUpperCase(),
+    "👏" + message.split(/\s/).join("👏") + "👏",
+  ];
+
+  const randomIndex = Math.floor(Math.random() * MESSAGES.length);
+  return MESSAGES[randomIndex];
+}
+
+app.post("/:id/chat", verifyToken(), async (req, res, next) => {
+  try {
+    // @ts-ignore
+    const { uid } = req.user;
+    const { id } = req.params;
+    const { author, message } = req.body;
+
+    await db
+      .collection("quiz-sessions")
+      .doc(id)
+      .update({
+        "chat.messages": admin.firestore.FieldValue.arrayUnion({
+          author: {
+            uid,
+            name: author?.name || "Unknown",
+          },
+          message: getMessage(message, author.name),
+          timestamp: admin.firestore.Timestamp.now(),
+        }),
+      });
     res.json({});
   } catch (error) {
     next(error);

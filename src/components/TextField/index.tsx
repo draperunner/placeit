@@ -10,11 +10,11 @@ interface Props {
 }
 
 export default function TextField(props: Props) {
-  const { label } = props;
+  const { label, style, className, ...restProps } = props;
   return (
-    <label className="text-field">
+    <label className={`text-field ${className || ""}`} style={style}>
       {label}
-      <input type="text" {...props} />
+      <input type="text" {...restProps} />
     </label>
   );
 }

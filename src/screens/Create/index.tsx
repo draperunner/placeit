@@ -42,7 +42,8 @@ export default function Create() {
   const history = useHistory();
 
   useEffect(() => {
-    if (user && (user.isAnonymous || !user.emailVerified)) {
+    // if (user && (user.isAnonymous || !user.emailVerified)) {
+    if (user && user.isAnonymous) {
       history.push("/login");
     }
   }, [history, user]);

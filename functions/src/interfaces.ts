@@ -55,6 +55,16 @@ export interface QuizSession {
     description: string;
     numberOfQuestions: number;
   };
+  chat: {
+    messages: Array<{
+      author: {
+        uid: string;
+        name: string;
+      };
+      message: string;
+      timestamp: admin.firestore.Timestamp;
+    }>;
+  };
 }
 
 export interface QuizState {
