@@ -1,15 +1,13 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import express, { Request, Response, NextFunction } from "express";
-import cors from "cors";
 
+import cors from "./cors";
 import { Quiz } from "./interfaces";
-
 import { verifyToken } from "./auth";
 
 const app = express();
-
-app.use(cors());
+app.use(cors);
 
 const db = admin.firestore();
 

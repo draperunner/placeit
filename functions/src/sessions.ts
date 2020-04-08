@@ -1,14 +1,15 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import express, { Request, Response, NextFunction } from "express";
-import cors from "cors";
 import haversine from "haversine";
 
+import cors from "./cors";
 import { Quiz, QuizSession, QuizState } from "./interfaces";
 import { verifyToken } from "./auth";
 import { ANSWER_TIME_LIMIT, ANSWER_TIME_SLACK } from "./constants";
 
 const app = express();
+app.use(cors);
 
 const db = admin.firestore();
 
@@ -98,8 +99,6 @@ function getMapData(map: string): MapData {
       };
   }
 }
-
-app.use(cors());
 
 async function getQuizSession(id: string): Promise<QuizSession | null> {
   const doc = await db.collection("quiz-sessions").doc(id).get();
