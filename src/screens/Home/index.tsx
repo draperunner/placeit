@@ -10,7 +10,7 @@ import "./styles.css";
 export default function Home() {
   return (
     <div className="home">
-      <h1>Map Quiz</h1>
+      <h1>Place it!</h1>
       <p>Get closest to the right answer – in meters!</p>
       <Button as={Link} to="/host" style={{ margin: 10, marginTop: 100 }}>
         Host a quiz!

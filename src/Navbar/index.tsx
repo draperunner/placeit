@@ -10,7 +10,7 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       {window.location.pathname !== "/" ? (
-        <Link to="/">Map Quiz</Link>
+        <Link to="/">Place it!</Link>
       ) : (
         <div />
       )}

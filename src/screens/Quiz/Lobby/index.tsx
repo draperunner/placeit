@@ -112,7 +112,7 @@ export default function Lobby({ quiz, user }: Props) {
 
   return (
     <AppWrapper>
-      <h1>Map Quiz by {host.name}</h1>
+      <h1>Quiz hosted by {host.name}</h1>
       <p>We are now in the lobby, waiting for people to join.</p>
       <div className="lobby__grid">
         <div>
