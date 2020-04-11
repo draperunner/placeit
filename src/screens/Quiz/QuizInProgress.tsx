@@ -224,7 +224,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     }
 
     if (answerSubmitted || countDown === 0) {
-      helpText = "Answer submitted! Waiting for the next question...";
+      helpText = "Answer submitted! Waiting for the results...";
     }
 
     if (correctAnswer) {
