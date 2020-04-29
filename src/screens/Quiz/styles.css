@@ -3,6 +3,7 @@
 }
 
 .quiz-panel {
+    color: black;
     position: absolute;
     padding: 2rem;
     background-color: white;

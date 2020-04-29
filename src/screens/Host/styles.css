@@ -27,7 +27,7 @@
 }
 
 .quiz-radio.quiz-radio__selected {
-    border-color: skyblue;
+    border-color: #EB144C;
 }
 
 .map-radio-group {
@@ -50,7 +50,7 @@
 }
 
 .map-radio__selected img {
-    border: 4px solid skyblue;
+    border: 4px solid #EB144C;
 }
 
 .map-radio img {

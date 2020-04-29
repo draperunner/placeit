@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 
 import Button from "../../components/Button";
 
-import image from "./mapquiz.jpg";
+import Blob from "./Blob";
+import Pin from "./Pin";
 
 import "./styles.css";
 
@@ -12,14 +13,18 @@ export default function Home() {
     <div className="home">
       <h1>Place it!</h1>
       <p>Get closest to the right answer – in meters!</p>
-      <Button as={Link} to="/host" style={{ margin: 10, marginTop: 100 }}>
+      <Button as={Link} to="/host" className="home__button">
         Host a quiz!
       </Button>
-      <Button as={Link} to="/create" style={{ margin: 10, marginTop: 100 }}>
+      <Button as={Link} to="/create" className="home__button">
         Create a quiz!
       </Button>
 
-      <img className="cover-photo" src={image} alt="Cover" />
+      <div className="home__illustration">
+        <Blob className="home__island" />
+        <Pin className="home__pin" color="#EB144C" />
+      </div>
+      {/* <img className="home__pin" src={pin} alt="Pin" /> */}
     </div>
   );
 }

@@ -15,6 +15,8 @@ import Navbar from "../../Navbar";
 
 import languages from "../../languages";
 
+import "./styles.css";
+
 type LatLng = { lat: number; lng: number };
 
 interface Question {
