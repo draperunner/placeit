@@ -8,12 +8,12 @@ import { useAnonymousLogin, UserContext } from "./auth";
 
 import AppWrapper from "./AppWrapper";
 
-import Home from "./screens/Home";
-import Host from "./screens/Host";
-import Quiz from "./screens/Quiz";
-import Login from "./screens/Login";
-import Create from "./screens/Create";
-import Profile from "./screens/Profile";
+import Home from "./pages/Home";
+import Host from "./pages/Host";
+import Quiz from "./pages/Quiz";
+import Login from "./pages/Login";
+import Create from "./pages/Create";
+import Profile from "./pages/Profile";
 
 function App() {
   const { user } = useAnonymousLogin();
