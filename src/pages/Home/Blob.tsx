@@ -1,23 +1,25 @@
 import React from "react";
+import * as blobs2 from "blobs/v2";
 
-interface Props {
+interface Props extends blobs2.BlobOptions {
   className?: string;
   color?: string;
 }
 
-export default function Blob({ className, color = "#00d084" }: Props) {
+export default function Blob({
+  className,
+  color = "#00d084",
+  ...blobOptions
+}: Props) {
+  const pathData = blobs2.svgPath(blobOptions);
+
   return (
     <svg
       className={className}
-      viewBox="0 0 600 600"
+      viewBox="0 0 100 100"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <g transform="translate(300,300)">
-        <path
-          d="M105.6,-144.9C145.6,-138.6,192.9,-124.1,203.5,-94.7C214.2,-65.3,188.3,-21,174.9,20.4C161.6,61.8,160.9,100.3,141.1,121.1C121.3,141.8,82.3,144.8,45.6,155.7C8.9,166.6,-25.5,185.5,-66.5,190.1C-107.5,194.7,-155,185.1,-183.8,156.6C-212.6,128.1,-222.6,80.8,-209.6,42.1C-196.6,3.3,-160.6,-26.8,-147.2,-71.8C-133.7,-116.7,-142.8,-176.6,-122,-191.6C-101.3,-206.6,-50.6,-176.8,-8.9,-162.9C32.8,-149,65.6,-151.1,105.6,-144.9Z"
-          fill={color}
-        />
-      </g>
+      <path d={pathData} fill={color} />
     </svg>
   );
 }

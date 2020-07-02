@@ -21,10 +21,15 @@ export default function Home() {
       </Button>
 
       <div className="home__illustration">
-        <Blob className="home__island" />
+        <Blob
+          className="home__island"
+          seed={Math.random()}
+          extraPoints={6}
+          randomness={30}
+          size={100}
+        />
         <Pin className="home__pin" color="#EB144C" />
       </div>
-      {/* <img className="home__pin" src={pin} alt="Pin" /> */}
     </div>
   );
 }
