@@ -1,18 +1,18 @@
 import React, { useState, useCallback, useEffect } from "react";
 import Leaflet from "leaflet";
-import firebase from "firebase/app";
+import firebase, { User } from "firebase/app";
 import { Map, TileLayer, Marker, Polygon, Tooltip } from "react-leaflet";
 import "firebase/firestore";
 
 import Button from "../../components/Button";
-import { QuizSession, User } from "../../interfaces";
+import { QuizSession } from "../../interfaces";
 import { usePrevious } from "../../utils";
 
 type LatLng = { lat: number; lng: number };
 
 interface Props {
   quiz: QuizSession;
-  user: User | null;
+  user: User | null | undefined;
 }
 
 function formatDistance(meters: number): string {

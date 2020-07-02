@@ -80,5 +80,3 @@ export interface QuizSession {
     }>;
   };
 }
-
-export type User = firebase.User;

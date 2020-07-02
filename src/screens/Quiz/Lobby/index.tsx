@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import firebase from "firebase/app";
+import firebase, { User } from "firebase/app";
 
 import AppWrapper from "../../../AppWrapper";
 
 import Button from "../../../components/Button";
 import TextField from "../../../components/TextField";
 
-import { QuizSession, User } from "../../../interfaces";
+import { QuizSession } from "../../../interfaces";
 import { getLanguageName } from "../../../utils";
 
 import { post } from "../../../http";
@@ -63,7 +63,7 @@ function sendChatMessage(quizId: string, message: string, authorName: string) {
 
 interface Props {
   quiz: QuizSession;
-  user: User | null;
+  user: User | null | undefined;
 }
 
 export default function Lobby({ quiz, user }: Props) {
