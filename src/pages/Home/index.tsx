@@ -8,6 +8,8 @@ import Pin from "./Pin";
 
 import "./styles.css";
 
+const blobSeed = Math.random();
+
 export default function Home() {
   return (
     <div className="home">
@@ -23,7 +25,7 @@ export default function Home() {
       <div className="home__illustration">
         <Blob
           className="home__island"
-          seed={Math.random()}
+          seed={blobSeed}
           extraPoints={6}
           randomness={30}
           size={100}
