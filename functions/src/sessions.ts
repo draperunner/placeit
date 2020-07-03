@@ -308,7 +308,7 @@ app.post("/", verifyToken(), async (req, res, next) => {
       quizId,
       map,
       hostParticipates,
-      answerTimeLimit = 20,
+      answerTimeLimit = ANSWER_TIME_LIMIT,
     } = req.body;
 
     if (!hostName || typeof hostName !== "string") {
