@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
-import "firebase";
+import "firebase/app";
 import "firebase/firestore";
 
 import { useAnonymousLogin, UserContext } from "./auth";
