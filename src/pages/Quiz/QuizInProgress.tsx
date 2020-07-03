@@ -243,7 +243,10 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
           </div>
         </div>
         {correctAnswer && results ? <ol>{renderResults()}</ol> : null}
-        {!gameOver && correctAnswer && results && isHost ? (
+        {!gameOver &&
+        (correctAnswer || countDown === 0) &&
+        results &&
+        isHost ? (
           <Button loading={loadingNextQuestion} onClick={nextQuestion}>
             Next Question
           </Button>
