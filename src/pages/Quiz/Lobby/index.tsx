@@ -186,7 +186,7 @@ export default function Lobby({ quiz, user }: Props) {
           <p>{quizDetails.description}</p>
           <p>{quizDetails.numberOfQuestions} questions.</p>
           <p>Language: {getLanguageName(quizDetails.language)}.</p>
-          <p>20 seconds per question.</p>
+          <p>30 seconds per question.</p>
           <h3>Map Style:</h3>
           <p style={{ display: "block", flexDirection: "column" }}>
             {map.name} by {map.author}
