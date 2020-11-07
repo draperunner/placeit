@@ -18,10 +18,7 @@ export default function Navbar() {
         <Link to="/profile">
           <img
             className="navbar__profile-img"
-            src={
-              user.photoURL ||
-              `https://api.adorable.io/avatars/40/${user.uid}.png`
-            }
+            src={user.photoURL || `https://joeschmoe.io/api/v1/${user.uid}`}
             alt={user.displayName || "profile photo"}
           />
         </Link>

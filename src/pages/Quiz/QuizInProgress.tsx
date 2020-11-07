@@ -276,7 +276,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
             position={answerMarker}
             icon={
               new Leaflet.Icon({
-                iconUrl: `https://api.adorable.io/avatars/40/${user?.uid}.png`,
+                iconUrl: `https://joeschmoe.io/api/v1/${user?.uid}`,
                 iconSize: [40, 40],
                 iconAnchor: [20, 20],
                 popupAnchor: [0, -22],
@@ -309,7 +309,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
                   key={participantId}
                   icon={
                     new Leaflet.Icon({
-                      iconUrl: `https://api.adorable.io/avatars/40/${participantId}.png`,
+                      iconUrl: `https://joeschmoe.io/api/v1/${participantId}`,
                       iconSize: [40, 40],
                       iconAnchor: [20, 20],
                       popupAnchor: [0, -22],

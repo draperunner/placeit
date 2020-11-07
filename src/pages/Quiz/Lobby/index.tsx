@@ -124,7 +124,7 @@ export default function Lobby({ quiz, user }: Props) {
             }}
           >
             <img
-              src={`https://api.adorable.io/avatars/40/${host.uid}.png`}
+              src={`https://joeschmoe.io/api/v1/${host.uid}`}
               alt=""
               style={{ borderRadius: 20, marginRight: 10 }}
             />
@@ -149,7 +149,7 @@ export default function Lobby({ quiz, user }: Props) {
                 }}
               >
                 <img
-                  src={`https://api.adorable.io/avatars/40/${participant.uid}.png`}
+                  src={`https://joeschmoe.io/api/v1/${participant.uid}`}
                   alt=""
                   style={{ borderRadius: 20, marginRight: 10 }}
                 />
@@ -223,7 +223,7 @@ export default function Lobby({ quiz, user }: Props) {
                     borderRadius: 20,
                     marginRight: 5,
                   }}
-                  src={`https://api.adorable.io/avatars/40/${author.uid}.png`}
+                  src={`https://joeschmoe.io/api/v1/${author.uid}`}
                 />
                 <span>{`said at ${timestampToTime(timestamp)}:`}</span>
               </div>
