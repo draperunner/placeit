@@ -141,7 +141,8 @@ export default function Host() {
   const onCreateQuiz = useCallback(
     (event) => {
       event.preventDefault();
-      if (!name || !quiz) return alert("You need to fill out the form!");
+      if (!name) return alert("You need to choose a name!");
+      if (!quiz) return alert("You need to choose a quiz!");
       setLoading(true);
       createQuizSession(name, quiz, map, hostParticipates).then((id) => {
         history.push(`/q/${id}`);
