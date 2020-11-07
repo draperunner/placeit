@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import Leaflet from "leaflet";
-import firebase, { User } from "firebase/app";
+import firebase from "firebase/app";
 import { Map, TileLayer, Marker, Polygon, Tooltip } from "react-leaflet";
 import "firebase/firestore";
 
@@ -12,7 +12,7 @@ type LatLng = { lat: number; lng: number };
 
 interface Props {
   quiz: QuizSession;
-  user: User | null | undefined;
+  user: firebase.User | null | undefined;
 }
 
 function formatDistance(meters: number): string {

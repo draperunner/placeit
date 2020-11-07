@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import firebase, { User } from "firebase/app";
+import firebase from "firebase/app";
 
 import "firebase/analytics";
 import "firebase/auth";
@@ -19,7 +19,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 export function useAnonymousLogin() {
-  const [user, setUser] = useState<User | null | undefined>();
+  const [user, setUser] = useState<firebase.User | null | undefined>();
   const [token, setToken] = useState<string | null | undefined>();
 
   useEffect(() => {
@@ -42,6 +42,8 @@ export function useAnonymousLogin() {
   };
 }
 
-export const UserContext = createContext<User | null | undefined>(null);
+export const UserContext = createContext<firebase.User | null | undefined>(
+  null
+);
 
 export const useUser = () => useContext(UserContext);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import firebase, { User } from "firebase/app";
+import firebase from "firebase/app";
 
 import AppWrapper from "../../../AppWrapper";
 
@@ -63,7 +63,7 @@ function sendChatMessage(quizId: string, message: string, authorName: string) {
 
 interface Props {
   quiz: QuizSession;
-  user: User | null | undefined;
+  user: firebase.User | null | undefined;
 }
 
 export default function Lobby({ quiz, user }: Props) {
