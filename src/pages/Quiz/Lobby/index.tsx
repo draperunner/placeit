@@ -124,9 +124,12 @@ export default function Lobby({ quiz, user }: Props) {
             }}
           >
             <img
+              className="profile-pic"
               src={`https://joeschmoe.io/api/v1/${host.uid}`}
               alt=""
-              style={{ borderRadius: 20, marginRight: 10 }}
+              style={{
+                marginRight: 10,
+              }}
             />
             {`${host.name}${hostIsParticipating ? " (participating)" : ""}`}
           </div>
@@ -151,7 +154,10 @@ export default function Lobby({ quiz, user }: Props) {
                 <img
                   src={`https://joeschmoe.io/api/v1/${participant.uid}`}
                   alt=""
-                  style={{ borderRadius: 20, marginRight: 10 }}
+                  className="profile-pic"
+                  style={{
+                    marginRight: 10,
+                  }}
                 />
                 {`${participant.name}${isYou(participant.uid) ? " (you)" : ""}`}
               </li>
@@ -217,10 +223,8 @@ export default function Lobby({ quiz, user }: Props) {
               >
                 <img
                   alt={author.name}
+                  className="profile-pic"
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
                     marginRight: 5,
                   }}
                   src={`https://joeschmoe.io/api/v1/${author.uid}`}

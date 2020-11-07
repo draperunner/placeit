@@ -8,6 +8,10 @@
     margin: 0.5rem;
 }
 
+.lobby__grid .profile-pic {
+    height: 40px;
+    width: 40px;
+}
 
 @media (max-width: 800px) {
     .lobby__grid {
