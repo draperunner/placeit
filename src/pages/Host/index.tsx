@@ -194,6 +194,7 @@ export default function Host() {
             <div className="quiz-radio-group">
               {personalQuizzes.map((q) => (
                 <label
+                  key={q.id}
                   className={`quiz-radio ${
                     quiz === q.id ? "quiz-radio__selected" : ""
                   }`}
@@ -221,6 +222,7 @@ export default function Host() {
             <div className="quiz-radio-group">
               {(publicQuizzes || []).map((q) => (
                 <label
+                  key={q.id}
                   className={`quiz-radio ${
                     quiz === q.id ? "quiz-radio__selected" : ""
                   }`}
@@ -245,6 +247,7 @@ export default function Host() {
         <div className="map-radio-group">
           {MAPS.map(({ id, name, url, author }) => (
             <label
+              key={id}
               className={`map-radio ${map === id ? "map-radio__selected" : ""}`}
             >
               <input
