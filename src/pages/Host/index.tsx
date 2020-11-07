@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 
 import firebase from "firebase/app";
@@ -94,30 +94,28 @@ async function createQuizSession(
   return session.id;
 }
 
-async function fetchQuizzes(): Promise<void | { quizzes: Quiz[] }> {
-  const currentUser = firebase.auth().currentUser;
-  if (!currentUser) {
-    console.log("No current user");
-    return;
-  }
-  return currentUser.getIdToken().then((token) => {
-    return fetch(
-      "https://europe-west1-mapquiz-app.cloudfunctions.net/quizzes/",
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    ).then((res) => res.json());
+const db = firebase.firestore();
+
+function docsToData<T>(
+  docs: firebase.firestore.QuerySnapshot<firebase.firestore.DocumentData>
+): T[] {
+  let dataArray: T[] = [];
+
+  docs.forEach((doc) => {
+    const data = doc.data() as T;
+    const id = doc.id;
+    dataArray.push({ ...data, id });
   });
+
+  return dataArray;
 }
 
 export default function Host() {
   const user = useUser();
   const history = useHistory();
   const [name, setName] = useState<string>(user?.displayName || "");
-  const [quizzes, setQuizzes] = useState<Quiz[] | undefined>();
+  const [publicQuizzes, setPublicQuizzes] = useState<Quiz[] | undefined>();
+  const [personalQuizzes, setPersonalQuizzes] = useState<Quiz[] | undefined>();
   const [quiz, setQuiz] = useState<string | undefined>();
   const [map, setMap] = useState<Map>(Map.STANDARD);
   const [hostParticipates, setHostParticipates] = useState<boolean>(true);
@@ -132,9 +130,19 @@ export default function Host() {
   }, [previousUser, user]);
 
   useEffect(() => {
-    fetchQuizzes().then((result) => {
-      if (!result) return;
-      setQuizzes(result?.quizzes || []);
+    if (!user) return;
+
+    const collectionRef = db.collection("quizzes");
+
+    Promise.all([
+      collectionRef
+        .where("author.uid", "!=", user.uid)
+        .where("isPrivate", "==", false)
+        .get(),
+      collectionRef.where("author.uid", "==", user.uid).get(),
+    ]).then(([publicQuizRefs, personalQuizRefs]) => {
+      setPublicQuizzes(docsToData<Quiz>(publicQuizRefs));
+      setPersonalQuizzes(docsToData<Quiz>(personalQuizRefs));
     });
   }, [user]);
 
@@ -150,18 +158,6 @@ export default function Host() {
       });
     },
     [history, hostParticipates, map, name, quiz]
-  );
-
-  const personalQuizzes = useMemo(
-    () =>
-      quizzes?.filter(({ author }) => user && author.uid === user.uid) || [],
-    [quizzes, user]
-  );
-
-  const publicQuizzes = useMemo(
-    () =>
-      quizzes?.filter(({ author }) => user && author.uid !== user.uid) || [],
-    [quizzes, user]
   );
 
   return (
@@ -187,9 +183,9 @@ export default function Host() {
         </label>
 
         <h2>Select a Quiz</h2>
-        {!quizzes ? <p>Loading quizzes...</p> : null}
+        {!publicQuizzes ? <p>Loading quizzes...</p> : null}
 
-        {personalQuizzes.length ? (
+        {personalQuizzes?.length ? (
           <>
             <h3>Your quizzes</h3>
             <div className="quiz-radio-group">
@@ -217,7 +213,7 @@ export default function Host() {
           </>
         ) : null}
 
-        {publicQuizzes.length ? (
+        {publicQuizzes?.length ? (
           <>
             <h3>Public quizzes</h3>
             <div className="quiz-radio-group">

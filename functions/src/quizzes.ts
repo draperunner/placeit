@@ -3,7 +3,6 @@ import * as admin from "firebase-admin";
 import express, { Request, Response, NextFunction } from "express";
 
 import cors from "./cors";
-import { Quiz } from "./interfaces";
 import { verifyToken } from "./auth";
 
 const app = express();
@@ -17,62 +16,6 @@ enum Collections {
   QUIZ_STATES = "quiz-states",
 }
 
-app.get(
-  "/",
-  verifyToken(),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const [publicQuizzes, personalQuizzes] = await Promise.all([
-        db
-          .collection(Collections.QUIZZES)
-          .where("isPrivate", "==", false)
-          .get(),
-        db
-          .collection(Collections.QUIZZES)
-          // @ts-ignore
-          .where("author.uid", "==", req.user.uid)
-          .get(),
-      ]);
-
-      const allQuizzes: Array<Quiz & { id: string }> = [];
-
-      publicQuizzes.forEach((doc) => {
-        const quiz = doc.data() as Quiz;
-        allQuizzes.push({ ...quiz, id: doc.id });
-      });
-
-      personalQuizzes.forEach((doc) => {
-        if (allQuizzes.some((q) => q.id === doc.id)) return;
-        const quiz = doc.data() as Quiz;
-        allQuizzes.push({ ...quiz, id: doc.id });
-      });
-
-      const sensoredQuizzes = await Promise.all(
-        allQuizzes.map(async (quiz) => {
-          const author = await admin.auth().getUser(quiz.author.uid);
-          return {
-            ...quiz,
-            questions: quiz.questions.map((question) => ({
-              ...question,
-              correctAnswer: undefined,
-            })),
-            author: {
-              uid: author.uid,
-              name: author.displayName || "nameless person",
-            },
-          };
-        })
-      );
-
-      res.json({
-        quizzes: sensoredQuizzes,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
 app.post(
   "/",
   verifyToken({ forbidAnonymous: true }),
@@ -85,7 +28,7 @@ app.post(
       const { name, description, questions, language, isPrivate } = req.body;
 
       // @ts-ignore
-      const { uid } = req.user;
+      const { uid, displayName } = req.user;
 
       if (typeof name !== "string") {
         throw new Error("`name` is not string");
@@ -105,6 +48,7 @@ app.post(
         })),
         author: {
           uid,
+          name: displayName,
         },
         isPrivate,
       });
