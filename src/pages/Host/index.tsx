@@ -79,7 +79,8 @@ async function createQuizSession(
   hostName: string,
   quizId: string,
   map: Map,
-  hostParticipates: boolean
+  hostParticipates: boolean,
+  answerTimeLimit: number
 ) {
   const { session } = await post(
     "https://europe-west1-mapquiz-app.cloudfunctions.net/sessions",
@@ -88,6 +89,7 @@ async function createQuizSession(
       quizId,
       map,
       hostParticipates,
+      answerTimeLimit,
     }
   );
 
@@ -117,6 +119,7 @@ export default function Host() {
   const [publicQuizzes, setPublicQuizzes] = useState<Quiz[] | undefined>();
   const [personalQuizzes, setPersonalQuizzes] = useState<Quiz[] | undefined>();
   const [quiz, setQuiz] = useState<string | undefined>();
+  const [answerTimeLimit, setAnswerTimeLimit] = useState<number>(20);
   const [map, setMap] = useState<Map>(Map.STANDARD);
   const [hostParticipates, setHostParticipates] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
@@ -152,12 +155,18 @@ export default function Host() {
       if (!name) return alert("You need to choose a name!");
       if (!quiz) return alert("You need to choose a quiz!");
       setLoading(true);
-      createQuizSession(name, quiz, map, hostParticipates).then((id) => {
+      createQuizSession(
+        name,
+        quiz,
+        map,
+        hostParticipates,
+        answerTimeLimit
+      ).then((id) => {
         history.push(`/q/${id}`);
         setLoading(false);
       });
     },
-    [history, hostParticipates, map, name, quiz]
+    [answerTimeLimit, history, hostParticipates, map, name, quiz]
   );
 
   return (
@@ -180,6 +189,19 @@ export default function Host() {
             onChange={() => setHostParticipates((prev) => !prev)}
           />
           Participate yourself?
+        </label>
+
+        <h2>Time Limit</h2>
+        <p>How hard do you want this to be?</p>
+        <label>
+          Seconds per answer:&nbsp;
+          <input
+            type="number"
+            value={answerTimeLimit}
+            min={5}
+            max={60}
+            onChange={(e) => setAnswerTimeLimit(Number(e.currentTarget.value))}
+          />
         </label>
 
         <h2>Select a Quiz</h2>

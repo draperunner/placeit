@@ -83,7 +83,7 @@ export default function Lobby({ quiz, user }: Props) {
   const joined =
     !!user && quiz.participants.some(({ uid }) => uid === user.uid);
 
-  const { host, quizDetails, map, chat } = quiz;
+  const { host, quizDetails, map, chat, answerTimeLimit } = quiz;
 
   const participants = (quiz.participants || []).filter(
     ({ uid }) => uid !== host.uid
@@ -192,7 +192,7 @@ export default function Lobby({ quiz, user }: Props) {
           <p>{quizDetails.description}</p>
           <p>{quizDetails.numberOfQuestions} questions.</p>
           <p>Language: {getLanguageName(quizDetails.language)}.</p>
-          <p>30 seconds per question.</p>
+          <p>{answerTimeLimit} seconds per question.</p>
           <h3>Map Style:</h3>
           <p style={{ display: "block", flexDirection: "column" }}>
             {map.name} by {map.author}
