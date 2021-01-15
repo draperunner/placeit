@@ -119,7 +119,7 @@ export default function Host() {
   const [publicQuizzes, setPublicQuizzes] = useState<Quiz[] | undefined>();
   const [personalQuizzes, setPersonalQuizzes] = useState<Quiz[] | undefined>();
   const [quiz, setQuiz] = useState<string | undefined>();
-  const [answerTimeLimit, setAnswerTimeLimit] = useState<number>(20);
+  const [answerTimeLimit, setAnswerTimeLimit] = useState<number>(30);
   const [map, setMap] = useState<Map>(Map.STANDARD);
   const [hostParticipates, setHostParticipates] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
