@@ -244,7 +244,7 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
       throw new Error("Quiz session does not exist");
     }
 
-    if (!quizSession.host.uid === currentUserUid) {
+    if (quizSession.host.uid !== currentUserUid) {
       throw new Error("Only the host can go to next question");
     }
 
