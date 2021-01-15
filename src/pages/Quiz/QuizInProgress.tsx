@@ -270,6 +270,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
             '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
           }
           url={quiz.map?.url || "https://{s}.tile.osm.org/{z}/{x}/{y}.png"}
+          noWrap
         />
         {answerMarker && !correctAnswer ? (
           <Marker
