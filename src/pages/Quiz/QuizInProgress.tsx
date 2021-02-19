@@ -247,9 +247,23 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
         (correctAnswer || countDown === 0) &&
         results &&
         isHost ? (
-          <Button loading={loadingNextQuestion} onClick={nextQuestion}>
-            Next Question
-          </Button>
+          <div>
+            <p>
+              Stuck? If some users quit or had network issues, this can happen.
+            </p>
+            <p>
+              You can use the button below to force the quiz to continue.
+              Participants that have a missing answer will get assigned a random
+              answer that is twice the distance of the worst answer.
+            </p>
+            <Button
+              variant="warning"
+              loading={loadingNextQuestion}
+              onClick={nextQuestion}
+            >
+              Force next question
+            </Button>
+          </div>
         ) : null}
       </div>
     );

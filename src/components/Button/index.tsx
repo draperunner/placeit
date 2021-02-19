@@ -4,6 +4,7 @@ import "./styles.css";
 
 interface Props {
   loading?: boolean;
+  mode?: "success" | "warning";
   [key: string]: any;
 }
 
@@ -27,7 +28,7 @@ function LoadingDots({ active }: { active?: boolean }) {
 }
 
 export default function Button(props: Props) {
-  const { as, loading, children, ...restProps } = props;
+  const { as, loading, variant = "success", children, ...restProps } = props;
 
   const Comp = props.as || "button";
 
@@ -35,7 +36,7 @@ export default function Button(props: Props) {
     <Comp
       disabled={loading}
       {...restProps}
-      className={`button ${props.className || ""}`}
+      className={`button button--${variant} ${props.className || ""}`}
     >
       <div
         className={`button__children ${
