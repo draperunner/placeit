@@ -2,9 +2,10 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import express, { Request, Response, NextFunction } from "express";
 import haversine from "haversine";
+import destination from "@turf/destination";
 
 import cors from "./cors";
-import { Quiz, QuizSession, QuizState } from "./interfaces";
+import { GivenAnswer, Quiz, QuizSession, QuizState } from "./interfaces";
 import { verifyToken } from "./auth";
 import { ANSWER_TIME_LIMIT, ANSWER_TIME_SLACK } from "./constants";
 
@@ -238,10 +239,17 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
     // @ts-ignore
     const currentUserUid = req.user.uid;
 
-    const quizSession = await getQuizSession(id);
+    const [quizSession, quizState] = await Promise.all([
+      getQuizSession(id),
+      getQuizState(id),
+    ]);
 
     if (!quizSession) {
       throw new Error("Quiz session does not exist");
+    }
+
+    if (!quizState) {
+      throw new Error("Quiz state does not exist");
     }
 
     if (quizSession.host.uid !== currentUserUid) {
@@ -256,19 +264,82 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
     const quiz = quizRef.data() as Quiz;
 
     if (!quiz) {
-      console.log("Quiz does not exist");
+      throw new Error("This quiz does not exist. A mind-blowing error indeed!");
+    }
+
+    const { currentCorrectAnswer } = quizState;
+    const { currentQuestion, participants } = quizSession;
+
+    if (!currentQuestion) {
+      throw new Error("Huh. There is no currentQuestion. Strange.");
+    }
+
+    const currentQuestionIndex = quiz.questions.findIndex(
+      (question) => question.id === currentQuestion.id
+    );
+
+    if (currentQuestionIndex < 0) {
+      throw new Error(
+        "The current question is not part of this quiz's questions. What?"
+      );
+    }
+
+    const { givenAnswers } = quizState;
+
+    const givenAnswersForThisQuestion = givenAnswers.filter(
+      ({ questionId }) => questionId === currentQuestion.id
+    );
+
+    const participantsThatHaventAnswered = participants.filter(
+      ({ uid }) =>
+        !givenAnswersForThisQuestion.some(
+          ({ participantId }) => participantId === uid
+        )
+    );
+
+    // If not all participants have answered, they either dropped out or timed out somehow.
+    // We need to assign some dummy answer so the quiz can continue.
+    if (participantsThatHaventAnswered.length > 0) {
+      const editedGivenAnswers = [...givenAnswers];
+
+      const worstAnswer = [...givenAnswersForThisQuestion].sort(
+        (a, b) => b.distance - a.distance
+      )[0] as GivenAnswer | undefined;
+
+      participantsThatHaventAnswered.forEach(({ uid }) => {
+        const distance = (worstAnswer?.distance || 10e6) * 2;
+        const randomAnswerPoint = destination(
+          [
+            currentCorrectAnswer.correctAnswer.longitude,
+            currentCorrectAnswer.correctAnswer.latitude,
+          ],
+          distance / 1000, // kilometers
+          Math.random() * 360 - 180
+        );
+
+        editedGivenAnswers.push({
+          answer: new admin.firestore.GeoPoint(
+            randomAnswerPoint.geometry.coordinates[1],
+            randomAnswerPoint.geometry.coordinates[0]
+          ),
+          distance,
+          participantId: uid,
+          questionId: currentQuestion.id,
+        });
+      });
+
+      await db.collection(Collections.QUIZ_STATES).doc(id).update({
+        givenAnswers: editedGivenAnswers,
+      });
+
+      // Return OK to client. The onWrite trigger should detect changes and take care of setting the next question.
+      res.json({
+        message: `Had to create fake answers for ${participantsThatHaventAnswered} participants.`,
+      });
       return;
     }
 
-    const currentQuestionId = quizSession.currentQuestion?.id || -1;
-    const currentQuestionIndex = quiz.questions.findIndex(
-      (question) => question.id === currentQuestionId
-    );
-
-    if (
-      currentQuestionIndex < 0 ||
-      currentQuestionIndex === quiz.questions.length - 1
-    ) {
+    if (currentQuestionIndex === quiz.questions.length - 1) {
       throw new Error(
         "There are no more questions. We should be done already."
       );

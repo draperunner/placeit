@@ -67,16 +67,18 @@ export interface QuizSession {
   };
 }
 
+export interface GivenAnswer {
+  questionId: string;
+  participantId: string;
+  answer: admin.firestore.GeoPoint;
+  distance: number;
+}
+
 export interface QuizState {
   quiz: string;
   currentCorrectAnswer: {
     questionId: string;
     correctAnswer: admin.firestore.GeoPoint;
   };
-  givenAnswers: Array<{
-    questionId: string;
-    participantId: string;
-    answer: admin.firestore.GeoPoint;
-    distance: number;
-  }>;
+  givenAnswers: GivenAnswer[];
 }
