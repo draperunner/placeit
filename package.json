@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "license": "MIT",
   "dependencies": {
-    "blobs": "^2.1.0",
-    "firebase": "^8.0.1",
-    "leaflet": "^1.6.0",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-leaflet": "^2.7.0",
+    "blobs": "^2.2.0",
+    "firebase": "^8.2.9",
+    "leaflet": "^1.7.1",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "react-leaflet": "^2.8.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1"
   },
@@ -35,17 +35,17 @@
     ]
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^5.11.2",
-    "@testing-library/react": "^10.4.8",
-    "@testing-library/user-event": "^12.1.0",
+    "@testing-library/jest-dom": "^5.11.9",
+    "@testing-library/react": "^10.4.9",
+    "@testing-library/user-event": "^12.7.1",
     "@types/jest": "^24.0.0",
-    "@types/node": "^10.17.28",
-    "@types/react": "^16.9.44",
-    "@types/react-dom": "^16.9.8",
+    "@types/node": "^10.17.54",
+    "@types/react": "^16.14.4",
+    "@types/react-dom": "^16.9.11",
     "@types/react-leaflet": "^2.5.2",
-    "@types/react-router-dom": "^5.1.5",
-    "eslint-plugin-prettier": "^3.1.4",
-    "prettier": "^2.0.5",
-    "typescript": "^3.9.7"
+    "@types/react-router-dom": "^5.1.7",
+    "eslint-plugin-prettier": "^3.3.1",
+    "prettier": "^2.2.1",
+    "typescript": "^3.9.9"
   }
 }
