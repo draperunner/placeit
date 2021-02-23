@@ -181,7 +181,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     setPosition(DEFAULT_POSITION);
   }, [quiz.currentQuestion?.id]);
 
-  const isHost = user && quiz?.host.uid === user.uid;
+  const isHost = !!user && quiz?.host.uid === user.uid;
 
   // Submit on deadline
   useEffect(() => {
@@ -222,6 +222,10 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       helpText = `The correct answer was of course at the blue marker.`;
     }
 
+    const inBetweenQuestions = !gameOver && countDown === 0 && !!results;
+    const showForceButton = !correctAnswer && inBetweenQuestions && isHost;
+    const showNextButton = !!correctAnswer && inBetweenQuestions && isHost;
+
     return (
       <div className="quiz-panel">
         <div className="quiz-panel__top">
@@ -243,10 +247,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
           </div>
         </div>
         {correctAnswer && results ? <ol>{renderResults()}</ol> : null}
-        {!gameOver &&
-        (correctAnswer || countDown === 0) &&
-        results &&
-        isHost ? (
+        {showForceButton ? (
           <div>
             <p>
               Stuck? If some users quit or had network issues, this can happen.
@@ -264,6 +265,11 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
               Force next question
             </Button>
           </div>
+        ) : null}
+        {showNextButton ? (
+          <Button loading={loadingNextQuestion} onClick={nextQuestion}>
+            Next question
+          </Button>
         ) : null}
       </div>
     );
