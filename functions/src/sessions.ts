@@ -2,7 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import express, { Request, Response, NextFunction } from "express";
 import haversine from "haversine";
-import destination from "@turf/destination";
+import destination from "@turf/rhumb-destination";
 
 import cors from "./cors";
 import { GivenAnswer, Quiz, QuizSession, QuizState } from "./interfaces";
@@ -317,11 +317,18 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
           Math.random() * 360 - 180
         );
 
+        const latitude = Math.max(
+          -90,
+          Math.min(90, randomAnswerPoint.geometry.coordinates[1])
+        );
+
+        const longitude = Math.max(
+          -180,
+          Math.min(180, randomAnswerPoint.geometry.coordinates[0])
+        );
+
         editedGivenAnswers.push({
-          answer: new admin.firestore.GeoPoint(
-            randomAnswerPoint.geometry.coordinates[1],
-            randomAnswerPoint.geometry.coordinates[0]
-          ),
+          answer: new admin.firestore.GeoPoint(latitude, longitude),
           distance,
           participantId: uid,
           questionId: currentQuestion.id,
