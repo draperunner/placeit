@@ -39,7 +39,7 @@
     "@testing-library/react": "^10.4.9",
     "@testing-library/user-event": "^12.7.1",
     "@types/jest": "^24.0.0",
-    "@types/node": "^10.17.54",
+    "@types/node": "^12.20.13",
     "@types/react": "^16.14.4",
     "@types/react-dom": "^16.9.11",
     "@types/react-leaflet": "^2.5.2",
