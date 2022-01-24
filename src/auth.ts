@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import firebase from "firebase/app";
 
-import "firebase/analytics";
 import "firebase/auth";
 
 const firebaseConfig = {
@@ -42,8 +41,7 @@ export function useAnonymousLogin() {
   };
 }
 
-export const UserContext = createContext<firebase.User | null | undefined>(
-  null
-);
+export const UserContext =
+  createContext<firebase.User | null | undefined>(null);
 
 export const useUser = () => useContext(UserContext);
