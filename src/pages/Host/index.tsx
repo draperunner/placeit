@@ -44,8 +44,7 @@ const MAPS = [
     id: Map.VOYAGER_NO_LABELS,
     name: "Voyager No Labels",
     author: "CARTO",
-    url:
-      "https://a.basemaps.cartocdn.com/rastertiles/voyager_nolabels/5/15/12.png",
+    url: "https://a.basemaps.cartocdn.com/rastertiles/voyager_nolabels/5/15/12.png",
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
   },
@@ -149,7 +148,7 @@ export default function Host() {
     });
   }, [user]);
 
-  const onCreateQuiz = useCallback(
+  const onCreateQuiz: React.FormEventHandler<HTMLFormElement> = useCallback(
     (event) => {
       event.preventDefault();
       if (!name) return alert("You need to choose a name!");

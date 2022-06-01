@@ -75,7 +75,7 @@ export default function Create() {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
 
-  const onMapClick = useCallback((event) => {
+  const onMapClick = useCallback((event: any) => {
     const { latlng } = event;
 
     setAnswerMarker(latlng);

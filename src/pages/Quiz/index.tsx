@@ -17,7 +17,7 @@ import "./styles.css";
 const db = firebase.firestore();
 
 export default function Quiz() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const user = useUser();
 
   const [quiz, setQuiz] = useState<QuizSession | undefined>();

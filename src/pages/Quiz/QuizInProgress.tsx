@@ -37,9 +37,8 @@ const DEFAULT_ZOOM = 2;
 export default function QuizSessionInProgress({ quiz, user }: Props) {
   const [position, setPosition] = useState<[number, number]>(DEFAULT_POSITION);
   const [zoom, setZoom] = useState<number>(DEFAULT_ZOOM);
-  const [loadingNextQuestion, setLoadingNextQuestion] = useState<boolean>(
-    false
-  );
+  const [loadingNextQuestion, setLoadingNextQuestion] =
+    useState<boolean>(false);
 
   const [answerMarker, setAnswerMarker] = useState<LatLng>(randomLatLng());
   const [answerSubmitted, setAnswerSubmitted] = useState<boolean>(false);
@@ -48,7 +47,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   const previousCountDown = usePrevious(countDown);
 
   const onMapClick = useCallback(
-    (event) => {
+    (event: any) => {
       if (answerSubmitted) return;
       const { latlng } = event;
 

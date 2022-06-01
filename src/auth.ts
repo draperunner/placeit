@@ -41,7 +41,8 @@ export function useAnonymousLogin() {
   };
 }
 
-export const UserContext =
-  createContext<firebase.User | null | undefined>(null);
+export const UserContext = createContext<firebase.User | null | undefined>(
+  null
+);
 
 export const useUser = () => useContext(UserContext);
