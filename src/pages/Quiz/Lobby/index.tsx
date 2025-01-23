@@ -125,7 +125,7 @@ export default function Lobby({ quiz, user }: Props) {
           >
             <img
               className="profile-pic"
-              src={`https://joeschmoe.io/api/v1/${host.uid}`}
+              src={`https://joesch.moe/api/v1/${host.uid}`}
               alt=""
               style={{
                 marginRight: 10,
@@ -152,7 +152,7 @@ export default function Lobby({ quiz, user }: Props) {
                 }}
               >
                 <img
-                  src={`https://joeschmoe.io/api/v1/${participant.uid}`}
+                  src={`https://joesch.moe/api/v1/${participant.uid}`}
                   alt=""
                   className="profile-pic"
                   style={{
@@ -227,7 +227,7 @@ export default function Lobby({ quiz, user }: Props) {
                   style={{
                     marginRight: 5,
                   }}
-                  src={`https://joeschmoe.io/api/v1/${author.uid}`}
+                  src={`https://joesch.moe/api/v1/${author.uid}`}
                 />
                 <span>{`said at ${timestampToTime(timestamp)}:`}</span>
               </div>

@@ -18,7 +18,7 @@ export default function Navbar() {
         <Link to="/profile">
           <img
             className="navbar__profile-img"
-            src={user.photoURL || `https://joeschmoe.io/api/v1/${user.uid}`}
+            src={user.photoURL || `https://joesch.moe/api/v1/${user.uid}`}
             alt={user.displayName || "profile photo"}
           />
         </Link>
