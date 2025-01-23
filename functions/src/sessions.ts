@@ -1,4 +1,4 @@
-import * as functions from "firebase-functions";
+import { onRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import express, { Request, Response, NextFunction } from "express";
 import haversine from "haversine";
@@ -8,11 +8,16 @@ import cors from "./cors";
 import { GivenAnswer, Quiz, QuizSession, QuizState } from "./interfaces";
 import { verifyToken } from "./auth";
 import { ANSWER_TIME_LIMIT, ANSWER_TIME_SLACK } from "./constants";
+import { setGlobalOptions } from "firebase-functions/v2";
 
 const app = express();
 app.use(cors);
 
 const db = admin.firestore();
+
+setGlobalOptions({
+  region: "europe-west1",
+});
 
 enum Collections {
   QUIZZES = "quizzes",
@@ -119,7 +124,7 @@ async function getQuizState(id: string): Promise<QuizState | null> {
 
 function calculateDistance(
   correctAnswer: admin.firestore.GeoPoint,
-  givenAnswer: { latitude: number; longitude: number }
+  givenAnswer: { latitude: number; longitude: number },
 ): number {
   return haversine(
     {
@@ -127,12 +132,12 @@ function calculateDistance(
       longitude: correctAnswer.longitude,
     },
     givenAnswer,
-    { unit: "meter" }
+    { unit: "meter" },
   );
 }
 
 function getDeadline(
-  answerTimeLimit = ANSWER_TIME_LIMIT
+  answerTimeLimit = ANSWER_TIME_LIMIT,
 ): admin.firestore.Timestamp {
   const deadline = new Date().getTime() + answerTimeLimit * 1000;
   return admin.firestore.Timestamp.fromMillis(deadline);
@@ -168,7 +173,7 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
 
     if (!currentQuestion) {
       throw new Error(
-        "Current question is undefined, although quiz has started."
+        "Current question is undefined, although quiz has started.",
       );
     }
 
@@ -186,11 +191,11 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
     const { givenAnswers } = quizState;
 
     const givenAnswersForThisQuestion = givenAnswers.filter(
-      ({ questionId }) => questionId === currentQuestion.id
+      ({ questionId }) => questionId === currentQuestion.id,
     );
 
     const participantsThatHaveAnswered = givenAnswersForThisQuestion.map(
-      ({ participantId }) => participantId
+      ({ participantId }) => participantId,
     );
 
     if (participantsThatHaveAnswered.includes(currentUserUid)) {
@@ -199,13 +204,13 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
 
     if (quizState.currentCorrectAnswer.questionId !== currentQuestion.id) {
       throw new Error(
-        "The quiz state current answer is not for the current question"
+        "The quiz state current answer is not for the current question",
       );
     }
 
     const distance = calculateDistance(
       quizState.currentCorrectAnswer.correctAnswer,
-      req.body
+      req.body,
     );
 
     const givenAnswer = {
@@ -271,26 +276,26 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
     }
 
     const currentQuestionIndex = quiz.questions.findIndex(
-      (question) => question.id === currentQuestion.id
+      (question) => question.id === currentQuestion.id,
     );
 
     if (currentQuestionIndex < 0) {
       throw new Error(
-        "The current question is not part of this quiz's questions. What?"
+        "The current question is not part of this quiz's questions. What?",
       );
     }
 
     const { givenAnswers } = quizState;
 
     const givenAnswersForThisQuestion = givenAnswers.filter(
-      ({ questionId }) => questionId === currentQuestion.id
+      ({ questionId }) => questionId === currentQuestion.id,
     );
 
     const participantsThatHaventAnswered = participants.filter(
       ({ uid }) =>
         !givenAnswersForThisQuestion.some(
-          ({ participantId }) => participantId === uid
-        )
+          ({ participantId }) => participantId === uid,
+        ),
     );
 
     // If not all participants have answered, they either dropped out or timed out somehow.
@@ -299,7 +304,7 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
       const editedGivenAnswers = [...givenAnswers];
 
       const worstAnswer = [...givenAnswersForThisQuestion].sort(
-        (a, b) => b.distance - a.distance
+        (a, b) => b.distance - a.distance,
       )[0] as GivenAnswer | undefined;
 
       participantsThatHaventAnswered.forEach(({ uid }) => {
@@ -310,17 +315,17 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
             currentCorrectAnswer.correctAnswer.latitude,
           ],
           distance / 1000, // kilometers
-          Math.random() * 360 - 180
+          Math.random() * 360 - 180,
         );
 
         const latitude = Math.max(
           -90,
-          Math.min(90, randomAnswerPoint.geometry.coordinates[1])
+          Math.min(90, randomAnswerPoint.geometry.coordinates[1]),
         );
 
         const longitude = Math.max(
           -180,
-          Math.min(180, randomAnswerPoint.geometry.coordinates[0])
+          Math.min(180, randomAnswerPoint.geometry.coordinates[0]),
         );
 
         editedGivenAnswers.push({
@@ -344,7 +349,7 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
 
     if (currentQuestionIndex === quiz.questions.length - 1) {
       throw new Error(
-        "There are no more questions. We should be done already."
+        "There are no more questions. We should be done already.",
       );
     }
 
@@ -552,4 +557,4 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ message: error.message });
 });
 
-export const sessions = functions.region("europe-west1").https.onRequest(app);
+export const sessions2ndGen = onRequest({ maxInstances: 1 }, app);

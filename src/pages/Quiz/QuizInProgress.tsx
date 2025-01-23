@@ -53,7 +53,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
 
       setAnswerMarker(latlng);
     },
-    [answerSubmitted]
+    [answerSubmitted],
   );
 
   const submitAnswer = useCallback(() => {
@@ -65,7 +65,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     }
     currentUser.getIdToken().then((token: string) => {
       return fetch(
-        `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions/${quiz.id}/answer`,
+        `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quiz.id}/answer`,
         {
           method: "POST",
           headers: {
@@ -76,7 +76,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
             latitude: answerMarker.lat,
             longitude: answerMarker.lng,
           }),
-        }
+        },
       );
     });
   }, [answerMarker, quiz.id]);
@@ -90,7 +90,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     setLoadingNextQuestion(true);
     currentUser.getIdToken().then((token) => {
       fetch(
-        `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions/${quiz.id}/next-question`,
+        `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quiz.id}/next-question`,
         {
           method: "POST",
           headers: {
@@ -98,7 +98,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({}),
-        }
+        },
       ).then(() => setLoadingNextQuestion(false));
     });
   }, [quiz.id]);
@@ -152,7 +152,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       const accumulated = formatDistance(distance);
 
       const givenAnswer = givenAnswers.find(
-        (givenAns) => givenAns.participantId === participantId
+        (givenAns) => givenAns.participantId === participantId,
       );
       const thisQuestionDistance = formatDistance(givenAnswer?.distance || 0);
 

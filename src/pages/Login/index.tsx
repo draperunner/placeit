@@ -59,7 +59,7 @@ export default function Login() {
 
     const credential = firebase.auth.EmailAuthProvider.credential(
       email,
-      password
+      password,
     );
 
     const currentUser = firebase.auth().currentUser;

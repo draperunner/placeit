@@ -35,29 +35,29 @@ function getMapPreview(url: string): string {
 
 function join(quizId: string, name: string) {
   return post(
-    `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions/${quizId}/join`,
+    `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quizId}/join`,
     {
       name,
-    }
+    },
   );
 }
 
 function start(quizId: string) {
   return post(
-    `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions/${quizId}/start`,
-    {}
+    `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quizId}/start`,
+    {},
   );
 }
 
 function sendChatMessage(quizId: string, message: string, authorName: string) {
   return post(
-    `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions/${quizId}/chat`,
+    `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quizId}/chat`,
     {
       message,
       author: {
         name: authorName,
       },
-    }
+    },
   );
 }
 
@@ -86,12 +86,12 @@ export default function Lobby({ quiz, user }: Props) {
   const { host, quizDetails, map, chat, answerTimeLimit } = quiz;
 
   const participants = (quiz.participants || []).filter(
-    ({ uid }) => uid !== host.uid
+    ({ uid }) => uid !== host.uid,
   );
 
   const isHost = user && host && user.uid === host.uid;
   const hostIsParticipating = (quiz.participants || []).some(
-    ({ uid }) => uid === host.uid
+    ({ uid }) => uid === host.uid,
   );
 
   const isYou = (id: string) => user && user.uid === id;

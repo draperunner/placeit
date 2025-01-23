@@ -1,4 +1,4 @@
-import * as functions from "firebase-functions";
+import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 
 import { QuizSession, QuizState } from "./interfaces";
@@ -32,22 +32,22 @@ async function checkIfAllAnswersGiven(quizState: QuizState, id: string) {
 
   if (!currentQuestion) {
     throw new Error(
-      "Current question is undefined, although quiz has started."
+      "Current question is undefined, although quiz has started.",
     );
   }
 
   const { givenAnswers } = quizState;
 
   const givenAnswersForThisQuestion = givenAnswers.filter(
-    ({ questionId }) => questionId === currentQuestion.id
+    ({ questionId }) => questionId === currentQuestion.id,
   );
 
   const participantsThatHaveAnswered = givenAnswersForThisQuestion.map(
-    ({ participantId }) => participantId
+    ({ participantId }) => participantId,
   );
 
   const haveAllParticipantsAnswered = quizSession.participants.every(
-    (participant) => participantsThatHaveAnswered.includes(participant.uid)
+    (participant) => participantsThatHaveAnswered.includes(participant.uid),
   );
 
   if (!haveAllParticipantsAnswered) {
@@ -83,12 +83,11 @@ async function checkIfAllAnswersGiven(quizState: QuizState, id: string) {
     });
 }
 
-export const onStateChange = functions
-  .region("europe-west1")
-  .firestore.document("quiz-states/{id}")
-  .onUpdate(async (change, context) => {
-    const newValue = change.after.data() as QuizState;
-    const previousValue = change.before.data() as QuizState;
+export const onStateChange2ndGen = onDocumentUpdated(
+  "quiz-states/{id}",
+  async ({ data, params }) => {
+    const newValue = data?.after.data() as QuizState;
+    const previousValue = data?.before.data() as QuizState;
 
     if (!newValue || !previousValue) {
       console.log("Either newValue or previousValue is undefined");
@@ -100,5 +99,6 @@ export const onStateChange = functions
       return;
     }
 
-    checkIfAllAnswersGiven(newValue, context.params.id);
-  });
+    checkIfAllAnswersGiven(newValue, params.id);
+  },
+);

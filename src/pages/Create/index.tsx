@@ -56,15 +56,15 @@ export default function Create() {
 
   const [name, setName] = useState<string>(draftQuiz.name || "");
   const [description, setDescription] = useState<string>(
-    draftQuiz.description || ""
+    draftQuiz.description || "",
   );
   const [language, setLanguage] = useState<string>("en");
   const [questions, setQuestions] = useState<Question[]>(
-    draftQuiz.questions || []
+    draftQuiz.questions || [],
   );
 
   const [isPrivate, setIsPrivate] = useState<boolean>(
-    draftQuiz.isPrivate || false
+    draftQuiz.isPrivate || false,
   );
   const [currentQuestion, setCurrentQuestion] = useState<
     IncompleteQuestion | Question
@@ -90,7 +90,7 @@ export default function Create() {
     setSubmitting(true);
     if (!isValid()) {
       return alert(
-        "You need to fill out name, description and add at least one question!"
+        "You need to fill out name, description and add at least one question!",
       );
     }
     const currentUser = firebase.auth().currentUser;
@@ -101,7 +101,7 @@ export default function Create() {
 
     currentUser.getIdToken().then((token: string) => {
       return fetch(
-        `https://europe-west1-mapquiz-app.cloudfunctions.net/quizzes`,
+        `https://europe-west1-mapquiz-app.cloudfunctions.net/quizzes2ndGen`,
         {
           method: "POST",
           headers: {
@@ -115,7 +115,7 @@ export default function Create() {
             language,
             isPrivate,
           }),
-        }
+        },
       )
         .then(() => {
           localStorage.removeItem("quiz-draft");
@@ -141,7 +141,7 @@ export default function Create() {
 
   const removeQuestion = (index: number) => {
     setQuestions((prevQuestions) =>
-      prevQuestions.filter((_, i) => i !== index)
+      prevQuestions.filter((_, i) => i !== index),
     );
   };
 

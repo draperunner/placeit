@@ -33,7 +33,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   const [allowMapMove, setAllowMapMove] = useState<boolean>(false);
 
   const [bounds, setBounds] = useState<Leaflet.LatLngBounds | undefined>(
-    undefined
+    undefined,
   );
 
   const map = useRef(null);
@@ -55,7 +55,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
 
     const resultsToShow = quiz.results
       .filter(({ participantId }) =>
-        shownAnswers.some((a) => a.participantId === participantId)
+        shownAnswers.some((a) => a.participantId === participantId),
       )
       .sort((a, b) => a.distance - b.distance);
 
@@ -74,10 +74,10 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
             const accumulated = formatDistance(distance);
 
             const givenAnswer = givenAnswers.find(
-              (givenAns) => givenAns.participantId === participantId
+              (givenAns) => givenAns.participantId === participantId,
             );
             const thisQuestionDistance = formatDistance(
-              givenAnswer?.distance || 0
+              givenAnswer?.distance || 0,
             );
 
             return (
@@ -109,7 +109,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       if (allShown) {
         clearInterval(interval);
         const winnersAnswer = givenAnswers.find(
-          ({ participantId }) => participantId === winner.participantId
+          ({ participantId }) => participantId === winner.participantId,
         )?.answer;
 
         if (!winnersAnswer) return null;
@@ -122,7 +122,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
           {
             lat: correctAnswer.latitude,
             lng: correctAnswer.longitude,
-          }
+          },
         );
         setBounds(bounds);
         return;
@@ -139,7 +139,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
         {
           lat: correctAnswer.latitude,
           lng: correctAnswer.longitude,
-        }
+        },
       );
       setShowAnswers((prevShownAnswers) => [...prevShownAnswers, givenAnswer]);
       setBounds(bounds);
@@ -156,7 +156,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   useEffect(() => {
     const timeout = setTimeout(
       () => setAllowMapMove(true),
-      (givenAnswers.length + 1) * REVEAL_INTERVAL
+      (givenAnswers.length + 1) * REVEAL_INTERVAL,
     );
     return () => clearTimeout(timeout);
   }, [givenAnswers.length]);

@@ -79,17 +79,17 @@ async function createQuizSession(
   quizId: string,
   map: Map,
   hostParticipates: boolean,
-  answerTimeLimit: number
+  answerTimeLimit: number,
 ) {
   const { session } = await post(
-    "https://europe-west1-mapquiz-app.cloudfunctions.net/sessions",
+    "https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen",
     {
       hostName,
       quizId,
       map,
       hostParticipates,
       answerTimeLimit,
-    }
+    },
   );
 
   return session.id;
@@ -98,7 +98,7 @@ async function createQuizSession(
 const db = firebase.firestore();
 
 function docsToData<T>(
-  docs: firebase.firestore.QuerySnapshot<firebase.firestore.DocumentData>
+  docs: firebase.firestore.QuerySnapshot<firebase.firestore.DocumentData>,
 ): T[] {
   let dataArray: T[] = [];
 
@@ -159,13 +159,13 @@ export default function Host() {
         quiz,
         map,
         hostParticipates,
-        answerTimeLimit
+        answerTimeLimit,
       ).then((id) => {
         history.push(`/q/${id}`);
         setLoading(false);
       });
     },
-    [answerTimeLimit, history, hostParticipates, map, name, quiz]
+    [answerTimeLimit, history, hostParticipates, map, name, quiz],
   );
 
   return (
