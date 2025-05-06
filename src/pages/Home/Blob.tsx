@@ -1,4 +1,3 @@
-import React from "react";
 import * as blobs2 from "blobs/v2";
 
 interface Props extends blobs2.BlobOptions {

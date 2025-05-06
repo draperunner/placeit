@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import firebase from "firebase/app";
 
 import Button from "../../components/Button";
@@ -21,7 +21,7 @@ async function sendVerificationEmail(user: firebase.User | null) {
 }
 
 export default function Login() {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -47,7 +47,7 @@ export default function Login() {
       return;
     }
 
-    history.push("/profile");
+    navigate("/profile");
   };
 
   const upgradeUser = (event: React.FormEvent<HTMLFormElement>) => {

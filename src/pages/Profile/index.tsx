@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import firebase from "firebase/app";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import Button from "../../components/Button";
 import TextField from "../../components/TextField";
@@ -12,7 +12,7 @@ import "./styles.css";
 
 export default function Profile() {
   const user = useUser();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const previousUser = usePrevious(user);
 
@@ -20,7 +20,7 @@ export default function Profile() {
   const [name, setName] = useState<string>(user?.displayName || "");
 
   const login = () => {
-    return history.push("/login");
+    return navigate("/login");
   };
 
   const logout = () => {

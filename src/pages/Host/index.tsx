@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import firebase from "firebase/app";
 import "firebase/firestore";
@@ -81,7 +81,7 @@ async function createQuizSession(
   hostParticipates: boolean,
   answerTimeLimit: number,
 ) {
-  const { session } = await post(
+  const { session } = await post<{ session: { id: string } }>(
     "https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen",
     {
       hostName,
@@ -113,7 +113,7 @@ function docsToData<T>(
 
 export default function Host() {
   const user = useUser();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [name, setName] = useState<string>(user?.displayName || "");
   const [publicQuizzes, setPublicQuizzes] = useState<Quiz[] | undefined>();
   const [personalQuizzes, setPersonalQuizzes] = useState<Quiz[] | undefined>();
@@ -161,7 +161,7 @@ export default function Host() {
         hostParticipates,
         answerTimeLimit,
       ).then((id) => {
-        history.push(`/q/${id}`);
+        navigate(`/q/${id}`);
         setLoading(false);
       });
     },

@@ -2,26 +2,12 @@
   "name": "placeit",
   "version": "0.1.0",
   "license": "MIT",
-  "dependencies": {
-    "blobs": "^2.2.0",
-    "firebase": "^8.2.9",
-    "leaflet": "^1.7.1",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0",
-    "react-leaflet": "^2.8.0",
-    "react-router-dom": "^5.2.0",
-    "react-scripts": "5.0.1"
-  },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
+    "start": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint src/**/*.{ts,tsx} ",
     "deploy": "npm run build && firebase deploy",
     "format": "prettier . --write"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
   },
   "browserslist": {
     "production": [
@@ -35,17 +21,30 @@
       "last 1 safari version"
     ]
   },
+  "dependencies": {
+    "blobs": "^2.2.0",
+    "firebase": "^8.10.1",
+    "leaflet": "^1.9.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-leaflet": "^5.0.0",
+    "react-router-dom": "^7.5.3"
+  },
   "devDependencies": {
-    "@testing-library/jest-dom": "^5.11.9",
-    "@testing-library/react": "^13.3.0",
-    "@testing-library/user-event": "^14.2.0",
-    "@types/jest": "^27.5.1",
-    "@types/node": "^17.0.38",
-    "@types/react": "^18.0.10",
-    "@types/react-dom": "^18.0.5",
-    "@types/react-leaflet": "^2.5.2",
-    "@types/react-router-dom": "^5.1.7",
-    "prettier": "^3.4.2",
-    "typescript": "^4.7.2"
+    "@types/jest": "^27.5.2",
+    "@types/node": "^22.15.14",
+    "@types/react": "^18.3.21",
+    "@types/react-dom": "^18.3.7",
+    "@types/react-leaflet": "^2.8.3",
+    "@types/react-router-dom": "^5.3.3",
+    "@vitejs/plugin-react-swc": "^3.9.0",
+    "eslint": "^9.26.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.32.0",
+    "vite": "^6.3.5"
   }
 }

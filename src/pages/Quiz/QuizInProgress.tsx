@@ -1,7 +1,13 @@
-import React, { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Leaflet from "leaflet";
 import firebase from "firebase/app";
-import { Map, TileLayer, Marker, Polygon, Tooltip } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polygon,
+  Tooltip,
+} from "react-leaflet";
 import "firebase/firestore";
 
 import Button from "../../components/Button";
@@ -48,6 +54,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
 
   const onMapClick = useCallback(
     (event: any) => {
+      console.log("onMapClick", event);
       if (answerSubmitted) return;
       const { latlng } = event;
 
@@ -276,11 +283,10 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
 
   return (
     <div className="App">
-      <Map
+      <MapContainer
         center={position}
         zoom={zoom}
         style={{ height: "100vh" }}
-        onClick={onMapClick}
         zoomControl={false}
       >
         <TileLayer
@@ -290,6 +296,9 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
           }
           url={quiz.map?.url || "https://{s}.tile.osm.org/{z}/{x}/{y}.png"}
           noWrap
+          eventHandlers={{
+            click: onMapClick,
+          }}
         />
         {answerMarker && !correctAnswer ? (
           <Marker
@@ -349,7 +358,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
               </>
             ))
           : null}
-      </Map>
+      </MapContainer>
       {renderQuestion()}
     </div>
   );

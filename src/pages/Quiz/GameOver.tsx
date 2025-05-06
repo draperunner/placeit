@@ -1,7 +1,13 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import firebase from "firebase/app";
 import Leaflet from "leaflet";
-import { Map, TileLayer, Marker, Polygon, Tooltip } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polygon,
+  Tooltip,
+} from "react-leaflet";
 
 import { usePrevious } from "../../utils";
 import { QuizSession, GivenAnswer } from "../../interfaces";
@@ -25,7 +31,7 @@ const DEFAULT_POSITION: [number, number] = [0, 0];
 const DEFAULT_ZOOM = 2;
 const REVEAL_INTERVAL = 5 * 1000;
 
-export default function QuizSessionInProgress({ quiz, user }: Props) {
+export default function QuizSessionInProgress({ quiz }: Props) {
   const [position, setPosition] = useState<[number, number]>(DEFAULT_POSITION);
   const [zoom, setZoom] = useState<number>(DEFAULT_ZOOM);
   const { correctAnswer, givenAnswers = [] } = quiz.currentQuestion || {};
@@ -171,12 +177,12 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
 
   return (
     <div className="App">
-      <Map
+      <MapContainer
         center={position}
         zoom={zoom}
         style={{ height: "100vh" }}
         zoomControl={false}
-        useFlyTo
+        // useFlyTo
         bounds={bounds}
         boundsOptions={{
           animate: true,
@@ -242,7 +248,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
               </>
             ))
           : null}
-      </Map>
+      </MapContainer>
       {renderResults()}
     </div>
   );

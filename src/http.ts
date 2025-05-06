@@ -1,10 +1,10 @@
 import firebase from "firebase/app";
 
-export async function post(url: string, data: any): Promise<any> {
+export async function post<T>(url: string, data: object): Promise<T> {
   const currentUser = firebase.auth().currentUser;
   if (!currentUser) {
     console.log("No current user");
-    return;
+    throw new Error("No current user");
   }
 
   const token = await currentUser.getIdToken();

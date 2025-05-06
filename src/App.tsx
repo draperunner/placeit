@@ -1,5 +1,4 @@
-import React from "react";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import "firebase/app";
 import "firebase/firestore";
@@ -20,36 +19,42 @@ function App() {
   return (
     <UserContext.Provider value={user}>
       <Router>
-        <div>
-          <Switch>
-            <Route path="/q/:id">
-              <Quiz />
-            </Route>
-            <Route path="/host">
+        <Routes>
+          <Route path="/q/:id" element={<Quiz />} />
+          <Route
+            path="/host"
+            element={
               <AppWrapper>
                 <Host />
               </AppWrapper>
-            </Route>
-            <Route path="/create">
-              <Create />
-            </Route>
-            <Route path="/login">
+            }
+          />
+          <Route path="/create" element={<Create />} />
+          <Route
+            path="/login"
+            element={
               <AppWrapper>
                 <Login />
               </AppWrapper>
-            </Route>
-            <Route path="/profile">
+            }
+          />
+          <Route
+            path="/profile"
+            element={
               <AppWrapper>
                 <Profile />
               </AppWrapper>
-            </Route>
-            <Route path="/">
+            }
+          />
+          <Route
+            path="/"
+            element={
               <AppWrapper>
                 <Home />
               </AppWrapper>
-            </Route>
-          </Switch>
-        </div>
+            }
+          />
+        </Routes>
       </Router>
     </UserContext.Provider>
   );

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { Map, TileLayer, Marker, Tooltip } from "react-leaflet";
-import { useHistory } from "react-router-dom";
+import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
+import { useNavigate } from "react-router-dom";
 import firebase from "firebase/app";
 import "firebase/firestore";
 
@@ -41,14 +41,14 @@ function newQuestion(): IncompleteQuestion {
 
 export default function Create() {
   const user = useUser();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // if (user && (user.isAnonymous || !user.emailVerified)) {
     if (user && user.isAnonymous) {
-      history.push("/login");
+      navigate("/login");
     }
-  }, [history, user]);
+  }, [user]);
 
   const draft = localStorage.getItem("quiz-draft");
 
@@ -76,6 +76,7 @@ export default function Create() {
   const [submitted, setSubmitted] = useState<boolean>(false);
 
   const onMapClick = useCallback((event: any) => {
+    console.log("onMapClick", event);
     const { latlng } = event;
 
     setAnswerMarker(latlng);
@@ -292,16 +293,18 @@ export default function Create() {
   return (
     <div className="create">
       <Navbar />
-      <Map
+      <MapContainer
         center={[0, 0]}
         zoom={2}
         style={{ height: "100vh" }}
-        onClick={onMapClick}
         zoomControl={false}
       >
         <TileLayer
           attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.osm.org/{z}/{x}/{y}.png"
+          eventHandlers={{
+            click: onMapClick,
+          }}
         />
         {answerMarker ? <Marker position={answerMarker} /> : null}
         {questions.map(({ correctAnswer }, index) => (
@@ -317,7 +320,7 @@ export default function Create() {
             }`}</Tooltip>
           </Marker>
         ))}
-      </Map>
+      </MapContainer>
       {renderLeftMargin()}
       <Modal visible={submitted}>
         <h2>Hooray!</h2>
