@@ -9,23 +9,23 @@
     "logs": "firebase functions:log"
   },
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "main": "lib/index.js",
   "dependencies": {
-    "@turf/rhumb-destination": "^6.3.0",
+    "@turf/rhumb-destination": "^6.5.0",
     "cors": "^2.8.5",
-    "express": "^4.17.1",
-    "firebase-admin": "^13.0.2",
-    "firebase-functions": "^6.2.0",
+    "express": "^4.21.2",
+    "firebase-admin": "^13.5.0",
+    "firebase-functions": "^6.4.0",
     "haversine": "^1.1.1"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.10",
-    "@types/express": "^4.17.11",
-    "@types/haversine": "^1.1.4",
-    "firebase-functions-test": "^0.1.6",
-    "typescript": "^4.7.2"
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.23",
+    "@types/haversine": "^1.1.8",
+    "firebase-functions-test": "^0.1.7",
+    "typescript": "^4.9.5"
   },
   "private": true
 }
