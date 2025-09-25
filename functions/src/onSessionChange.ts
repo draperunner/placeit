@@ -4,6 +4,7 @@ import * as admin from "firebase-admin";
 import { Quiz, QuizSession } from "./interfaces";
 import { ANSWER_TIME_LIMIT } from "./constants";
 import { setGlobalOptions } from "firebase-functions/v2";
+import { FieldValue } from "firebase-admin/firestore";
 
 const db = admin.firestore();
 
@@ -25,8 +26,6 @@ function getDeadline(
 }
 
 async function startSession(newValue: QuizSession, id: string): Promise<void> {
-  const now = admin.firestore.Timestamp.now();
-
   const quizId = newValue.quizDetails.id;
   const quizRef = await db.collection(Collections.QUIZZES).doc(quizId).get();
   const quiz = quizRef.data() as Quiz;
@@ -38,28 +37,28 @@ async function startSession(newValue: QuizSession, id: string): Promise<void> {
 
   const firstQuestion = quiz.questions[0];
 
-  db.collection(Collections.QUIZ_STATES)
-    .doc(id)
-    .set({
-      quiz: quizId,
-      givenAnswers: [],
-      currentCorrectAnswer: {
-        questionId: firstQuestion.id,
-        correctAnswer: firstQuestion.correctAnswer,
-      },
-      results: [],
-    });
+  const batch = db.batch();
 
-  db.collection(Collections.QUIZ_SESSIONS)
-    .doc(id)
-    .update({
-      startedAt: now,
-      currentQuestion: {
-        id: firstQuestion.id,
-        text: firstQuestion.text,
-        deadline: getDeadline(newValue.answerTimeLimit),
-      },
-    });
+  batch.set(db.collection(Collections.QUIZ_STATES).doc(id), {
+    quiz: quizId,
+    givenAnswers: [],
+    currentCorrectAnswer: {
+      questionId: firstQuestion.id,
+      correctAnswer: firstQuestion.correctAnswer,
+    },
+    results: [],
+  });
+
+  batch.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
+    startedAt: FieldValue.serverTimestamp(),
+    currentQuestion: {
+      id: firstQuestion.id,
+      text: firstQuestion.text,
+      deadline: getDeadline(newValue.answerTimeLimit),
+    },
+  });
+
+  await batch.commit();
 }
 
 export const onSessionChange2ndGen = onDocumentUpdated(
