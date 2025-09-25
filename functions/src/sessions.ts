@@ -1,23 +1,22 @@
 import { onRequest } from "firebase-functions/v2/https";
-import * as admin from "firebase-admin";
 import express, { Request, Response, NextFunction } from "express";
 import haversine from "haversine";
 import destination from "@turf/rhumb-destination";
 
-import cors from "./cors";
-import { GivenAnswer, Quiz, QuizSession, QuizState } from "./interfaces";
-import { verifyToken } from "./auth";
-import { ANSWER_TIME_LIMIT, ANSWER_TIME_SLACK } from "./constants";
-import { setGlobalOptions } from "firebase-functions/v2";
+import cors from "./cors.js";
+import { GivenAnswer, Quiz, QuizSession, QuizState } from "./interfaces.js";
+import { verifyToken } from "./auth.js";
+import { ANSWER_TIME_LIMIT, ANSWER_TIME_SLACK } from "./constants.js";
+import {
+  FieldValue,
+  GeoPoint,
+  getFirestore,
+  Timestamp,
+} from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
 
 const app = express();
 app.use(cors);
-
-const db = admin.firestore();
-
-setGlobalOptions({
-  region: "europe-west1",
-});
 
 enum Collections {
   QUIZZES = "quizzes",
@@ -103,6 +102,7 @@ function getMapData(map: string): MapData {
 }
 
 async function getQuizSession(id: string): Promise<QuizSession | null> {
+  const db = getFirestore();
   const doc = await db.collection("quiz-sessions").doc(id).get();
 
   if (!doc.exists) {
@@ -113,6 +113,7 @@ async function getQuizSession(id: string): Promise<QuizSession | null> {
 }
 
 async function getQuizState(id: string): Promise<QuizState | null> {
+  const db = getFirestore();
   const doc = await db.collection("quiz-states").doc(id).get();
 
   if (!doc.exists) {
@@ -123,7 +124,7 @@ async function getQuizState(id: string): Promise<QuizState | null> {
 }
 
 function calculateDistance(
-  correctAnswer: admin.firestore.GeoPoint,
+  correctAnswer: GeoPoint,
   givenAnswer: { latitude: number; longitude: number },
 ): number {
   return haversine(
@@ -136,15 +137,14 @@ function calculateDistance(
   );
 }
 
-function getDeadline(
-  answerTimeLimit = ANSWER_TIME_LIMIT,
-): admin.firestore.Timestamp {
+function getDeadline(answerTimeLimit = ANSWER_TIME_LIMIT): Timestamp {
   const deadline = new Date().getTime() + answerTimeLimit * 1000;
-  return admin.firestore.Timestamp.fromMillis(deadline);
+  return Timestamp.fromMillis(deadline);
 }
 
 app.post("/:id/answer", verifyToken(), async (req, res, next) => {
   try {
+    const db = getFirestore();
     const now = new Date();
     const id = req.params.id;
 
@@ -218,13 +218,13 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
       participantId: currentUserUid,
       answer: req.body,
       distance,
-      timestamp: admin.firestore.Timestamp.fromDate(now),
+      timestamp: Timestamp.fromDate(now),
     };
 
     db.collection(Collections.QUIZ_STATES)
       .doc(id)
       .update({
-        givenAnswers: admin.firestore.FieldValue.arrayUnion(givenAnswer),
+        givenAnswers: FieldValue.arrayUnion(givenAnswer),
       });
 
     res.json({});
@@ -257,6 +257,7 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
       throw new Error("Only the host can go to next question");
     }
 
+    const db = getFirestore();
     const quizRef = await db
       .collection(Collections.QUIZZES)
       .doc(quizSession.quizDetails.id)
@@ -329,7 +330,7 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
         );
 
         editedGivenAnswers.push({
-          answer: new admin.firestore.GeoPoint(latitude, longitude),
+          answer: new GeoPoint(latitude, longitude),
           distance,
           participantId: uid,
           questionId: currentQuestion.id,
@@ -401,6 +402,7 @@ app.post("/", verifyToken(), async (req, res, next) => {
     // @ts-ignore
     const uid = req.user.uid;
 
+    const db = getFirestore();
     const quizRef = await db.collection(Collections.QUIZZES).doc(quizId).get();
 
     if (!quizRef || !quizRef.exists) {
@@ -413,7 +415,7 @@ app.post("/", verifyToken(), async (req, res, next) => {
       throw new Error("Could not find quiz with this ID.");
     }
 
-    const quizAuthor = await admin.auth().getUser(quiz.author.uid);
+    const quizAuthor = await getAuth().getUser(quiz.author.uid);
 
     const quizDetails = {
       id: quizId,
@@ -466,11 +468,12 @@ app.post("/:id/join", verifyToken(), async (req, res, next) => {
     const { uid } = req.user;
     const { name } = req.body;
 
+    const db = getFirestore();
     await db
       .collection("quiz-sessions")
       .doc(id)
       .update({
-        participants: admin.firestore.FieldValue.arrayUnion({
+        participants: FieldValue.arrayUnion({
           uid,
           name,
         }),
@@ -484,7 +487,7 @@ app.post("/:id/join", verifyToken(), async (req, res, next) => {
 app.post("/:id/start", verifyToken(), async (req, res, next) => {
   try {
     const { id } = req.params;
-
+    const db = getFirestore();
     await db.collection("quiz-sessions").doc(id).update({
       state: "in-progress",
     });
@@ -530,17 +533,17 @@ app.post("/:id/chat", verifyToken(), async (req, res, next) => {
     const { id } = req.params;
     const { author, message } = req.body;
 
-    await db
+    await getFirestore()
       .collection("quiz-sessions")
       .doc(id)
       .update({
-        "chat.messages": admin.firestore.FieldValue.arrayUnion({
+        "chat.messages": FieldValue.arrayUnion({
           author: {
             uid,
             name: author?.name || "Unknown",
           },
           message: getMessage(message, author.name),
-          timestamp: admin.firestore.Timestamp.now(),
+          timestamp: Timestamp.now(),
         }),
       });
     res.json({});
@@ -557,4 +560,10 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ message: error.message });
 });
 
-export const sessions2ndGen = onRequest({ maxInstances: 1 }, app);
+export const sessions2ndGen = onRequest(
+  {
+    maxInstances: 1,
+    region: "europe-west1",
+  },
+  app,
+);

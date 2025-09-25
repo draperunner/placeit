@@ -1,9 +1,7 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
-import * as admin from "firebase-admin";
 
-import { QuizSession, QuizState } from "./interfaces";
-
-const db = admin.firestore();
+import { QuizSession, QuizState } from "./interfaces.js";
+import { getFirestore } from "firebase-admin/firestore";
 
 enum Collections {
   QUIZZES = "quizzes",
@@ -12,6 +10,7 @@ enum Collections {
 }
 
 async function getQuizSession(id: string): Promise<QuizSession | null> {
+  const db = getFirestore();
   const doc = await db.collection(Collections.QUIZ_SESSIONS).doc(id).get();
 
   if (!doc.exists) {
@@ -22,6 +21,7 @@ async function getQuizSession(id: string): Promise<QuizSession | null> {
 }
 
 async function checkIfAllAnswersGiven(quizState: QuizState, id: string) {
+  const db = getFirestore();
   const quizSession = await getQuizSession(id);
 
   if (!quizSession) {
@@ -84,7 +84,10 @@ async function checkIfAllAnswersGiven(quizState: QuizState, id: string) {
 }
 
 export const onStateChange2ndGen = onDocumentUpdated(
-  "quiz-states/{id}",
+  {
+    document: "quiz-states/{id}",
+    region: "europe-west1",
+  },
   async ({ data, params }) => {
     const newValue = data?.after.data() as QuizState;
     const previousValue = data?.before.data() as QuizState;

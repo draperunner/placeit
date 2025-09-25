@@ -1,4 +1,4 @@
-import * as admin from "firebase-admin";
+import type { GeoPoint, Timestamp } from "firebase-admin/firestore";
 
 export interface Quiz {
   name: string;
@@ -7,7 +7,7 @@ export interface Quiz {
   questions: Array<{
     id: string;
     text: string;
-    correctAnswer: admin.firestore.GeoPoint;
+    correctAnswer: GeoPoint;
   }>;
   author: {
     uid: string;
@@ -29,22 +29,22 @@ export interface QuizSession {
   currentQuestion: null | {
     id: string;
     text: string;
-    correctAnswer?: admin.firestore.GeoPoint;
+    correctAnswer?: GeoPoint;
     givenAnswers?: Array<{
       questionId: string;
       participantId: string;
-      answer: admin.firestore.GeoPoint;
+      answer: GeoPoint;
       distance: number;
     }>;
-    deadline: admin.firestore.Timestamp;
+    deadline: Timestamp;
   };
   results: Array<{
     participantId: string;
     distance: number;
     name: string;
   }>;
-  createdAt: admin.firestore.Timestamp;
-  startedAt: admin.firestore.Timestamp;
+  createdAt: Timestamp;
+  startedAt: Timestamp;
   map: {
     url: string;
     attribution: string;
@@ -62,7 +62,7 @@ export interface QuizSession {
         name: string;
       };
       message: string;
-      timestamp: admin.firestore.Timestamp;
+      timestamp: Timestamp;
     }>;
   };
 }
@@ -70,7 +70,7 @@ export interface QuizSession {
 export interface GivenAnswer {
   questionId: string;
   participantId: string;
-  answer: admin.firestore.GeoPoint;
+  answer: GeoPoint;
   distance: number;
 }
 
@@ -78,7 +78,7 @@ export interface QuizState {
   quiz: string;
   currentCorrectAnswer: {
     questionId: string;
-    correctAnswer: admin.firestore.GeoPoint;
+    correctAnswer: GeoPoint;
   };
   givenAnswers: GivenAnswer[];
 }

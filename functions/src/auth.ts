@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 
-import * as admin from "firebase-admin";
+import { getAuth } from "firebase-admin/auth";
 
 interface VerifyOptions {
   forbidAnonymous?: boolean;
@@ -9,10 +9,11 @@ interface VerifyOptions {
 export function verifyToken(options?: VerifyOptions) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const auth = getAuth();
       const token = (req.get("Authorization") || "").replace("Bearer ", "");
-      const decodedToken = await admin.auth().verifyIdToken(token);
+      const decodedToken = await auth.verifyIdToken(token);
 
-      const userRecord = await admin.auth().getUser(decodedToken.uid);
+      const userRecord = await auth.getUser(decodedToken.uid);
 
       if (options?.forbidAnonymous && !userRecord.email) {
         return res.status(401).json({ message: "Unauthorized" });

@@ -1,5 +1,6 @@
 {
   "name": "functions",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "serve": "npm run build && firebase emulators:start --only functions",
@@ -13,7 +14,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "@turf/rhumb-destination": "^6.5.0",
+    "@turf/rhumb-destination": "^7.2.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "firebase-admin": "^13.5.0",

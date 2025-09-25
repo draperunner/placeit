@@ -1,8 +1,8 @@
-import * as admin from "firebase-admin";
+import { initializeApp } from "firebase-admin/app";
 
-admin.initializeApp();
+initializeApp();
 
-export { sessions2ndGen } from "./sessions";
-export { quizzes2ndGen } from "./quizzes";
-export { onSessionChange2ndGen } from "./onSessionChange";
-export { onStateChange2ndGen } from "./onStateChange";
+export { sessions2ndGen } from "./sessions.js";
+export { quizzes2ndGen } from "./quizzes.js";
+export { onSessionChange2ndGen } from "./onSessionChange.js";
+export { onStateChange2ndGen } from "./onStateChange.js";

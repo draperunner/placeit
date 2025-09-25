@@ -1,16 +1,8 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
-import * as admin from "firebase-admin";
 
-import { Quiz, QuizSession } from "./interfaces";
-import { ANSWER_TIME_LIMIT } from "./constants";
-import { setGlobalOptions } from "firebase-functions/v2";
-import { FieldValue } from "firebase-admin/firestore";
-
-const db = admin.firestore();
-
-setGlobalOptions({
-  region: "europe-west1",
-});
+import { Quiz, QuizSession } from "./interfaces.js";
+import { ANSWER_TIME_LIMIT } from "./constants.js";
+import { FieldValue, getFirestore, Timestamp } from "firebase-admin/firestore";
 
 enum Collections {
   QUIZZES = "quizzes",
@@ -18,14 +10,13 @@ enum Collections {
   QUIZ_STATES = "quiz-states",
 }
 
-function getDeadline(
-  answerTimeLimit = ANSWER_TIME_LIMIT,
-): admin.firestore.Timestamp {
+function getDeadline(answerTimeLimit = ANSWER_TIME_LIMIT): Timestamp {
   const deadline = new Date().getTime() + answerTimeLimit * 1000;
-  return admin.firestore.Timestamp.fromMillis(deadline);
+  return Timestamp.fromMillis(deadline);
 }
 
 async function startSession(newValue: QuizSession, id: string): Promise<void> {
+  const db = getFirestore();
   const quizId = newValue.quizDetails.id;
   const quizRef = await db.collection(Collections.QUIZZES).doc(quizId).get();
   const quiz = quizRef.data() as Quiz;
@@ -62,7 +53,10 @@ async function startSession(newValue: QuizSession, id: string): Promise<void> {
 }
 
 export const onSessionChange2ndGen = onDocumentUpdated(
-  "quiz-sessions/{id}",
+  {
+    document: "quiz-sessions/{id}",
+    region: "europe-west1",
+  },
   async ({ data, params }) => {
     const newValue = data?.after.data() as QuizSession;
     const previousValue = data?.before.data() as QuizSession;

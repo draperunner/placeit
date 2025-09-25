@@ -1,19 +1,12 @@
 import { onRequest } from "firebase-functions/v2/https";
-import * as admin from "firebase-admin";
 import express, { Request, Response, NextFunction } from "express";
 
-import cors from "./cors";
-import { verifyToken } from "./auth";
-import { setGlobalOptions } from "firebase-functions/v2";
+import cors from "./cors.js";
+import { verifyToken } from "./auth.js";
+import { getFirestore } from "firebase-admin/firestore";
 
 const app = express();
 app.use(cors);
-
-const db = admin.firestore();
-
-setGlobalOptions({
-  region: "europe-west1",
-});
 
 enum Collections {
   QUIZZES = "quizzes",
@@ -26,6 +19,8 @@ app.post(
   verifyToken({ forbidAnonymous: true }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const db = getFirestore();
+
       if (!req.body) {
         throw new Error("Invalid body");
       }
@@ -80,4 +75,10 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ message: error.message });
 });
 
-export const quizzes2ndGen = onRequest({ maxInstances: 1 }, app);
+export const quizzes2ndGen = onRequest(
+  {
+    maxInstances: 1,
+    region: "europe-west1",
+  },
+  app,
+);
