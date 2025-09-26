@@ -5,7 +5,7 @@ import destination from "@turf/rhumb-destination";
 
 import cors from "./cors.js";
 import { GivenAnswer, Quiz, QuizSession, QuizState } from "./interfaces.js";
-import { verifyToken } from "./auth.js";
+import { getUserContext, verifyToken } from "./auth.js";
 import { ANSWER_TIME_LIMIT, ANSWER_TIME_SLACK } from "./constants.js";
 import {
   FieldValue,
@@ -148,8 +148,7 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
     const now = new Date();
     const id = req.params.id;
 
-    // @ts-ignore
-    const currentUserUid = req.user.uid;
+    const currentUserUid = getUserContext().uid;
 
     if (!req.body || !req.body.latitude || !req.body.longitude) {
       throw new Error("There are no coordinates in body");
@@ -236,9 +235,7 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
 app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
   try {
     const id = req.params.id;
-
-    // @ts-ignore
-    const currentUserUid = req.user.uid;
+    const currentUserUid = getUserContext().uid;
 
     const [quizSession, quizState] = await Promise.all([
       getQuizSession(id),
@@ -399,8 +396,7 @@ app.post("/", verifyToken(), async (req, res, next) => {
       throw new Error("`map` is invalid.");
     }
 
-    // @ts-ignore
-    const uid = req.user.uid;
+    const uid = getUserContext().uid;
 
     const db = getFirestore();
     const quizRef = await db.collection(Collections.QUIZZES).doc(quizId).get();
@@ -464,8 +460,7 @@ app.post("/", verifyToken(), async (req, res, next) => {
 app.post("/:id/join", verifyToken(), async (req, res, next) => {
   try {
     const { id } = req.params;
-    // @ts-ignore
-    const { uid } = req.user;
+    const { uid } = getUserContext();
     const { name } = req.body;
 
     const db = getFirestore();
@@ -528,8 +523,7 @@ function getMessage(message: string, authorName: string): string {
 
 app.post("/:id/chat", verifyToken(), async (req, res, next) => {
   try {
-    // @ts-ignore
-    const { uid } = req.user;
+    const { uid } = getUserContext();
     const { id } = req.params;
     const { author, message } = req.body;
 

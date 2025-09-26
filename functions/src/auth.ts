@@ -1,10 +1,21 @@
 import { Request, Response, NextFunction } from "express";
 
-import { getAuth } from "firebase-admin/auth";
+import { getAuth, UserRecord } from "firebase-admin/auth";
+import { AsyncLocalStorage } from "node:async_hooks";
 
 interface VerifyOptions {
   forbidAnonymous?: boolean;
 }
+
+const userContext = new AsyncLocalStorage<UserRecord>();
+
+export const getUserContext = (): UserRecord => {
+  const context = userContext.getStore();
+  if (!context) {
+    throw new Error("Auth context not found");
+  }
+  return context;
+};
 
 export function verifyToken(options?: VerifyOptions) {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -19,11 +30,12 @@ export function verifyToken(options?: VerifyOptions) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      // @ts-ignore
-      req.user = userRecord.toJSON();
+      userContext.run(userRecord, () => {
+        next();
+      });
 
-      return next();
-    } catch (error) {
+      return;
+    } catch {
       return res.status(401).json({ message: "Unauthorized" });
     }
   };

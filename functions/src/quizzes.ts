@@ -2,7 +2,7 @@ import { onRequest } from "firebase-functions/v2/https";
 import express, { Request, Response, NextFunction } from "express";
 
 import cors from "./cors.js";
-import { verifyToken } from "./auth.js";
+import { getUserContext, verifyToken } from "./auth.js";
 import { getFirestore } from "firebase-admin/firestore";
 
 const app = express();
@@ -27,8 +27,7 @@ app.post(
 
       const { name, description, questions, language, isPrivate } = req.body;
 
-      // @ts-ignore
-      const { uid, displayName } = req.user;
+      const { uid, displayName } = getUserContext();
 
       if (typeof name !== "string") {
         throw new Error("`name` is not string");
