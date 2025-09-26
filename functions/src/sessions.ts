@@ -12,6 +12,7 @@ import {
   GeoPoint,
   getFirestore,
   Timestamp,
+  Transaction,
 } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 
@@ -101,9 +102,13 @@ function getMapData(map: string): MapData {
   }
 }
 
-async function getQuizSession(id: string): Promise<QuizSession | null> {
+async function getQuizSession(
+  id: string,
+  transaction?: Transaction,
+): Promise<QuizSession | null> {
   const db = getFirestore();
-  const doc = await db.collection("quiz-sessions").doc(id).get();
+  const ref = db.collection("quiz-sessions").doc(id);
+  const doc = transaction ? await transaction.get(ref) : await ref.get();
 
   if (!doc.exists) {
     return null;
@@ -112,9 +117,13 @@ async function getQuizSession(id: string): Promise<QuizSession | null> {
   return doc.data() as QuizSession;
 }
 
-async function getQuizState(id: string): Promise<QuizState | null> {
+async function getQuizState(
+  id: string,
+  transaction?: Transaction,
+): Promise<QuizState | null> {
   const db = getFirestore();
-  const doc = await db.collection("quiz-states").doc(id).get();
+  const ref = db.collection("quiz-states").doc(id);
+  const doc = transaction ? await transaction.get(ref) : await ref.get();
 
   if (!doc.exists) {
     return null;
@@ -145,86 +154,87 @@ function getDeadline(answerTimeLimit = ANSWER_TIME_LIMIT): Timestamp {
 app.post("/:id/answer", verifyToken(), async (req, res, next) => {
   try {
     const db = getFirestore();
-    const now = new Date();
-    const id = req.params.id;
 
-    const currentUserUid = getUserContext().uid;
+    await db.runTransaction(async (transaction) => {
+      const now = new Date();
+      const id = req.params.id;
 
-    if (!req.body || !req.body.latitude || !req.body.longitude) {
-      throw new Error("There are no coordinates in body");
-    }
+      const currentUserUid = getUserContext().uid;
 
-    const quizSession = await getQuizSession(id);
+      if (!req.body || !req.body.latitude || !req.body.longitude) {
+        throw new Error("There are no coordinates in body");
+      }
 
-    if (!quizSession) {
-      throw new Error("Quiz session does not exist");
-    }
+      const quizSession = await getQuizSession(id, transaction);
 
-    if (quizSession.state !== "in-progress") {
-      throw new Error("Cannot answer in a quiz that has not started.");
-    }
+      if (!quizSession) {
+        throw new Error("Quiz session does not exist");
+      }
 
-    if (!quizSession.participants.some(({ uid }) => uid === currentUserUid)) {
-      throw new Error("User is not participating in this quiz session.");
-    }
+      if (quizSession.state !== "in-progress") {
+        throw new Error("Cannot answer in a quiz that has not started.");
+      }
 
-    const { currentQuestion } = quizSession;
+      if (!quizSession.participants.some(({ uid }) => uid === currentUserUid)) {
+        throw new Error("User is not participating in this quiz session.");
+      }
 
-    if (!currentQuestion) {
-      throw new Error(
-        "Current question is undefined, although quiz has started.",
+      const { currentQuestion } = quizSession;
+
+      if (!currentQuestion) {
+        throw new Error(
+          "Current question is undefined, although quiz has started.",
+        );
+      }
+
+      const diff = currentQuestion.deadline.toMillis() - now.getTime();
+      if (diff < ANSWER_TIME_SLACK * -1000) {
+        throw new Error(`Answered too late: ${diff} ms`);
+      }
+
+      const quizState = await getQuizState(id, transaction);
+
+      if (!quizState) {
+        throw new Error("Quiz state does not exist");
+      }
+
+      const { givenAnswers } = quizState;
+
+      const givenAnswersForThisQuestion = givenAnswers.filter(
+        ({ questionId }) => questionId === currentQuestion.id,
       );
-    }
 
-    const diff = currentQuestion.deadline.toMillis() - now.getTime();
-    if (diff < ANSWER_TIME_SLACK * -1000) {
-      throw new Error(`Answered too late: ${diff} ms`);
-    }
-
-    const quizState = await getQuizState(id);
-
-    if (!quizState) {
-      throw new Error("Quiz state does not exist");
-    }
-
-    const { givenAnswers } = quizState;
-
-    const givenAnswersForThisQuestion = givenAnswers.filter(
-      ({ questionId }) => questionId === currentQuestion.id,
-    );
-
-    const participantsThatHaveAnswered = givenAnswersForThisQuestion.map(
-      ({ participantId }) => participantId,
-    );
-
-    if (participantsThatHaveAnswered.includes(currentUserUid)) {
-      throw new Error("User has already answered this question!");
-    }
-
-    if (quizState.currentCorrectAnswer.questionId !== currentQuestion.id) {
-      throw new Error(
-        "The quiz state current answer is not for the current question",
+      const participantsThatHaveAnswered = givenAnswersForThisQuestion.map(
+        ({ participantId }) => participantId,
       );
-    }
 
-    const distance = calculateDistance(
-      quizState.currentCorrectAnswer.correctAnswer,
-      req.body,
-    );
+      if (participantsThatHaveAnswered.includes(currentUserUid)) {
+        throw new Error("User has already answered this question!");
+      }
 
-    const givenAnswer = {
-      questionId: currentQuestion.id,
-      participantId: currentUserUid,
-      answer: req.body,
-      distance,
-      timestamp: Timestamp.fromDate(now),
-    };
+      if (quizState.currentCorrectAnswer.questionId !== currentQuestion.id) {
+        throw new Error(
+          "The quiz state current answer is not for the current question",
+        );
+      }
 
-    db.collection(Collections.QUIZ_STATES)
-      .doc(id)
-      .update({
+      const distance = calculateDistance(
+        quizState.currentCorrectAnswer.correctAnswer,
+        req.body,
+      );
+
+      const givenAnswer = {
+        questionId: currentQuestion.id,
+        participantId: currentUserUid,
+        answer: req.body,
+        distance,
+        timestamp: Timestamp.fromDate(now),
+      };
+
+      transaction.update(db.collection(Collections.QUIZ_STATES).doc(id), {
         givenAnswers: FieldValue.arrayUnion(givenAnswer),
       });
+    });
 
     res.json({});
   } catch (error) {
@@ -237,140 +247,136 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
     const id = req.params.id;
     const currentUserUid = getUserContext().uid;
 
-    const [quizSession, quizState] = await Promise.all([
-      getQuizSession(id),
-      getQuizState(id),
-    ]);
-
-    if (!quizSession) {
-      throw new Error("Quiz session does not exist");
-    }
-
-    if (!quizState) {
-      throw new Error("Quiz state does not exist");
-    }
-
-    if (quizSession.host.uid !== currentUserUid) {
-      throw new Error("Only the host can go to next question");
-    }
-
     const db = getFirestore();
-    const quizRef = await db
-      .collection(Collections.QUIZZES)
-      .doc(quizSession.quizDetails.id)
-      .get();
 
-    const quiz = quizRef.data() as Quiz;
+    await db.runTransaction(async (transaction) => {
+      const [quizSession, quizState] = await Promise.all([
+        getQuizSession(id, transaction),
+        getQuizState(id, transaction),
+      ]);
 
-    if (!quiz) {
-      throw new Error("This quiz does not exist. A mind-blowing error indeed!");
-    }
+      if (!quizSession) {
+        throw new Error("Quiz session does not exist");
+      }
 
-    const { currentCorrectAnswer } = quizState;
-    const { currentQuestion, participants } = quizSession;
+      if (!quizState) {
+        throw new Error("Quiz state does not exist");
+      }
 
-    if (!currentQuestion) {
-      throw new Error("Huh. There is no currentQuestion. Strange.");
-    }
+      if (quizSession.host.uid !== currentUserUid) {
+        throw new Error("Only the host can go to next question");
+      }
 
-    const currentQuestionIndex = quiz.questions.findIndex(
-      (question) => question.id === currentQuestion.id,
-    );
-
-    if (currentQuestionIndex < 0) {
-      throw new Error(
-        "The current question is not part of this quiz's questions. What?",
+      const quizRef = await transaction.get(
+        db.collection(Collections.QUIZZES).doc(quizSession.quizDetails.id),
       );
-    }
 
-    const { givenAnswers } = quizState;
+      const quiz = quizRef.data() as Quiz;
 
-    const givenAnswersForThisQuestion = givenAnswers.filter(
-      ({ questionId }) => questionId === currentQuestion.id,
-    );
-
-    const participantsThatHaventAnswered = participants.filter(
-      ({ uid }) =>
-        !givenAnswersForThisQuestion.some(
-          ({ participantId }) => participantId === uid,
-        ),
-    );
-
-    // If not all participants have answered, they either dropped out or timed out somehow.
-    // We need to assign some dummy answer so the quiz can continue.
-    if (participantsThatHaventAnswered.length > 0) {
-      const editedGivenAnswers = [...givenAnswers];
-
-      const worstAnswer = [...givenAnswersForThisQuestion].sort(
-        (a, b) => b.distance - a.distance,
-      )[0] as GivenAnswer | undefined;
-
-      participantsThatHaventAnswered.forEach(({ uid }) => {
-        const distance = (worstAnswer?.distance || 10e6) * 2;
-        const randomAnswerPoint = destination(
-          [
-            currentCorrectAnswer.correctAnswer.longitude,
-            currentCorrectAnswer.correctAnswer.latitude,
-          ],
-          distance / 1000, // kilometers
-          Math.random() * 360 - 180,
+      if (!quiz) {
+        throw new Error(
+          "This quiz does not exist. A mind-blowing error indeed!",
         );
+      }
 
-        const latitude = Math.max(
-          -90,
-          Math.min(90, randomAnswerPoint.geometry.coordinates[1]),
+      const { currentCorrectAnswer } = quizState;
+      const { currentQuestion, participants } = quizSession;
+
+      if (!currentQuestion) {
+        throw new Error("Huh. There is no currentQuestion. Strange.");
+      }
+
+      const currentQuestionIndex = quiz.questions.findIndex(
+        (question) => question.id === currentQuestion.id,
+      );
+
+      if (currentQuestionIndex < 0) {
+        throw new Error(
+          "The current question is not part of this quiz's questions. What?",
         );
+      }
 
-        const longitude = Math.max(
-          -180,
-          Math.min(180, randomAnswerPoint.geometry.coordinates[0]),
-        );
+      const { givenAnswers } = quizState;
 
-        editedGivenAnswers.push({
-          answer: new GeoPoint(latitude, longitude),
-          distance,
-          participantId: uid,
-          questionId: currentQuestion.id,
+      const givenAnswersForThisQuestion = givenAnswers.filter(
+        ({ questionId }) => questionId === currentQuestion.id,
+      );
+
+      const participantsThatHaventAnswered = participants.filter(
+        ({ uid }) =>
+          !givenAnswersForThisQuestion.some(
+            ({ participantId }) => participantId === uid,
+          ),
+      );
+
+      // If not all participants have answered, they either dropped out or timed out somehow.
+      // We need to assign some dummy answer so the quiz can continue.
+      if (participantsThatHaventAnswered.length > 0) {
+        const editedGivenAnswers = [...givenAnswers];
+
+        const worstAnswer = [...givenAnswersForThisQuestion].sort(
+          (a, b) => b.distance - a.distance,
+        )[0] as GivenAnswer | undefined;
+
+        participantsThatHaventAnswered.forEach(({ uid }) => {
+          const distance = (worstAnswer?.distance || 10e6) * 2;
+          const randomAnswerPoint = destination(
+            [
+              currentCorrectAnswer.correctAnswer.longitude,
+              currentCorrectAnswer.correctAnswer.latitude,
+            ],
+            distance / 1000, // kilometers
+            Math.random() * 360 - 180,
+          );
+
+          const latitude = Math.max(
+            -90,
+            Math.min(90, randomAnswerPoint.geometry.coordinates[1]),
+          );
+
+          const longitude = Math.max(
+            -180,
+            Math.min(180, randomAnswerPoint.geometry.coordinates[0]),
+          );
+
+          editedGivenAnswers.push({
+            answer: new GeoPoint(latitude, longitude),
+            distance,
+            participantId: uid,
+            questionId: currentQuestion.id,
+          });
         });
-      });
 
-      await db.collection(Collections.QUIZ_STATES).doc(id).update({
-        givenAnswers: editedGivenAnswers,
-      });
+        transaction.update(db.collection(Collections.QUIZ_STATES).doc(id), {
+          givenAnswers: editedGivenAnswers,
+        });
 
-      // Return OK to client. The onWrite trigger should detect changes and take care of setting the next question.
-      res.json({
-        message: `Had to create fake answers for ${participantsThatHaventAnswered} participants.`,
-      });
-      return;
-    }
+        return;
+      }
 
-    if (currentQuestionIndex === quiz.questions.length - 1) {
-      throw new Error(
-        "There are no more questions. We should be done already.",
-      );
-    }
+      if (currentQuestionIndex === quiz.questions.length - 1) {
+        throw new Error(
+          "There are no more questions. We should be done already.",
+        );
+      }
 
-    const nextQuestion = quiz.questions[currentQuestionIndex + 1];
+      const nextQuestion = quiz.questions[currentQuestionIndex + 1];
 
-    db.collection(Collections.QUIZ_STATES)
-      .doc(id)
-      .update({
+      transaction.update(db.collection(Collections.QUIZ_STATES).doc(id), {
         currentCorrectAnswer: {
           questionId: nextQuestion.id,
           correctAnswer: nextQuestion.correctAnswer,
         },
       });
 
-    db.collection(Collections.QUIZ_SESSIONS)
-      .doc(id)
-      .update({
+      transaction.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
         currentQuestion: {
           id: nextQuestion.id,
           text: nextQuestion.text,
           deadline: getDeadline(quizSession.answerTimeLimit),
         },
       });
+    });
 
     res.json({});
   } catch (error) {
