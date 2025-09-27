@@ -15,6 +15,7 @@ import {
   Transaction,
 } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
+import z from "zod";
 
 const app = express();
 app.use(cors);
@@ -41,7 +42,7 @@ interface MapData {
   attribution: string;
 }
 
-function getMapData(map: string): MapData {
+function getMapData(map: Map): MapData {
   switch (map) {
     case Map.WATERCOLOR: {
       return {
@@ -151,20 +152,22 @@ function getDeadline(answerTimeLimit = ANSWER_TIME_LIMIT): Timestamp {
   return Timestamp.fromMillis(deadline);
 }
 
+const CoordinatesSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});
+
 app.post("/:id/answer", verifyToken(), async (req, res, next) => {
   try {
     const db = getFirestore();
+    const now = new Date();
+    const id = req.params.id;
+
+    const parsedBody = CoordinatesSchema.parse(req.body);
+
+    const currentUserUid = getUserContext().uid;
 
     await db.runTransaction(async (transaction) => {
-      const now = new Date();
-      const id = req.params.id;
-
-      const currentUserUid = getUserContext().uid;
-
-      if (!req.body || !req.body.latitude || !req.body.longitude) {
-        throw new Error("There are no coordinates in body");
-      }
-
       const quizSession = await getQuizSession(id, transaction);
 
       if (!quizSession) {
@@ -220,13 +223,13 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
 
       const distance = calculateDistance(
         quizState.currentCorrectAnswer.correctAnswer,
-        req.body,
+        parsedBody,
       );
 
       const givenAnswer = {
         questionId: currentQuestion.id,
         participantId: currentUserUid,
-        answer: req.body,
+        answer: parsedBody,
         distance,
         timestamp: Timestamp.fromDate(now),
       };
@@ -384,6 +387,14 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
   }
 });
 
+const SessionSchema = z.object({
+  hostName: z.string().min(1),
+  quizId: z.string().min(1),
+  map: z.enum(Map),
+  hostParticipates: z.boolean().optional(),
+  answerTimeLimit: z.number().min(5).max(120).optional(),
+});
+
 app.post("/", verifyToken(), async (req, res, next) => {
   try {
     const {
@@ -392,15 +403,7 @@ app.post("/", verifyToken(), async (req, res, next) => {
       map,
       hostParticipates,
       answerTimeLimit = ANSWER_TIME_LIMIT,
-    } = req.body;
-
-    if (!hostName || typeof hostName !== "string") {
-      throw new Error("`hostName` is invalid.");
-    }
-
-    if (!map || typeof map !== "string") {
-      throw new Error("`map` is invalid.");
-    }
+    } = SessionSchema.parse(req.body);
 
     const uid = getUserContext().uid;
 
@@ -463,11 +466,15 @@ app.post("/", verifyToken(), async (req, res, next) => {
   }
 });
 
+const JoinSchema = z.object({
+  name: z.string().min(1),
+});
+
 app.post("/:id/join", verifyToken(), async (req, res, next) => {
   try {
     const { id } = req.params;
     const { uid } = getUserContext();
-    const { name } = req.body;
+    const { name } = JoinSchema.parse(req.body);
 
     const db = getFirestore();
     await db
@@ -527,11 +534,18 @@ function getMessage(message: string, authorName: string): string {
   return MESSAGES[randomIndex];
 }
 
+const ChatSchema = z.object({
+  author: z.object({
+    name: z.string().min(1),
+  }),
+  message: z.string().min(1),
+});
+
 app.post("/:id/chat", verifyToken(), async (req, res, next) => {
   try {
     const { uid } = getUserContext();
     const { id } = req.params;
-    const { author, message } = req.body;
+    const { author, message } = ChatSchema.parse(req.body);
 
     await getFirestore()
       .collection("quiz-sessions")
@@ -540,7 +554,7 @@ app.post("/:id/chat", verifyToken(), async (req, res, next) => {
         "chat.messages": FieldValue.arrayUnion({
           author: {
             uid,
-            name: author?.name || "Unknown",
+            name: author.name,
           },
           message: getMessage(message, author.name),
           timestamp: Timestamp.now(),

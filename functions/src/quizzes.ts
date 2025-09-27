@@ -4,6 +4,7 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "./cors.js";
 import { getUserContext, verifyToken } from "./auth.js";
 import { getFirestore } from "firebase-admin/firestore";
+import z from "zod";
 
 const app = express();
 app.use(cors);
@@ -13,6 +14,22 @@ enum Collections {
   QUIZ_SESSIONS = "quiz-sessions",
   QUIZ_STATES = "quiz-states",
 }
+
+const QuizSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  questions: z.array(
+    z.object({
+      text: z.string().min(1),
+      correctAnswer: z.object({
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+      }),
+    }),
+  ),
+  language: z.string().min(2).max(2),
+  isPrivate: z.boolean().default(false),
+});
 
 app.post(
   "/",
@@ -25,7 +42,8 @@ app.post(
         throw new Error("Invalid body");
       }
 
-      const { name, description, questions, language, isPrivate } = req.body;
+      const { name, description, questions, language, isPrivate } =
+        QuizSchema.parse(req.body);
 
       const { uid, displayName } = getUserContext();
 
