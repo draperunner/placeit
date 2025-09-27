@@ -19,7 +19,7 @@ async function startSession(newValue: QuizSession, id: string): Promise<void> {
   const db = getFirestore();
   const quizId = newValue.quizDetails.id;
   const quizRef = await db.collection(Collections.QUIZZES).doc(quizId).get();
-  const quiz = quizRef.data() as Quiz;
+  const quiz = quizRef.data() as Quiz | undefined;
 
   if (!quiz) {
     console.log("Quiz does not exist");
@@ -58,8 +58,8 @@ export const onSessionChange2ndGen = onDocumentUpdated(
     region: "europe-west1",
   },
   async ({ data, params }) => {
-    const newValue = data?.after.data() as QuizSession;
-    const previousValue = data?.before.data() as QuizSession;
+    const newValue = data?.after.data() as QuizSession | undefined;
+    const previousValue = data?.before.data() as QuizSession | undefined;
 
     if (!newValue || !previousValue) {
       console.log("Either newValue or previousValue is undefined");

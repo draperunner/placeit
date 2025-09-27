@@ -9,9 +9,10 @@ const WHITELIST = [
 const corsMiddleware = cors({
   origin: (origin, callback) => {
     if (origin && WHITELIST.includes(origin)) {
-      return callback(null, true);
+      callback(null, true);
+    } else {
+      callback(new Error("Origin not allowed by CORS"));
     }
-    return callback(new Error("Origin not allowed by CORS"));
   },
 });
 

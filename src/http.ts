@@ -16,5 +16,5 @@ export async function post<T>(url: string, data: object): Promise<T> {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
-  }).then((res) => res.json());
+  }).then((res) => res.json() as Promise<T>);
 }

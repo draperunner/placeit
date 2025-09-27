@@ -59,7 +59,8 @@ async function checkIfAllAnswersGiven(quizState: QuizState, id: string) {
     quizSession.quizDetails.numberOfQuestions ===
     Number.parseInt(currentQuestion.id) + 1;
 
-  db.collection(Collections.QUIZ_SESSIONS)
+  await db
+    .collection(Collections.QUIZ_SESSIONS)
     .doc(id)
     .update({
       "currentQuestion.correctAnswer":
@@ -89,8 +90,8 @@ export const onStateChange2ndGen = onDocumentUpdated(
     region: "europe-west1",
   },
   async ({ data, params }) => {
-    const newValue = data?.after.data() as QuizState;
-    const previousValue = data?.before.data() as QuizState;
+    const newValue = data?.after.data() as QuizState | undefined;
+    const previousValue = data?.before.data() as QuizState | undefined;
 
     if (!newValue || !previousValue) {
       console.log("Either newValue or previousValue is undefined");
@@ -102,6 +103,6 @@ export const onStateChange2ndGen = onDocumentUpdated(
       return;
     }
 
-    checkIfAllAnswersGiven(newValue, params.id);
+    await checkIfAllAnswersGiven(newValue, params.id);
   },
 );

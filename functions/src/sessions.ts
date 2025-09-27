@@ -1,5 +1,5 @@
 import { onRequest } from "firebase-functions/v2/https";
-import express, { Request, Response, NextFunction } from "express";
+import express, { Request, Response } from "express";
 import haversine from "haversine";
 import destination from "@turf/rhumb-destination";
 
@@ -274,7 +274,7 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
         db.collection(Collections.QUIZZES).doc(quizSession.quizDetails.id),
       );
 
-      const quiz = quizRef.data() as Quiz;
+      const quiz = quizRef.data() as Quiz | undefined;
 
       if (!quiz) {
         throw new Error(
@@ -410,11 +410,11 @@ app.post("/", verifyToken(), async (req, res, next) => {
     const db = getFirestore();
     const quizRef = await db.collection(Collections.QUIZZES).doc(quizId).get();
 
-    if (!quizRef || !quizRef.exists) {
+    if (!quizRef.exists) {
       throw new Error("Could not find quiz with this ID.");
     }
 
-    const quiz = quizRef.data() as Quiz;
+    const quiz = quizRef.data() as Quiz | undefined;
 
     if (!quiz) {
       throw new Error("Could not find quiz with this ID.");
@@ -570,7 +570,7 @@ app.use("*", (req, res) => {
   res.status(404).json({ message: "Not Found" });
 });
 
-app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((error: Error, req: Request, res: Response) => {
   res.status(500).json({ message: error.message });
 });
 

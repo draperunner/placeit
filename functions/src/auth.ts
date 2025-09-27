@@ -18,7 +18,11 @@ export const getUserContext = (): UserRecord => {
 };
 
 export function verifyToken(options?: VerifyOptions) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const auth = getAuth();
       const token = (req.get("Authorization") || "").replace("Bearer ", "");
@@ -27,16 +31,15 @@ export function verifyToken(options?: VerifyOptions) {
       const userRecord = await auth.getUser(decodedToken.uid);
 
       if (options?.forbidAnonymous && !userRecord.email) {
-        return res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Unauthorized" });
+        return;
       }
 
       userContext.run(userRecord, () => {
         next();
       });
-
-      return;
     } catch {
-      return res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: "Unauthorized" });
     }
   };
 }
