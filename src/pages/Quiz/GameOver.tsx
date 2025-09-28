@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import firebase from "firebase/app";
 import Leaflet from "leaflet";
 import {
   MapContainer,
@@ -11,10 +10,11 @@ import {
 
 import { usePrevious } from "../../utils";
 import { QuizSession, GivenAnswer } from "../../interfaces";
+import { User } from "firebase/auth";
 
 interface Props {
   quiz: QuizSession;
-  user: firebase.User | null | undefined;
+  user: User | null | undefined;
 }
 
 function formatDistance(meters: number): string {

@@ -1,7 +1,7 @@
-import firebase from "firebase/app";
+import { getAuth } from "firebase/auth";
 
 export async function post<T>(url: string, data: object): Promise<T> {
-  const currentUser = firebase.auth().currentUser;
+  const currentUser = getAuth().currentUser;
   if (!currentUser) {
     console.log("No current user");
     throw new Error("No current user");

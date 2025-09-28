@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import firebase from "firebase/app";
 
 import AppWrapper from "../../../AppWrapper";
 
@@ -12,8 +11,10 @@ import { getLanguageName } from "../../../utils";
 import { post } from "../../../http";
 
 import "./styles.css";
+import { Timestamp } from "firebase/firestore";
+import { User } from "firebase/auth";
 
-function timestampToTime(timestamp: firebase.firestore.Timestamp): string {
+function timestampToTime(timestamp: Timestamp): string {
   const date = timestamp.toDate();
   const hours = `${date.getHours()}`.padStart(2, "0");
   const min = `${date.getMinutes()}`.padStart(2, "0");
@@ -63,7 +64,7 @@ function sendChatMessage(quizId: string, message: string, authorName: string) {
 
 interface Props {
   quiz: QuizSession;
-  user: firebase.User | null | undefined;
+  user: User | null | undefined;
 }
 
 export default function Lobby({ quiz, user }: Props) {

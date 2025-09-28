@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
 import Leaflet from "leaflet";
-import firebase from "firebase/app";
 import {
   MapContainer,
   TileLayer,
@@ -13,12 +12,13 @@ import "firebase/firestore";
 import Button from "../../components/Button";
 import { QuizSession } from "../../interfaces";
 import { usePrevious } from "../../utils";
+import { getAuth, type User } from "firebase/auth";
 
 type LatLng = { lat: number; lng: number };
 
 interface Props {
   quiz: QuizSession;
-  user: firebase.User | null | undefined;
+  user: User | null | undefined;
 }
 
 function formatDistance(meters: number): string {
@@ -65,7 +65,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
 
   const submitAnswer = useCallback(async () => {
     setAnswerSubmitted(true);
-    const currentUser = firebase.auth().currentUser;
+    const currentUser = getAuth().currentUser;
     if (!currentUser) {
       console.log("No current user");
       return;
@@ -88,7 +88,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   }, [answerMarker, quiz.id]);
 
   const nextQuestion = useCallback(async () => {
-    const currentUser = firebase.auth().currentUser;
+    const currentUser = getAuth().currentUser;
     if (!currentUser) {
       console.log("No current user");
       return;

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import firebase from "firebase/app";
 
 import Button from "../../components/Button";
 import TextField from "../../components/TextField";
@@ -8,11 +7,19 @@ import TextField from "../../components/TextField";
 import { usePrevious } from "../../utils";
 
 import "./styles.css";
+import {
+  EmailAuthProvider,
+  getAuth,
+  linkWithCredential,
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+  User,
+} from "firebase/auth";
 
-async function sendVerificationEmail(user: firebase.User | null) {
+async function sendVerificationEmail(user: User | null) {
   try {
     if (!user) return;
-    await user.sendEmailVerification();
+    await sendEmailVerification(user);
     console.log("sendEmailVerification success");
   } catch (error) {
     console.log("sendEmailVerification error");
@@ -36,7 +43,7 @@ export default function Login() {
   const [error, setError] = useState<string>("");
   const [needsVerification, setNeedsVerification] = useState<boolean>(false);
 
-  const [user, setUser] = useState<firebase.User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const previousUser = usePrevious(user);
 
   useEffect(() => {
@@ -45,7 +52,7 @@ export default function Login() {
     }
   }, [previousUser, user]);
 
-  const onLoginSuccess = async (usr: firebase.User | null) => {
+  const onLoginSuccess = async (usr: User | null) => {
     if (!usr) return;
 
     setUser(usr);
@@ -66,20 +73,16 @@ export default function Login() {
       return;
     }
 
-    const credential = firebase.auth.EmailAuthProvider.credential(
-      email,
-      password,
-    );
-
-    const currentUser = firebase.auth().currentUser;
+    const currentUser = getAuth().currentUser;
 
     if (!currentUser) {
       console.log("No currentUser");
       return;
     }
 
-    currentUser
-      .linkWithCredential(credential)
+    const credential = EmailAuthProvider.credential(email, password);
+
+    linkWithCredential(currentUser, credential)
       .then(({ user }) => onLoginSuccess(user))
       .catch((error: unknown) => {
         if (
@@ -87,9 +90,7 @@ export default function Login() {
           (error.code === "auth/email-already-in-use" ||
             error.code === "auth/provider-already-linked")
         ) {
-          firebase
-            .auth()
-            .signInWithEmailAndPassword(email, password)
+          signInWithEmailAndPassword(getAuth(), email, password)
             .then(({ user }) => onLoginSuccess(user))
             .catch((err: unknown) => {
               if (isAuthError(err)) {

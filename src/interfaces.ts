@@ -1,4 +1,4 @@
-import firebase from "firebase/app";
+import type { GeoPoint, Timestamp } from "firebase/firestore";
 
 export interface Quiz {
   id: string;
@@ -26,9 +26,9 @@ interface MapData {
 export interface GivenAnswer {
   questionId: string;
   participantId: string;
-  answer: firebase.firestore.GeoPoint;
+  answer: GeoPoint;
   distance: number;
-  timestamp: firebase.firestore.Timestamp;
+  timestamp: Timestamp;
 }
 
 export interface QuizSession {
@@ -62,7 +62,7 @@ export interface QuizSession {
       longitude: number;
     };
     givenAnswers?: GivenAnswer[];
-    deadline?: firebase.firestore.Timestamp;
+    deadline?: Timestamp;
   };
   results: Array<{
     participantId: string;
@@ -76,7 +76,7 @@ export interface QuizSession {
         name: string;
       };
       message: string;
-      timestamp: firebase.firestore.Timestamp;
+      timestamp: Timestamp;
     }>;
   };
 }

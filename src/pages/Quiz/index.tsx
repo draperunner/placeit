@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
-
-import firebase from "firebase/app";
-import "firebase/firestore";
-
 import { useParams } from "react-router-dom";
+import { collection, doc, getFirestore, onSnapshot } from "firebase/firestore";
 
 import { useUser } from "../../auth";
 import { QuizSession } from "../../interfaces";
@@ -14,7 +11,7 @@ import GameOver from "./GameOver";
 
 import "./styles.css";
 
-const db = firebase.firestore();
+const db = getFirestore();
 
 export default function Quiz() {
   const { id } = useParams<{ id: string }>();
@@ -24,10 +21,9 @@ export default function Quiz() {
 
   useEffect(() => {
     if (!id || !user) return;
-    const unsubscribe = db
-      .collection("quiz-sessions")
-      .doc(id)
-      .onSnapshot((doc) => {
+    const unsubscribe = onSnapshot(
+      doc(collection(db, "quiz-sessions"), id),
+      (doc) => {
         const quizData = doc.data() as QuizSession | undefined;
 
         if (!quizData) {
@@ -35,7 +31,8 @@ export default function Quiz() {
         }
 
         setQuiz({ ...quizData, id });
-      });
+      },
+    );
     return unsubscribe;
   }, [id, user]);
 

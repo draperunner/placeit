@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import firebase from "firebase/app";
 import { useNavigate } from "react-router-dom";
 
 import Button from "../../components/Button";
@@ -9,6 +8,7 @@ import { useUser } from "../../auth";
 import { usePrevious } from "../../utils";
 
 import "./styles.css";
+import { getAuth, signOut, updateProfile } from "firebase/auth";
 
 export default function Profile() {
   const user = useUser();
@@ -24,7 +24,7 @@ export default function Profile() {
   };
 
   const logout = () => {
-    return firebase.auth().signOut();
+    return signOut(getAuth());
   };
 
   useEffect(() => {
@@ -34,16 +34,15 @@ export default function Profile() {
     }
   }, [previousUser, user]);
 
-  const updateProfile = () => {
+  const updateProfileInfo = () => {
     if (!user) return;
-    user
-      .updateProfile({
-        displayName: name,
-        photoURL: null,
-      })
-      .catch((error: unknown) => {
-        console.error(error);
-      });
+
+    updateProfile(user, {
+      displayName: name,
+      photoURL: null,
+    }).catch((error: unknown) => {
+      console.error(error);
+    });
   };
 
   if (!user || user.isAnonymous) {
@@ -76,7 +75,7 @@ export default function Profile() {
       />
       <Button
         style={{ marginTop: 20, marginRight: 20 }}
-        onClick={updateProfile}
+        onClick={updateProfileInfo}
       >
         Update profile
       </Button>

@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
 import { useNavigate } from "react-router-dom";
-import firebase from "firebase/app";
 import "firebase/firestore";
 
 import { useUser } from "../../auth";
@@ -16,6 +15,7 @@ import Navbar from "../../Navbar";
 import languages from "../../languages";
 
 import "./styles.css";
+import { getAuth } from "firebase/auth";
 
 type LatLng = { lat: number; lng: number };
 
@@ -102,7 +102,7 @@ export default function Create() {
       );
       return;
     }
-    const currentUser = firebase.auth().currentUser;
+    const currentUser = getAuth().currentUser;
     if (!currentUser) {
       console.log("No current user");
       return;

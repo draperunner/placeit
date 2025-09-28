@@ -1,7 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-import firebase from "firebase/app";
 import "firebase/firestore";
 
 import Button from "../../components/Button";
@@ -13,6 +11,14 @@ import { post } from "../../http";
 import { usePrevious, getLanguageName } from "../../utils";
 
 import "./styles.css";
+import {
+  collection,
+  getDocs,
+  getFirestore,
+  query,
+  QuerySnapshot,
+  where,
+} from "firebase/firestore";
 
 enum Map {
   STANDARD = "STANDARD",
@@ -95,9 +101,9 @@ async function createQuizSession(
   return session.id;
 }
 
-const db = firebase.firestore();
+const db = getFirestore();
 
-function docsToData<T>(docs: firebase.firestore.QuerySnapshot): T[] {
+function docsToData<T>(docs: QuerySnapshot): T[] {
   const dataArray: T[] = [];
 
   docs.forEach((doc) => {
@@ -132,14 +138,17 @@ export default function Host() {
   useEffect(() => {
     if (!user) return;
 
-    const collectionRef = db.collection("quizzes");
+    const collectionRef = collection(db, "quizzes");
 
     void Promise.all([
-      collectionRef
-        .where("author.uid", "!=", user.uid)
-        .where("isPrivate", "==", false)
-        .get(),
-      collectionRef.where("author.uid", "==", user.uid).get(),
+      getDocs(
+        query(
+          collectionRef,
+          where("author.uid", "!=", user.uid),
+          where("isPrivate", "==", false),
+        ),
+      ),
+      getDocs(query(collectionRef, where("author.uid", "==", user.uid))),
     ]).then(([publicQuizRefs, personalQuizRefs]) => {
       setPublicQuizzes(docsToData<Quiz>(publicQuizRefs));
       setPersonalQuizzes(docsToData<Quiz>(personalQuizRefs));
