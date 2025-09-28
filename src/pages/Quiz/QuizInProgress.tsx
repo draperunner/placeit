@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, Fragment } from "react";
 import Leaflet from "leaflet";
 import { MapContainer, Marker, Polygon, Tooltip } from "react-leaflet";
 import "firebase/firestore";
@@ -66,15 +66,15 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     const token = await currentUser.getIdToken();
 
     await fetch(`${SESSIONS_URL}/${quiz.id}/answer`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          latitude: answerMarker.lat,
-          longitude: answerMarker.lng,
-        }),
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        latitude: answerMarker.lat,
+        longitude: answerMarker.lng,
+      }),
     });
   }, [answerMarker, quiz.id]);
 
@@ -88,12 +88,12 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     const token = await currentUser.getIdToken();
 
     await fetch(`${SESSIONS_URL}/${quiz.id}/next-question`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({}),
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({}),
     });
     setLoadingNextQuestion(false);
   }, [quiz.id]);
@@ -303,7 +303,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
         ) : null}
         {givenAnswers
           ? givenAnswers.map(({ participantId, answer }) => (
-              <>
+              <Fragment key={participantId}>
                 {correctAnswer ? (
                   <Polygon
                     weight={1}
@@ -334,7 +334,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
                       ?.name || ""}
                   </Tooltip>
                 </Marker>
-              </>
+              </Fragment>
             ))
           : null}
       </MapContainer>
