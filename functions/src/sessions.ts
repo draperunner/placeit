@@ -29,8 +29,6 @@ enum Collections {
 enum Map {
   STANDARD = "STANDARD",
   DARK_MATTER = "DARK_MATTER",
-  WATERCOLOR = "WATERCOLOR",
-  TONER_LITE = "TONER_LITE",
   VOYAGER = "VOYAGER",
   VOYAGER_NO_LABELS = "VOYAGER_NO_LABELS",
 }
@@ -44,15 +42,6 @@ interface MapData {
 
 function getMapData(map: Map): MapData {
   switch (map) {
-    case Map.WATERCOLOR: {
-      return {
-        name: "Watercolor",
-        author: "Stamen",
-        attribution:
-          'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        url: "https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg",
-      };
-    }
     case Map.VOYAGER: {
       return {
         name: "Voyager",
@@ -80,17 +69,6 @@ function getMapData(map: Map): MapData {
         url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
       };
     }
-
-    case Map.TONER_LITE: {
-      return {
-        name: "Toner Lite",
-        author: "Stamen",
-        attribution:
-          'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        url: "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}.png",
-      };
-    }
-
     case Map.STANDARD:
     default:
       return {

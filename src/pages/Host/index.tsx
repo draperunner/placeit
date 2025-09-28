@@ -24,8 +24,6 @@ import { SESSIONS_URL } from "../../constants";
 enum Map {
   STANDARD = "STANDARD",
   DARK_MATTER = "DARK_MATTER",
-  WATERCOLOR = "WATERCOLOR",
-  TONER_LITE = "TONER_LITE",
   VOYAGER = "VOYAGER",
   VOYAGER_NO_LABELS = "VOYAGER_NO_LABELS",
 }
@@ -62,22 +60,6 @@ const MAPS = [
     attribution:
       'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     url: "https://a.basemaps.cartocdn.com/dark_all/5/15/12.png",
-  },
-  {
-    id: Map.WATERCOLOR,
-    name: "Watercolor",
-    author: "Stamen",
-    attribution:
-      'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    url: "https://stamen-tiles-a.a.ssl.fastly.net/watercolor/5/15/12.jpg",
-  },
-  {
-    id: Map.TONER_LITE,
-    name: "Toner Lite",
-    author: "Stamen",
-    attribution:
-      'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    url: "https://stamen-tiles-a.a.ssl.fastly.net/toner-lite/5/15/12.png",
   },
 ];
 
