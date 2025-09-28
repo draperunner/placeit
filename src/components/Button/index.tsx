@@ -4,7 +4,7 @@ import type React from "react";
 // Button specific props (not coming from the underlying element)
 interface ButtonOwnProps {
   loading?: boolean;
-  variant?: "success" | "warning";
+  variant?: "success" | "info" | "warning";
 }
 
 // Generic polymorphic prop helper

@@ -15,10 +15,10 @@ export default function Home() {
       <h1>Place it!</h1>
       <p>Get closest to the right answer – in meters!</p>
       <Button as={Link} to="/host" className="home__button">
-        Host a quiz!
+        Play now!
       </Button>
-      <Button as={Link} to="/create" className="home__button">
-        Create a quiz!
+      <Button as={Link} to="/create" className="home__button" variant="info">
+        Create your own quiz
       </Button>
 
       <div className="home__illustration">
