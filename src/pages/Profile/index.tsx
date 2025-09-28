@@ -39,7 +39,6 @@ export default function Profile() {
 
     updateProfile(user, {
       displayName: name,
-      photoURL: null,
     }).catch((error: unknown) => {
       console.error(error);
     });
