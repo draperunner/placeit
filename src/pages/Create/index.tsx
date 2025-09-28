@@ -84,13 +84,14 @@ export default function Create() {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
 
-  const onMapClick = useCallback((event: unknown) => {
-    const { latlng } = event as { latlng: LatLng };
-
-    setAnswerMarker(latlng);
+  const onMapClick = useCallback((coordinates: LatLng) => {
+    setAnswerMarker(coordinates);
     setCurrentQuestion((prevCurrentQuestion) => ({
       ...prevCurrentQuestion,
-      correctAnswer: { latitude: latlng.lat, longitude: latlng.lng },
+      correctAnswer: {
+        latitude: coordinates.lat,
+        longitude: coordinates.lng,
+      },
     }));
   }, []);
 
