@@ -17,6 +17,7 @@ import languages from "../../languages";
 import "./styles.css";
 import { getAuth } from "firebase/auth";
 import { TileLayer } from "../../components/TileLayer";
+import { QUIZZES_URL } from "../../constants";
 
 type LatLng = { lat: number; lng: number };
 
@@ -112,23 +113,20 @@ export default function Create() {
 
     const token = await currentUser.getIdToken();
 
-    await fetch(
-      `https://europe-west1-mapquiz-app.cloudfunctions.net/quizzes2ndGen`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          description,
-          questions,
-          language,
-          isPrivate,
-        }),
+    await fetch(QUIZZES_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-    )
+      body: JSON.stringify({
+        name,
+        description,
+        questions,
+        language,
+        isPrivate,
+      }),
+    })
       .then(() => {
         localStorage.removeItem("quiz-draft");
         setSubmitting(false);

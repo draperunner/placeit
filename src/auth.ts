@@ -1,6 +1,13 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { getAuth, signInAnonymously, User } from "firebase/auth";
+import {
+  connectAuthEmulator,
+  getAuth,
+  signInAnonymously,
+  User,
+} from "firebase/auth";
 import { initializeApp } from "firebase/app";
+import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBNbMx3Ms2tVig-TyK68lUfJ9s0Q9SYr-o",
@@ -15,6 +22,13 @@ const firebaseConfig = {
 
 // Initialize Firebase
 initializeApp(firebaseConfig);
+
+if (import.meta.env.DEV) {
+  console.log("Using Firebase emulators");
+  connectAuthEmulator(getAuth(), "http://127.0.0.1:9099");
+  connectFirestoreEmulator(getFirestore(), "127.0.0.1", 8080);
+  connectFunctionsEmulator(getFunctions(), "127.0.0.1", 5001);
+}
 
 export function useAnonymousLogin() {
   const [user, setUser] = useState<User | null | undefined>();

@@ -19,6 +19,7 @@ import {
   QuerySnapshot,
   where,
 } from "firebase/firestore";
+import { SESSIONS_URL } from "../../constants";
 
 enum Map {
   STANDARD = "STANDARD",
@@ -87,16 +88,13 @@ async function createQuizSession(
   hostParticipates: boolean,
   answerTimeLimit: number,
 ) {
-  const { session } = await post<{ session: { id: string } }>(
-    "https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen",
-    {
-      hostName,
-      quizId,
-      map,
-      hostParticipates,
-      answerTimeLimit,
-    },
-  );
+  const { session } = await post<{ session: { id: string } }>(SESSIONS_URL, {
+    hostName,
+    quizId,
+    map,
+    hostParticipates,
+    answerTimeLimit,
+  });
 
   return session.id;
 }

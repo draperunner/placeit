@@ -8,6 +8,7 @@ import { QuizSession } from "../../interfaces";
 import { usePrevious } from "../../utils";
 import { getAuth, type User } from "firebase/auth";
 import { TileLayer } from "../../components/TileLayer";
+import { SESSIONS_URL } from "../../constants";
 
 type LatLng = { lat: number; lng: number };
 
@@ -63,9 +64,8 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       return;
     }
     const token = await currentUser.getIdToken();
-    await fetch(
-      `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quiz.id}/answer`,
-      {
+
+    await fetch(`${SESSIONS_URL}/${quiz.id}/answer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -75,8 +75,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
           latitude: answerMarker.lat,
           longitude: answerMarker.lng,
         }),
-      },
-    );
+    });
   }, [answerMarker, quiz.id]);
 
   const nextQuestion = useCallback(async () => {
@@ -88,17 +87,14 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     setLoadingNextQuestion(true);
     const token = await currentUser.getIdToken();
 
-    await fetch(
-      `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quiz.id}/next-question`,
-      {
+    await fetch(`${SESSIONS_URL}/${quiz.id}/next-question`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({}),
-      },
-    );
+    });
     setLoadingNextQuestion(false);
   }, [quiz.id]);
 

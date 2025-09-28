@@ -13,6 +13,7 @@ import { post } from "../../../http";
 import "./styles.css";
 import { Timestamp } from "firebase/firestore";
 import { User } from "firebase/auth";
+import { SESSIONS_URL } from "../../../constants";
 
 function timestampToTime(timestamp: Timestamp): string {
   const date = timestamp.toDate();
@@ -35,31 +36,22 @@ function getMapPreview(url: string): string {
 }
 
 function join(quizId: string, name: string) {
-  return post(
-    `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quizId}/join`,
-    {
-      name,
-    },
-  );
+  return post(`${SESSIONS_URL}/${quizId}/join`, {
+    name,
+  });
 }
 
 function start(quizId: string) {
-  return post(
-    `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quizId}/start`,
-    {},
-  );
+  return post(`${SESSIONS_URL}/${quizId}/start`, {});
 }
 
 function sendChatMessage(quizId: string, message: string, authorName: string) {
-  return post(
-    `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quizId}/chat`,
-    {
-      message,
-      author: {
-        name: authorName,
-      },
+  return post(`${SESSIONS_URL}/${quizId}/chat`, {
+    message,
+    author: {
+      name: authorName,
     },
-  );
+  });
 }
 
 interface Props {
