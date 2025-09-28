@@ -56,7 +56,7 @@ export default function Create() {
   useEffect(() => {
     // if (user && (user.isAnonymous || !user.emailVerified)) {
     if (user && user.isAnonymous) {
-      void navigate("/login");
+      void navigate("/login", { replace: true });
     }
   }, [navigate, user]);
 
