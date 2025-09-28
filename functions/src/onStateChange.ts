@@ -1,7 +1,7 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 
 import { QuizSession, QuizState } from "./interfaces.js";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, Transaction } from "firebase-admin/firestore";
 
 enum Collections {
   QUIZZES = "quizzes",
@@ -9,9 +9,13 @@ enum Collections {
   QUIZ_STATES = "quiz-states",
 }
 
-async function getQuizSession(id: string): Promise<QuizSession | null> {
+async function getQuizSession(
+  id: string,
+  transaction?: Transaction,
+): Promise<QuizSession | null> {
   const db = getFirestore();
-  const doc = await db.collection(Collections.QUIZ_SESSIONS).doc(id).get();
+  const ref = db.collection("quiz-sessions").doc(id);
+  const doc = transaction ? await transaction.get(ref) : await ref.get();
 
   if (!doc.exists) {
     return null;
@@ -22,47 +26,46 @@ async function getQuizSession(id: string): Promise<QuizSession | null> {
 
 async function checkIfAllAnswersGiven(quizState: QuizState, id: string) {
   const db = getFirestore();
-  const quizSession = await getQuizSession(id);
 
-  if (!quizSession) {
-    throw new Error("Quiz session does not exist");
-  }
+  await db.runTransaction(async (transaction) => {
+    const quizSession = await getQuizSession(id, transaction);
 
-  const { currentQuestion } = quizSession;
+    if (!quizSession) {
+      throw new Error("Quiz session does not exist");
+    }
 
-  if (!currentQuestion) {
-    throw new Error(
-      "Current question is undefined, although quiz has started.",
+    const { currentQuestion } = quizSession;
+
+    if (!currentQuestion) {
+      throw new Error(
+        "Current question is undefined, although quiz has started.",
+      );
+    }
+
+    const { givenAnswers } = quizState;
+
+    const givenAnswersForThisQuestion = givenAnswers.filter(
+      ({ questionId }) => questionId === currentQuestion.id,
     );
-  }
 
-  const { givenAnswers } = quizState;
+    const participantsThatHaveAnswered = givenAnswersForThisQuestion.map(
+      ({ participantId }) => participantId,
+    );
 
-  const givenAnswersForThisQuestion = givenAnswers.filter(
-    ({ questionId }) => questionId === currentQuestion.id,
-  );
+    const haveAllParticipantsAnswered = quizSession.participants.every(
+      (participant) => participantsThatHaveAnswered.includes(participant.uid),
+    );
 
-  const participantsThatHaveAnswered = givenAnswersForThisQuestion.map(
-    ({ participantId }) => participantId,
-  );
+    if (!haveAllParticipantsAnswered) {
+      console.log("Not all participants have answered yet.");
+      return;
+    }
 
-  const haveAllParticipantsAnswered = quizSession.participants.every(
-    (participant) => participantsThatHaveAnswered.includes(participant.uid),
-  );
+    const gameOver =
+      quizSession.quizDetails.numberOfQuestions ===
+      Number.parseInt(currentQuestion.id) + 1;
 
-  if (!haveAllParticipantsAnswered) {
-    console.log("Not all participants have answered yet.");
-    return;
-  }
-
-  const gameOver =
-    quizSession.quizDetails.numberOfQuestions ===
-    Number.parseInt(currentQuestion.id) + 1;
-
-  await db
-    .collection(Collections.QUIZ_SESSIONS)
-    .doc(id)
-    .update({
+    transaction.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
       "currentQuestion.correctAnswer":
         quizState.currentCorrectAnswer.correctAnswer,
       "currentQuestion.givenAnswers": givenAnswersForThisQuestion,
@@ -82,6 +85,7 @@ async function checkIfAllAnswersGiven(quizState: QuizState, id: string) {
         })
         .sort((a, b) => a.distance - b.distance),
     });
+  });
 }
 
 export const onStateChange2ndGen = onDocumentUpdated(
