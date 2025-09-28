@@ -23,9 +23,6 @@ import { SESSIONS_URL } from "../../constants";
 
 enum Map {
   STANDARD = "STANDARD",
-  DARK_MATTER = "DARK_MATTER",
-  VOYAGER = "VOYAGER",
-  VOYAGER_NO_LABELS = "VOYAGER_NO_LABELS",
 }
 
 const MAPS = [
@@ -36,30 +33,6 @@ const MAPS = [
     url: "https://a.tile.osm.org/5/15/12.png",
     attribution:
       '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
-  },
-  {
-    id: Map.VOYAGER,
-    name: "Voyager",
-    author: "CARTO",
-    url: "https://a.basemaps.cartocdn.com/rastertiles/voyager/5/15/12.png",
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-  },
-  {
-    id: Map.VOYAGER_NO_LABELS,
-    name: "Voyager No Labels",
-    author: "CARTO",
-    url: "https://a.basemaps.cartocdn.com/rastertiles/voyager_nolabels/5/15/12.png",
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-  },
-  {
-    id: Map.DARK_MATTER,
-    name: "Dark Matter",
-    author: "CARTO",
-    attribution:
-      'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    url: "https://a.basemaps.cartocdn.com/dark_all/5/15/12.png",
   },
 ];
 
@@ -272,11 +245,13 @@ export default function Host() {
           {MAPS.map(({ id, name, url, author }) => (
             <label
               key={id}
+              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
               className={`map-radio ${map === id ? "map-radio__selected" : ""}`}
             >
               <input
                 type="radio"
                 name="pick-map"
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                 checked={map === id}
                 value={id}
                 onChange={() => {
