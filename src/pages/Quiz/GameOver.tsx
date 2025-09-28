@@ -1,16 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import Leaflet from "leaflet";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Polygon,
-  Tooltip,
-} from "react-leaflet";
+import { MapContainer, Marker, Polygon, Tooltip } from "react-leaflet";
 
 import { usePrevious } from "../../utils";
 import { QuizSession, GivenAnswer } from "../../interfaces";
 import { User } from "firebase/auth";
+import { TileLayer } from "../../components/TileLayer";
 
 interface Props {
   quiz: QuizSession;

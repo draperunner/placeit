@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
+import { MapContainer, Marker, Tooltip } from "react-leaflet";
 import { useNavigate } from "react-router-dom";
 import "firebase/firestore";
 
@@ -16,6 +16,7 @@ import languages from "../../languages";
 
 import "./styles.css";
 import { getAuth } from "firebase/auth";
+import { TileLayer } from "../../components/TileLayer";
 
 type LatLng = { lat: number; lng: number };
 
@@ -327,9 +328,7 @@ export default function Create() {
         <TileLayer
           attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.osm.org/{z}/{x}/{y}.png"
-          eventHandlers={{
-            click: onMapClick,
-          }}
+          onMapClick={onMapClick}
         />
         {answerMarker ? <Marker position={answerMarker} /> : null}
         {questions.map(({ correctAnswer }, index) => (

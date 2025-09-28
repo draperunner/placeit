@@ -1,18 +1,13 @@
 import { useState, useCallback, useEffect } from "react";
 import Leaflet from "leaflet";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Polygon,
-  Tooltip,
-} from "react-leaflet";
+import { MapContainer, Marker, Polygon, Tooltip } from "react-leaflet";
 import "firebase/firestore";
 
 import Button from "../../components/Button";
 import { QuizSession } from "../../interfaces";
 import { usePrevious } from "../../utils";
 import { getAuth, type User } from "firebase/auth";
+import { TileLayer } from "../../components/TileLayer";
 
 type LatLng = { lat: number; lng: number };
 
@@ -53,12 +48,9 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   const previousCountDown = usePrevious(countDown);
 
   const onMapClick = useCallback(
-    (event: unknown) => {
-      console.log("onMapClick", event);
+    (coordinates: LatLng) => {
       if (answerSubmitted) return;
-      const { latlng } = event as { latlng: LatLng };
-
-      setAnswerMarker(latlng);
+      setAnswerMarker(coordinates);
     },
     [answerSubmitted],
   );
@@ -289,10 +281,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
             '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
           }
           url={quiz.map.url || "https://{s}.tile.osm.org/{z}/{x}/{y}.png"}
-          noWrap
-          eventHandlers={{
-            click: onMapClick,
-          }}
+          onMapClick={onMapClick}
         />
         {!correctAnswer ? (
           <Marker
