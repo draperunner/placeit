@@ -84,7 +84,7 @@ app.post(
   },
 );
 
-app.use("*", (req, res) => {
+app.use("/{*splat}", (req, res) => {
   res.status(404).json({ message: "Not Found" });
 });
 
