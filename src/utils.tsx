@@ -4,7 +4,7 @@ import languages from "./languages";
 
 // From https://usehooks.com/usePrevious/
 export function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T | undefined>();
+  const ref = useRef<T | undefined>(undefined);
 
   useEffect(() => {
     ref.current = value;
