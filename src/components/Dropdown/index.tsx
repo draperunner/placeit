@@ -12,7 +12,6 @@ interface Props {
   value: string;
   onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   options: Option[];
-  [key: string]: any;
 }
 
 export default function Dropdown(props: Props) {

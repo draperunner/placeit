@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <div className="home">
       <h1>Place it!</h1>
-      <p>Get closest to the right answer – in meters!</p>
+      <p>Get closest to the right answer – in meters!</p>
       <Button as={Link} to="/host" className="home__button">
         Host a quiz!
       </Button>

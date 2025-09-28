@@ -97,10 +97,8 @@ async function createQuizSession(
 
 const db = firebase.firestore();
 
-function docsToData<T>(
-  docs: firebase.firestore.QuerySnapshot<firebase.firestore.DocumentData>,
-): T[] {
-  let dataArray: T[] = [];
+function docsToData<T>(docs: firebase.firestore.QuerySnapshot): T[] {
+  const dataArray: T[] = [];
 
   docs.forEach((doc) => {
     const data = doc.data() as T;
@@ -136,7 +134,7 @@ export default function Host() {
 
     const collectionRef = db.collection("quizzes");
 
-    Promise.all([
+    void Promise.all([
       collectionRef
         .where("author.uid", "!=", user.uid)
         .where("isPrivate", "==", false)
@@ -149,23 +147,32 @@ export default function Host() {
   }, [user]);
 
   const onCreateQuiz: React.FormEventHandler<HTMLFormElement> = useCallback(
-    (event) => {
+    async (event) => {
       event.preventDefault();
-      if (!name) return alert("You need to choose a name!");
-      if (!quiz) return alert("You need to choose a quiz!");
-      setLoading(true);
-      createQuizSession(
-        name,
-        quiz,
-        map,
-        hostParticipates,
-        answerTimeLimit,
-      ).then((id) => {
-        navigate(`/q/${id}`);
+      if (!name) {
+        alert("You need to choose a name!");
+        return;
+      }
+      if (!quiz) {
+        alert("You need to choose a quiz!");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const id = await createQuizSession(
+          name,
+          quiz,
+          map,
+          hostParticipates,
+          answerTimeLimit,
+        );
+        await navigate(`/q/${id}`);
+      } finally {
         setLoading(false);
-      });
+      }
     },
-    [answerTimeLimit, history, hostParticipates, map, name, quiz],
+    [answerTimeLimit, hostParticipates, map, name, navigate, quiz],
   );
 
   return (
@@ -178,14 +185,18 @@ export default function Host() {
           autoFocus
           label="Your nickname"
           value={name}
-          onChange={(event) => setName(event.target.value)}
+          onChange={(event) => {
+            setName(event.target.value);
+          }}
         />
 
         <label style={{ display: "block", marginTop: 20 }}>
           <input
             type="checkbox"
             checked={hostParticipates}
-            onChange={() => setHostParticipates((prev) => !prev)}
+            onChange={() => {
+              setHostParticipates((prev) => !prev);
+            }}
           />
           Participate yourself?
         </label>
@@ -199,7 +210,9 @@ export default function Host() {
             value={answerTimeLimit}
             min={5}
             max={60}
-            onChange={(e) => setAnswerTimeLimit(Number(e.currentTarget.value))}
+            onChange={(e) => {
+              setAnswerTimeLimit(Number(e.currentTarget.value));
+            }}
           />
         </label>
 
@@ -221,7 +234,9 @@ export default function Host() {
                     type="radio"
                     name="pick-quiz"
                     value={q.name}
-                    onChange={() => setQuiz(q.id)}
+                    onChange={() => {
+                      setQuiz(q.id);
+                    }}
                   />
                   <b>{q.name}</b>
                   <i>by {q.author.name}</i>
@@ -238,7 +253,7 @@ export default function Host() {
           <>
             <h3>Public quizzes</h3>
             <div className="quiz-radio-group">
-              {(publicQuizzes || []).map((q) => (
+              {publicQuizzes.map((q) => (
                 <label
                   key={q.id}
                   className={`quiz-radio ${
@@ -249,7 +264,9 @@ export default function Host() {
                     type="radio"
                     name="pick-quiz"
                     value={q.name}
-                    onChange={() => setQuiz(q.id)}
+                    onChange={() => {
+                      setQuiz(q.id);
+                    }}
                   />
                   <b>{q.name}</b>
                   <i>by {q.author.name}</i>
@@ -273,7 +290,9 @@ export default function Host() {
                 name="pick-map"
                 checked={map === id}
                 value={id}
-                onChange={() => setMap(id)}
+                onChange={() => {
+                  setMap(id);
+                }}
               />
               {name} by {author}
               <img src={url} alt="" />

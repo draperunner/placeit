@@ -20,6 +20,15 @@ async function sendVerificationEmail(user: firebase.User | null) {
   }
 }
 
+function isAuthError(error: unknown): error is { code: string } {
+  return (
+    !!error &&
+    typeof error === "object" &&
+    "code" in error &&
+    typeof error.code === "string"
+  );
+}
+
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string>("");
@@ -36,18 +45,18 @@ export default function Login() {
     }
   }, [previousUser, user]);
 
-  const onLoginSuccess = (usr: firebase.User | null) => {
+  const onLoginSuccess = async (usr: firebase.User | null) => {
     if (!usr) return;
 
     setUser(usr);
 
     if (!usr.emailVerified) {
       setNeedsVerification(true);
-      sendVerificationEmail(usr);
+      await sendVerificationEmail(usr);
       return;
     }
 
-    navigate("/profile");
+    await navigate("/profile");
   };
 
   const upgradeUser = (event: React.FormEvent<HTMLFormElement>) => {
@@ -71,24 +80,25 @@ export default function Login() {
 
     currentUser
       .linkWithCredential(credential)
-      .then(({ user }) => {
-        onLoginSuccess(user);
-      })
-      .catch(function (error) {
+      .then(({ user }) => onLoginSuccess(user))
+      .catch((error: unknown) => {
         if (
-          error.code === "auth/email-already-in-use" ||
-          error.code === "auth/provider-already-linked"
+          isAuthError(error) &&
+          (error.code === "auth/email-already-in-use" ||
+            error.code === "auth/provider-already-linked")
         ) {
           firebase
             .auth()
             .signInWithEmailAndPassword(email, password)
-            .then(({ user }) => {
-              onLoginSuccess(user);
-            })
-            .catch((err) => {
-              setError(err.code);
+            .then(({ user }) => onLoginSuccess(user))
+            .catch((err: unknown) => {
+              if (isAuthError(err)) {
+                setError(err.code);
+              } else {
+                setError("Unknown error");
+              }
             });
-        } else {
+        } else if (isAuthError(error)) {
           console.log("Error upgrading anonymous account", error);
           setError(error.code);
         }
@@ -122,14 +132,18 @@ export default function Login() {
         label="Email"
         value={email}
         type="email"
-        onChange={(event) => setEmail(event.target.value)}
+        onChange={(event) => {
+          setEmail(event.target.value);
+        }}
       />
 
       <TextField
         label="Password"
         value={password}
         type="password"
-        onChange={(event) => setPassword(event.target.value)}
+        onChange={(event) => {
+          setPassword(event.target.value);
+        }}
       />
 
       {error ? (

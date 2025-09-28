@@ -57,7 +57,7 @@ export default function QuizSessionInProgress({ quiz }: Props) {
   }, [correctAnswer, previousCorrectAnswer]);
 
   const renderResults = useCallback(() => {
-    if (!quiz || !quiz.results || !correctAnswer || !givenAnswers) return null;
+    if (!correctAnswer) return null;
 
     const resultsToShow = quiz.results
       .filter(({ participantId }) =>
@@ -150,7 +150,9 @@ export default function QuizSessionInProgress({ quiz }: Props) {
       setShowAnswers((prevShownAnswers) => [...prevShownAnswers, givenAnswer]);
       setBounds(bounds);
     }, REVEAL_INTERVAL);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+    };
   }, [
     allShown,
     correctAnswer,
@@ -161,19 +163,15 @@ export default function QuizSessionInProgress({ quiz }: Props) {
 
   useEffect(() => {
     const timeout = setTimeout(
-      () => setAllowMapMove(true),
+      () => {
+        setAllowMapMove(true);
+      },
       (givenAnswers.length + 1) * REVEAL_INTERVAL,
     );
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+    };
   }, [givenAnswers.length]);
-
-  if (!quiz) {
-    return (
-      <div className="App">
-        <p>Loading...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="App">
@@ -199,10 +197,10 @@ export default function QuizSessionInProgress({ quiz }: Props) {
       >
         <TileLayer
           attribution={
-            quiz.map?.attribution ||
+            quiz.map.attribution ||
             '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
           }
-          url={quiz.map?.url || "https://{s}.tile.osm.org/{z}/{x}/{y}.png"}
+          url={quiz.map.url || "https://{s}.tile.osm.org/{z}/{x}/{y}.png"}
         />
         {correctAnswer ? (
           <Marker
@@ -212,42 +210,40 @@ export default function QuizSessionInProgress({ quiz }: Props) {
             }}
           />
         ) : null}
-        {shownAnswers
-          ? shownAnswers.map(({ participantId, answer }) => (
-              <>
-                {correctAnswer ? (
-                  <Polygon
-                    weight={1}
-                    positions={[
-                      [answer.latitude, answer.longitude],
-                      [correctAnswer.latitude, correctAnswer.longitude],
-                    ]}
-                  ></Polygon>
-                ) : null}
-                <Marker
-                  key={participantId}
-                  icon={
-                    new Leaflet.Icon({
-                      iconUrl: `https://joesch.moe/api/v1/${participantId}`,
-                      iconSize: [40, 40],
-                      iconAnchor: [20, 20],
-                      popupAnchor: [0, -22],
-                      className: "map-user-icon",
-                    })
-                  }
-                  position={{
-                    lat: answer.latitude,
-                    lng: answer.longitude,
-                  }}
-                >
-                  <Tooltip direction="top" permanent offset={[0, -20]}>
-                    {quiz.participants.find((p) => p.uid === participantId)
-                      ?.name || ""}
-                  </Tooltip>
-                </Marker>
-              </>
-            ))
-          : null}
+        {shownAnswers.map(({ participantId, answer }) => (
+          <>
+            {correctAnswer ? (
+              <Polygon
+                weight={1}
+                positions={[
+                  [answer.latitude, answer.longitude],
+                  [correctAnswer.latitude, correctAnswer.longitude],
+                ]}
+              ></Polygon>
+            ) : null}
+            <Marker
+              key={participantId}
+              icon={
+                new Leaflet.Icon({
+                  iconUrl: `https://joesch.moe/api/v1/${participantId}`,
+                  iconSize: [40, 40],
+                  iconAnchor: [20, 20],
+                  popupAnchor: [0, -22],
+                  className: "map-user-icon",
+                })
+              }
+              position={{
+                lat: answer.latitude,
+                lng: answer.longitude,
+              }}
+            >
+              <Tooltip direction="top" permanent offset={[0, -20]}>
+                {quiz.participants.find((p) => p.uid === participantId)?.name ||
+                  ""}
+              </Tooltip>
+            </Marker>
+          </>
+        ))}
       </MapContainer>
       {renderResults()}
     </div>

@@ -3,8 +3,8 @@ import { useRef, useEffect } from "react";
 import languages from "./languages";
 
 // From https://usehooks.com/usePrevious/
-export function usePrevious<T>(value: T): T | void {
-  const ref = useRef<T | void>();
+export function usePrevious<T>(value: T): T | undefined {
+  const ref = useRef<T | undefined>();
 
   useEffect(() => {
     ref.current = value;

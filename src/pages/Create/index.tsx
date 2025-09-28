@@ -32,6 +32,14 @@ interface IncompleteQuestion {
   correctAnswer: undefined;
 }
 
+type QuizDraft = {
+  name: string;
+  description: string;
+  isPrivate: boolean;
+  questions: Question[];
+  currentQuestion: IncompleteQuestion | Question;
+};
+
 function newQuestion(): IncompleteQuestion {
   return {
     text: "",
@@ -46,38 +54,37 @@ export default function Create() {
   useEffect(() => {
     // if (user && (user.isAnonymous || !user.emailVerified)) {
     if (user && user.isAnonymous) {
-      navigate("/login");
+      void navigate("/login");
     }
-  }, [user]);
+  }, [navigate, user]);
 
   const draft = localStorage.getItem("quiz-draft");
 
-  const draftQuiz = draft ? JSON.parse(draft) : {};
+  const draftQuiz = draft ? (JSON.parse(draft) as Partial<QuizDraft>) : null;
 
-  const [name, setName] = useState<string>(draftQuiz.name || "");
+  const [name, setName] = useState<string>(draftQuiz?.name || "");
   const [description, setDescription] = useState<string>(
-    draftQuiz.description || "",
+    draftQuiz?.description || "",
   );
   const [language, setLanguage] = useState<string>("en");
   const [questions, setQuestions] = useState<Question[]>(
-    draftQuiz.questions || [],
+    draftQuiz?.questions || [],
   );
 
   const [isPrivate, setIsPrivate] = useState<boolean>(
-    draftQuiz.isPrivate || false,
+    draftQuiz?.isPrivate || false,
   );
   const [currentQuestion, setCurrentQuestion] = useState<
     IncompleteQuestion | Question
-  >(draftQuiz.currentQuestion || newQuestion());
+  >(draftQuiz?.currentQuestion || newQuestion());
 
-  const [answerMarker, setAnswerMarker] = useState<LatLng | void>();
+  const [answerMarker, setAnswerMarker] = useState<LatLng | undefined>();
 
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
 
-  const onMapClick = useCallback((event: any) => {
-    console.log("onMapClick", event);
-    const { latlng } = event;
+  const onMapClick = useCallback((event: unknown) => {
+    const { latlng } = event as { latlng: LatLng };
 
     setAnswerMarker(latlng);
     setCurrentQuestion((prevCurrentQuestion) => ({
@@ -86,13 +93,14 @@ export default function Create() {
     }));
   }, []);
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
     if (!isValid()) {
-      return alert(
+      alert(
         "You need to fill out name, description and add at least one question!",
       );
+      return;
     }
     const currentUser = firebase.auth().currentUser;
     if (!currentUser) {
@@ -100,31 +108,33 @@ export default function Create() {
       return;
     }
 
-    currentUser.getIdToken().then((token: string) => {
-      return fetch(
-        `https://europe-west1-mapquiz-app.cloudfunctions.net/quizzes2ndGen`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name,
-            description,
-            questions,
-            language,
-            isPrivate,
-          }),
+    const token = await currentUser.getIdToken();
+
+    await fetch(
+      `https://europe-west1-mapquiz-app.cloudfunctions.net/quizzes2ndGen`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      )
-        .then(() => {
-          localStorage.removeItem("quiz-draft");
-          setSubmitting(false);
-          setSubmitted(true);
-        })
-        .catch(() => setSubmitting(false));
-    });
+        body: JSON.stringify({
+          name,
+          description,
+          questions,
+          language,
+          isPrivate,
+        }),
+      },
+    )
+      .then(() => {
+        localStorage.removeItem("quiz-draft");
+        setSubmitting(false);
+        setSubmitted(true);
+      })
+      .catch(() => {
+        setSubmitting(false);
+      });
   };
 
   const addQuestion = () => {
@@ -167,7 +177,7 @@ export default function Create() {
   }, [name, description, questions, isPrivate, currentQuestion]);
 
   const isValid = (): boolean => {
-    return Boolean(name?.length && description?.length && questions.length);
+    return Boolean(name.length && description.length && questions.length);
   };
 
   const renderLeftMargin = () => {
@@ -194,19 +204,25 @@ export default function Create() {
           <TextField
             label="Quiz Name"
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => {
+              setName(event.target.value);
+            }}
           />
 
           <TextField
             label="Description"
             value={description}
-            onChange={(event) => setDescription(event.target.value)}
+            onChange={(event) => {
+              setDescription(event.target.value);
+            }}
           />
 
           <Dropdown
             label="Language"
             value={language}
-            onChange={(e) => setLanguage(e.target.value)}
+            onChange={(e) => {
+              setLanguage(e.target.value);
+            }}
             options={languages.map(({ code, name, native }) => ({
               value: code,
               label: `${name} (${native})`,
@@ -217,7 +233,9 @@ export default function Create() {
             <input
               type="checkbox"
               checked={isPrivate}
-              onChange={() => setIsPrivate((prev) => !prev)}
+              onChange={() => {
+                setIsPrivate((prev) => !prev);
+              }}
             />
             Make it private?
           </label>
@@ -241,7 +259,13 @@ export default function Create() {
                   whiteSpace: "nowrap",
                 }}
               >{`Q${index + 1}: ${question.text}`}</p>
-              <button onClick={() => removeQuestion(index)}>X</button>
+              <button
+                onClick={() => {
+                  removeQuestion(index);
+                }}
+              >
+                X
+              </button>
             </div>
           ))}
 
@@ -273,6 +297,7 @@ export default function Create() {
             type="button"
             style={{ display: "block", marginTop: 32 }}
             onClick={addQuestion}
+            security=""
           >
             Add question
           </Button>
@@ -324,7 +349,7 @@ export default function Create() {
       {renderLeftMargin()}
       <Modal visible={submitted}>
         <h2>Hooray!</h2>
-        <p>Your quiz "{name}" has been successfully created.</p>
+        <p>Your quiz &quot;{name}&quot; has been successfully created.</p>
         <Button onClick={reset} type="submit" style={{ marginTop: 32 }}>
           Nice.
         </Button>

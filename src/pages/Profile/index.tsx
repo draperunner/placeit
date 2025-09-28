@@ -41,8 +41,7 @@ export default function Profile() {
         displayName: name,
         photoURL: null,
       })
-      .then(function () {})
-      .catch(function (error) {
+      .catch((error: unknown) => {
         console.error(error);
       });
   };
@@ -64,12 +63,16 @@ export default function Profile() {
         disabled
         label="Email"
         value={email}
-        onChange={(event) => setEmail(event.target.value)}
+        onChange={(event) => {
+          setEmail(event.target.value);
+        }}
       />
       <TextField
         label="Display Name"
         value={name}
-        onChange={(event) => setName(event.target.value)}
+        onChange={(event) => {
+          setName(event.target.value);
+        }}
       />
       <Button
         style={{ marginTop: 20, marginRight: 20 }}

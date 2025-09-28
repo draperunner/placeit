@@ -28,7 +28,7 @@ export default function Quiz() {
       .collection("quiz-sessions")
       .doc(id)
       .onSnapshot((doc) => {
-        const quizData = doc.data() as QuizSession;
+        const quizData = doc.data() as QuizSession | undefined;
 
         if (!quizData) {
           return;
@@ -55,9 +55,5 @@ export default function Quiz() {
     return <QuizInProgress quiz={quiz} user={user} />;
   }
 
-  if (quiz.state === "over") {
-    return <GameOver quiz={quiz} user={user} />;
-  }
-
-  return null;
+  return <GameOver quiz={quiz} user={user} />;
 }

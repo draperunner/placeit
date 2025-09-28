@@ -28,9 +28,9 @@ function getMapPreview(url: string): string {
   const y = 12;
   return url
     .replace("{s}", s)
-    .replace("{z}", "" + z)
-    .replace("{x}", "" + x)
-    .replace("{y}", "" + y);
+    .replace("{z}", z.toString())
+    .replace("{x}", x.toString())
+    .replace("{y}", y.toString());
 }
 
 function join(quizId: string, name: string) {
@@ -72,42 +72,33 @@ export default function Lobby({ quiz, user }: Props) {
   const [chatSent, setChatSent] = useState<boolean>(false);
   const [chatMessage, setChatMessage] = useState<string>("");
 
-  if (!quiz) {
-    return (
-      <div className="lobby">
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
   const joined =
     !!user && quiz.participants.some(({ uid }) => uid === user.uid);
 
   const { host, quizDetails, map, chat, answerTimeLimit } = quiz;
 
-  const participants = (quiz.participants || []).filter(
-    ({ uid }) => uid !== host.uid,
-  );
+  const participants = quiz.participants.filter(({ uid }) => uid !== host.uid);
 
-  const isHost = user && host && user.uid === host.uid;
-  const hostIsParticipating = (quiz.participants || []).some(
+  const isHost = user && user.uid === host.uid;
+  const hostIsParticipating = quiz.participants.some(
     ({ uid }) => uid === host.uid,
   );
 
   const isYou = (id: string) => user && user.uid === id;
 
-  const startQuiz = () => {
+  const startQuiz = async () => {
     setLoading(true);
-    start(quiz.id).then(() => setLoading(false));
+    await start(quiz.id);
+    setLoading(false);
   };
 
-  const postChat = (event: React.FormEvent<HTMLFormElement>) => {
+  const postChat = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!chatMessage) {
       return;
     }
     setChatSent(true);
-    sendChatMessage(quiz.id, chatMessage, name);
+    await sendChatMessage(quiz.id, chatMessage, name);
   };
 
   return (
@@ -176,7 +167,9 @@ export default function Lobby({ quiz, user }: Props) {
               <TextField
                 label="Nickname"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                }}
                 autoFocus
               />
               <Button type="submit" style={{ marginTop: 20 }}>
@@ -208,6 +201,7 @@ export default function Lobby({ quiz, user }: Props) {
           <p>Please be friendly in the chat.</p>
           {chat.messages.map(({ author, message, timestamp }) => (
             <div
+              key={author.uid}
               className="chat__entry"
               style={{
                 display: "flex",
@@ -253,7 +247,9 @@ export default function Lobby({ quiz, user }: Props) {
             >
               <TextField
                 value={chatMessage}
-                onChange={(e) => setChatMessage(e.target.value)}
+                onChange={(e) => {
+                  setChatMessage(e.target.value);
+                }}
                 label="Chat message"
                 style={{ flex: 1 }}
               />

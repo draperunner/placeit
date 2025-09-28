@@ -53,61 +53,61 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   const previousCountDown = usePrevious(countDown);
 
   const onMapClick = useCallback(
-    (event: any) => {
+    (event: unknown) => {
       console.log("onMapClick", event);
       if (answerSubmitted) return;
-      const { latlng } = event;
+      const { latlng } = event as { latlng: LatLng };
 
       setAnswerMarker(latlng);
     },
     [answerSubmitted],
   );
 
-  const submitAnswer = useCallback(() => {
+  const submitAnswer = useCallback(async () => {
     setAnswerSubmitted(true);
     const currentUser = firebase.auth().currentUser;
     if (!currentUser) {
       console.log("No current user");
       return;
     }
-    currentUser.getIdToken().then((token: string) => {
-      return fetch(
-        `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quiz.id}/answer`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            latitude: answerMarker.lat,
-            longitude: answerMarker.lng,
-          }),
+    const token = await currentUser.getIdToken();
+    await fetch(
+      `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quiz.id}/answer`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      );
-    });
+        body: JSON.stringify({
+          latitude: answerMarker.lat,
+          longitude: answerMarker.lng,
+        }),
+      },
+    );
   }, [answerMarker, quiz.id]);
 
-  const nextQuestion = useCallback(() => {
+  const nextQuestion = useCallback(async () => {
     const currentUser = firebase.auth().currentUser;
     if (!currentUser) {
       console.log("No current user");
       return;
     }
     setLoadingNextQuestion(true);
-    currentUser.getIdToken().then((token) => {
-      fetch(
-        `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quiz.id}/next-question`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({}),
+    const token = await currentUser.getIdToken();
+
+    await fetch(
+      `https://europe-west1-mapquiz-app.cloudfunctions.net/sessions2ndGen/${quiz.id}/next-question`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      ).then(() => setLoadingNextQuestion(false));
-    });
+        body: JSON.stringify({}),
+      },
+    );
+    setLoadingNextQuestion(false);
   }, [quiz.id]);
 
   const gameOver = quiz.state === "over";
@@ -142,7 +142,9 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       const newCountDown = countDown - 1;
       setCountDown(newCountDown);
     }, 1000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+    };
   }, [countDown, deadline, quiz.answerTimeLimit]);
 
   useEffect(() => {
@@ -153,7 +155,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   }, [correctAnswer, previousCorrectAnswer]);
 
   const renderResults = () => {
-    if (!quiz || !quiz.results || !correctAnswer || !givenAnswers) return null;
+    if (!correctAnswer || !givenAnswers) return null;
 
     return quiz.results.map(({ participantId, distance, name }) => {
       const accumulated = formatDistance(distance);
@@ -187,7 +189,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     setPosition(DEFAULT_POSITION);
   }, [quiz.currentQuestion?.id]);
 
-  const isHost = !!user && quiz?.host.uid === user.uid;
+  const isHost = !!user && quiz.host.uid === user.uid;
 
   // Submit on deadline
   useEffect(() => {
@@ -197,17 +199,9 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       countDown === 0 &&
       !answerSubmitted
     ) {
-      submitAnswer();
+      void submitAnswer();
     }
   }, [previousCountDown, countDown, answerSubmitted, submitAnswer, isHost]);
-
-  if (!quiz) {
-    return (
-      <div className="App">
-        <p>Loading...</p>
-      </div>
-    );
-  }
 
   const { results = [] } = quiz;
 
@@ -252,7 +246,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
             ) : null}
           </div>
         </div>
-        {correctAnswer && results ? <ol>{renderResults()}</ol> : null}
+        {correctAnswer ? <ol>{renderResults()}</ol> : null}
         {showForceButton ? (
           <div>
             <p>
@@ -291,16 +285,16 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       >
         <TileLayer
           attribution={
-            quiz.map?.attribution ||
+            quiz.map.attribution ||
             '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
           }
-          url={quiz.map?.url || "https://{s}.tile.osm.org/{z}/{x}/{y}.png"}
+          url={quiz.map.url || "https://{s}.tile.osm.org/{z}/{x}/{y}.png"}
           noWrap
           eventHandlers={{
             click: onMapClick,
           }}
         />
-        {answerMarker && !correctAnswer ? (
+        {!correctAnswer ? (
           <Marker
             position={answerMarker}
             icon={
