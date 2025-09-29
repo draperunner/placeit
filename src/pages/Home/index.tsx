@@ -5,31 +5,36 @@ import Button from "../../components/Button";
 import Blob from "./Blob";
 import Pin from "./Pin";
 
-import "./styles.css";
+import styles from "./Home.module.css";
 
 const blobSeed = Math.random();
 
 export default function Home() {
   return (
-    <div className="home">
+    <div className={styles.home}>
       <h1>Place it!</h1>
       <p>Get closest to the right answer – in meters!</p>
-      <Button as={Link} to="/host" className="home__button">
+      <Button as={Link} to="/host" className={styles.homeButton}>
         Play now!
       </Button>
-      <Button as={Link} to="/create" className="home__button" variant="info">
+      <Button
+        as={Link}
+        to="/create"
+        className={styles.homeButton}
+        variant="info"
+      >
         Create your own quiz
       </Button>
 
-      <div className="home__illustration">
+      <div className={styles.homeIllustration}>
         <Blob
-          className="home__island"
+          className={styles.homeIsland}
           seed={blobSeed}
           extraPoints={6}
           randomness={30}
           size={100}
         />
-        <Pin className="home__pin" color="#EB144C" />
+        <Pin className={styles.homePin} color="#EB144C" />
       </div>
     </div>
   );

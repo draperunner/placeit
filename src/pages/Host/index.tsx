@@ -10,7 +10,6 @@ import { useUser } from "../../auth";
 import { post } from "../../http";
 import { usePrevious, getLanguageName } from "../../utils";
 
-import "./styles.css";
 import {
   collection,
   getDocs,
@@ -20,6 +19,7 @@ import {
   where,
 } from "firebase/firestore";
 import { SESSIONS_URL } from "../../constants";
+import styles from "./Host.module.css";
 
 enum Map {
   STANDARD = "STANDARD",
@@ -138,7 +138,7 @@ export default function Host() {
   );
 
   return (
-    <div className="host">
+    <div className={styles.host}>
       <h1>Host a new Quiz Session</h1>
 
       <form onSubmit={onCreateQuiz}>
@@ -184,12 +184,12 @@ export default function Host() {
         {personalQuizzes?.length ? (
           <>
             <h3>Your quizzes</h3>
-            <div className="quiz-radio-group">
+            <div className={styles.quizRadioGroup}>
               {personalQuizzes.map((q) => (
                 <label
                   key={q.id}
-                  className={`quiz-radio ${
-                    quiz === q.id ? "quiz-radio__selected" : ""
+                  className={`${styles.quizRadio} ${
+                    quiz === q.id ? styles.quizRadioSelected : ""
                   }`}
                 >
                   <input
@@ -214,12 +214,12 @@ export default function Host() {
         {publicQuizzes?.length ? (
           <>
             <h3>Public quizzes</h3>
-            <div className="quiz-radio-group">
+            <div className={styles.quizRadioGroup}>
               {publicQuizzes.map((q) => (
                 <label
                   key={q.id}
-                  className={`quiz-radio ${
-                    quiz === q.id ? "quiz-radio__selected" : ""
+                  className={`${styles.quizRadio} ${
+                    quiz === q.id ? styles.quizRadioSelected : ""
                   }`}
                 >
                   <input
@@ -241,12 +241,12 @@ export default function Host() {
         ) : null}
 
         <h2>Map Type</h2>
-        <div className="map-radio-group">
+        <div className={styles.mapRadioGroup}>
           {MAPS.map(({ id, name, url, author }) => (
             <label
               key={id}
               // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-              className={`map-radio ${map === id ? "map-radio__selected" : ""}`}
+              className={`${styles.mapRadio} ${map === id ? styles.mapRadioSelected : ""}`}
             >
               <input
                 type="radio"
@@ -264,7 +264,7 @@ export default function Host() {
           ))}
         </div>
 
-        <Button loading={loading} type="submit" className="host__submit-button">
+        <Button loading={loading} type="submit" className={styles.submitButton}>
           Host it!
         </Button>
       </form>

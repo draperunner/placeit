@@ -7,7 +7,6 @@ import TextField from "../../components/TextField";
 import { useUser } from "../../auth";
 import { usePrevious } from "../../utils";
 
-import "./styles.css";
 import { getAuth, signOut, updateProfile } from "firebase/auth";
 
 export default function Profile() {
@@ -46,7 +45,7 @@ export default function Profile() {
 
   if (!user || user.isAnonymous) {
     return (
-      <div className="profile">
+      <div>
         <h1>Profil</h1>
         <Button onClick={login}>Log in?</Button>
       </div>
@@ -54,7 +53,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="profile">
+    <div>
       <h1>Profil</h1>
       <h2>{user.displayName}</h2>
       <TextField

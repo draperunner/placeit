@@ -10,7 +10,7 @@ import { getLanguageName } from "../../../utils";
 
 import { post } from "../../../http";
 
-import "./styles.css";
+import styles from "./Lobby.module.css";
 import { User } from "firebase/auth";
 import { SESSIONS_URL } from "../../../constants";
 
@@ -69,7 +69,7 @@ export default function Lobby({ quiz, user }: Props) {
     <AppWrapper>
       <h1>Quiz hosted by {host.name}</h1>
       <p>We are now in the lobby, waiting for people to join.</p>
-      <div className="lobby__grid">
+      <div className={styles.lobbyGrid}>
         <div>
           <h2>Host</h2>
           <div
@@ -79,9 +79,11 @@ export default function Lobby({ quiz, user }: Props) {
             }}
           >
             <img
-              className="profile-pic"
+              className={styles.profilePic}
               src={`https://joesch.moe/api/v1/${host.uid}`}
-              alt=""
+              alt={host.name}
+              height={40}
+              width={40}
               style={{
                 marginRight: 10,
               }}
@@ -109,7 +111,7 @@ export default function Lobby({ quiz, user }: Props) {
                 <img
                   src={`https://joesch.moe/api/v1/${participant.uid}`}
                   alt=""
-                  className="profile-pic"
+                  className={styles.profilePic}
                   style={{
                     marginRight: 10,
                   }}

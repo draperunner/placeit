@@ -1,8 +1,8 @@
-.map-user-icon {
+.mapUserIcon {
   border-radius: 20px;
 }
 
-.quiz-panel {
+.quizPanel {
   color: black;
   position: absolute;
   padding: 2rem;
@@ -20,12 +20,12 @@
 }
 
 @media (max-width: 800px) {
-  .quiz-panel {
+  .quizPanel {
     max-width: unset;
     padding: 1rem;
     width: calc(100vw - 2rem);
   }
-  .quiz-panel__top {
+  .quizPanelTop {
     display: flex;
     flex-direction: row;
     justify-content: space-between;

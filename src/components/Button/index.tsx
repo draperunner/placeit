@@ -1,5 +1,5 @@
-import "./styles.css";
 import type React from "react";
+import styles from "./Button.module.css";
 
 // Button specific props (not coming from the underlying element)
 interface ButtonOwnProps {
@@ -23,19 +23,12 @@ export type ButtonProps<C extends React.ElementType = "button"> =
 
 function LoadingDots({ active }: { active?: boolean }) {
   return (
-    <div className={`button-loading ${active ? "button-loading--active" : ""}`}>
-      <div
-        className="button-loading__dot"
-        style={{ animationDelay: "100ms" }}
-      />
-      <div
-        className="button-loading__dot"
-        style={{ animationDelay: "200ms" }}
-      />
-      <div
-        className="button-loading__dot"
-        style={{ animationDelay: "300ms" }}
-      />
+    <div
+      className={`${styles.buttonLoading} ${active ? styles.buttonLoadingActive : ""}`}
+    >
+      <div className={styles.loadingDot} style={{ animationDelay: "100ms" }} />
+      <div className={styles.loadingDot} style={{ animationDelay: "200ms" }} />
+      <div className={styles.loadingDot} style={{ animationDelay: "300ms" }} />
     </div>
   );
 }
@@ -61,11 +54,11 @@ export default function Button<C extends React.ElementType = "button">(
         ? { disabled: loading }
         : {})}
       {...restProps}
-      className={`button button--${variant} ${className || ""}`}
+      className={`${styles.button} ${styles[variant]} ${className || ""}`}
     >
       <div
-        className={`button__children ${
-          loading ? "button__children--loading" : ""
+        className={`${styles.buttonChildren} ${
+          loading ? styles.buttonChildrenLoading : ""
         }`}
       >
         {children}

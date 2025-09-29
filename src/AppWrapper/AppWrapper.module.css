@@ -1,0 +1,11 @@
+.children {
+  max-width: 800px;
+  margin: auto;
+  padding: 4rem 1rem;
+}
+
+@media (max-width: 800px) {
+  .children {
+    max-width: unset;
+  }
+}

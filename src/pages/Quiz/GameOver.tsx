@@ -6,6 +6,7 @@ import { usePrevious } from "../../utils";
 import { QuizSession, GivenAnswer } from "../../interfaces";
 import { User } from "firebase/auth";
 import { TileLayer } from "../../components/TileLayer";
+import styles from "./GameOver.module.css";
 
 interface Props {
   quiz: QuizSession;
@@ -67,7 +68,7 @@ export default function QuizSessionInProgress({ quiz }: Props) {
     }
 
     return (
-      <div className="quiz-panel">
+      <div className={styles.quizPanel}>
         <h1>Game Over</h1>
         <p>{description}</p>
         <ol>
@@ -169,7 +170,7 @@ export default function QuizSessionInProgress({ quiz }: Props) {
   }, [givenAnswers.length]);
 
   return (
-    <div className="App">
+    <div>
       <MapContainer
         center={position}
         zoom={zoom}
@@ -224,7 +225,7 @@ export default function QuizSessionInProgress({ quiz }: Props) {
                   iconSize: [40, 40],
                   iconAnchor: [20, 20],
                   popupAnchor: [0, -22],
-                  className: "map-user-icon",
+                  className: styles.mapUserIcon,
                 })
               }
               position={{

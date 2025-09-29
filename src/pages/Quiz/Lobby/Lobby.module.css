@@ -1,20 +1,20 @@
-.lobby__grid {
+.lobbyGrid {
   display: flex;
   flex-direction: row;
   gap: 16px;
+
+  > div {
+    flex: 1;
+  }
 }
 
-.lobby__grid > div {
-  flex: 1;
-}
-
-.lobby__grid .profile-pic {
+.profilePic {
   height: 40px;
   width: 40px;
 }
 
 @media (max-width: 800px) {
-  .lobby__grid {
+  .lobbyGrid {
     flex-direction: column;
   }
 }

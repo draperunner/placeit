@@ -2,12 +2,12 @@ import { Link } from "react-router-dom";
 
 import { useUser } from "../auth";
 
-import "./styles.css";
+import styles from "./Navbar.module.css";
 
 export default function Navbar() {
   const user = useUser();
   return (
-    <nav className="navbar">
+    <nav className={styles.navbar}>
       {window.location.pathname !== "/" ? (
         <Link to="/">Place it!</Link>
       ) : (
@@ -16,7 +16,7 @@ export default function Navbar() {
       {user && !user.isAnonymous ? (
         <Link to="/profile">
           <img
-            className="navbar__profile-img"
+            className={styles.navbarProfileImg}
             src={user.photoURL || `https://joesch.moe/api/v1/${user.uid}`}
             alt={user.displayName || "profile photo"}
           />

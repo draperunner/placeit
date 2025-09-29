@@ -1,0 +1,29 @@
+.mapUserIcon {
+  border-radius: 20px;
+}
+
+.quizPanel {
+  color: black;
+  position: absolute;
+  padding: 2rem;
+  background-color: white;
+  border-bottom-right-radius: 4px;
+  top: 0;
+  left: 0;
+  z-index: 500;
+  text-align: left;
+  max-width: 300px;
+}
+
+@media (max-width: 800px) {
+  .quizPanel {
+    max-width: unset;
+    padding: 1rem;
+    width: calc(100vw - 2rem);
+  }
+
+  .deadline {
+    font-size: 60px;
+    margin-left: 1rem;
+  }
+}

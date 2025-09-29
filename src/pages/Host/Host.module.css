@@ -1,15 +1,15 @@
-.host__submit-button {
+.submitButton {
   display: block;
   margin-top: 2rem;
 }
 
-.quiz-radio-group {
+.quizRadioGroup {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
 }
 
-.quiz-radio {
+.quizRadio {
   border: 4px solid #e9e9e9;
   border-radius: 4px;
   cursor: pointer;
@@ -21,50 +21,50 @@
   flex-direction: column;
 }
 
-.quiz-radio input {
+.quizRadio input {
   appearance: none;
   margin: 0;
 }
 
-.quiz-radio.quiz-radio__selected {
+.quizRadio.quizRadioSelected {
   border-color: #eb144c;
 }
 
-.map-radio-group {
+.mapRadioGroup {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
 }
 
-.map-radio {
+.mapRadio {
   cursor: pointer;
   margin: 0.5rem;
 }
 
-.map-radio input {
+.mapRadio input {
   appearance: none;
 }
 
-.map-radio img {
+.mapRadio img {
   border: 4px solid #e9e9e9;
   border-radius: 4px;
 }
 
-.map-radio__selected img {
+.mapRadioSelected img {
   border: 4px solid #eb144c;
 }
 
-.map-radio img {
+.mapRadio img {
   border-radius: 4px;
 }
 
 @media (max-width: 800px) {
-  .map-radio-group {
+  .mapRadioGroup {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 540px) {
-  .map-radio-group {
+  .mapRadioGroup {
     grid-template-columns: 1fr;
   }
 }

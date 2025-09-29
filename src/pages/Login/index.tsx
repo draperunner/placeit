@@ -6,7 +6,6 @@ import TextField from "../../components/TextField";
 
 import { usePrevious } from "../../utils";
 
-import "./styles.css";
 import {
   EmailAuthProvider,
   getAuth,
@@ -108,7 +107,7 @@ export default function Login() {
 
   if (needsVerification) {
     return (
-      <div className="login">
+      <div>
         <h1>Please verify your email.</h1>
         <p>
           We sent an email to {user?.email}. You need to verify your email
@@ -122,7 +121,7 @@ export default function Login() {
   }
 
   return (
-    <form className="login" onSubmit={upgradeUser}>
+    <form onSubmit={upgradeUser}>
       <h1>You need to log in.</h1>
       <p>
         In order to create new awesome quizzes, you need a good, old user

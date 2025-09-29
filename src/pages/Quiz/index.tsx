@@ -9,8 +9,6 @@ import Lobby from "./Lobby";
 import QuizInProgress from "./QuizInProgress";
 import GameOver from "./GameOver";
 
-import "./styles.css";
-
 const db = getFirestore();
 
 export default function Quiz() {
@@ -38,7 +36,7 @@ export default function Quiz() {
 
   if (!id || !quiz) {
     return (
-      <div className="App">
+      <div>
         <p>Loading...</p>
       </div>
     );

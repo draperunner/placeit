@@ -2,7 +2,7 @@ import React from "react";
 
 import Navbar from "../Navbar";
 
-import "./styles.css";
+import styles from "./AppWrapper.module.css";
 
 interface Props {
   children: React.ReactNode;
@@ -10,9 +10,9 @@ interface Props {
 
 export default function AppWrapper(props: Props) {
   return (
-    <div className="app-wrapper">
+    <div>
       <Navbar />
-      <div className="app-wrapper__children">{props.children}</div>
+      <div className={styles.children}>{props.children}</div>
     </div>
   );
 }

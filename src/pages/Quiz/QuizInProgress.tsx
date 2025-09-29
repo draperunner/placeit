@@ -9,6 +9,7 @@ import { usePrevious } from "../../utils";
 import { getAuth, type User } from "firebase/auth";
 import { TileLayer } from "../../components/TileLayer";
 import { SESSIONS_URL } from "../../constants";
+import styles from "./QuizInProgress.module.css";
 
 type LatLng = { lat: number; lng: number };
 
@@ -215,8 +216,8 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     const showNextButton = !!correctAnswer && inBetweenQuestions && isHost;
 
     return (
-      <div className="quiz-panel">
-        <div className="quiz-panel__top">
+      <div className={styles.quizPanel}>
+        <div className={styles.quizPanelTop}>
           <div>
             <p>{question}</p>
             <p style={{ fontSize: 14, color: "dimgray" }}>{helpText}</p>
@@ -224,7 +225,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
           <div>
             {countDown ? (
               <div
-                className="deadline"
+                className={styles.deadline}
                 style={{
                   color: countDown > 5 ? "black" : "red",
                 }}
@@ -264,7 +265,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   };
 
   return (
-    <div className="App">
+    <div>
       <MapContainer
         center={position}
         zoom={zoom}
@@ -288,7 +289,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
                 iconSize: [40, 40],
                 iconAnchor: [20, 20],
                 popupAnchor: [0, -22],
-                className: "map-user-icon",
+                className: styles.mapUserIcon,
               })
             }
           />
@@ -321,7 +322,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
                       iconSize: [40, 40],
                       iconAnchor: [20, 20],
                       popupAnchor: [0, -22],
-                      className: "map-user-icon",
+                      className: styles.mapUserIcon,
                     })
                   }
                   position={{

@@ -13,11 +13,10 @@ import Modal from "../../components/Modal";
 import Navbar from "../../Navbar";
 
 import languages from "../../languages";
-
-import "./styles.css";
 import { getAuth } from "firebase/auth";
 import { TileLayer } from "../../components/TileLayer";
 import { QUIZZES_URL } from "../../constants";
+import styles from "./Create.module.css";
 
 type LatLng = { lat: number; lng: number };
 
@@ -183,7 +182,6 @@ export default function Create() {
   const renderLeftMargin = () => {
     return (
       <div
-        className="question"
         style={{
           position: "absolute",
           padding: 32,
@@ -316,7 +314,7 @@ export default function Create() {
   };
 
   return (
-    <div className="create">
+    <div className={styles.create}>
       <Navbar />
       <MapContainer
         center={[0, 0]}

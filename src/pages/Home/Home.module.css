@@ -1,17 +1,17 @@
 .home {
   color: white;
+
+  h1 {
+    font-size: 4rem;
+  }
 }
 
-.home h1 {
-  font-size: 4rem;
-}
-
-.home__button {
+.homeButton {
   margin: 10px;
   margin-top: 100px;
 }
 
-.home__illustration {
+.homeIllustration {
   position: absolute;
   display: flex;
   align-items: center;
@@ -21,22 +21,22 @@
   z-index: -1;
 }
 
-.home__island {
+.homeIsland {
   width: 600px;
 }
 
-.home__pin {
+.homePin {
   height: 90px;
   position: absolute;
   animation: scale 1s ease-in infinite alternate;
 }
 
 @media (max-width: 1000px) {
-  .home__illustration {
+  .homeIllustration {
     position: static;
   }
 
-  .home__button {
+  .homeButton {
     margin: 20px 20px 0 0;
   }
 }

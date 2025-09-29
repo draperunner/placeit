@@ -1,6 +1,6 @@
 import React from "react";
 
-import "./styles.css";
+import styles from "./Dropdown.module.css";
 
 interface Option {
   value: string;
@@ -17,7 +17,7 @@ interface Props {
 export default function Dropdown(props: Props) {
   const { value, label, options, onChange } = props;
   return (
-    <label className="dropdown">
+    <label className={styles.dropdown}>
       {label}
       <select value={value} onChange={onChange}>
         {options.map((option) => (

@@ -9,41 +9,41 @@
   text-decoration: none;
 }
 
-.button--success {
+.success {
   background-color: #00d084;
 }
 
-.button--success:hover {
+.success:hover {
   background-color: #7bdcb5;
 }
 
-.button--info {
+.info {
   background-color: #0693e3;
   border: 2px solid white;
   color: white;
 }
 
-.button--info:hover {
+.info:hover {
   background-color: #0582d2;
 }
 
-.button--warning {
+.warning {
   background-color: orange;
 }
 
-.button--warning:hover {
+.warning:hover {
   background-color: #ffb40a;
 }
 
-.button__children {
+.buttonChildren {
   visibility: visible;
 }
 
-.button__children--loading {
+.buttonChildrenLoading {
   visibility: hidden;
 }
 
-.button-loading {
+.buttonLoading {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -54,11 +54,11 @@
   margin-top: -1rem;
 }
 
-.button-loading--active {
+.buttonLoadingActive {
   visibility: visible;
 }
 
-.button-loading__dot {
+.loadingDot {
   height: 1rem;
   width: 1rem;
   border-radius: 0.5rem;

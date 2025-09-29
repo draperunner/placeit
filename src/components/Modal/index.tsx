@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 
-import "./styles.css";
+import styles from "./Modal.module.css";
 
 interface Props {
   visible: boolean;
@@ -15,8 +15,8 @@ export default function Modal(props: Props) {
 
   return (
     <>
-      <div className="modal__backdrop" />
-      <div {...restProps} className={`modal ${className || ""}`}>
+      <div className={styles.modalBackdrop} />
+      <div {...restProps} className={`${styles.modal} ${className || ""}`}>
         {children}
       </div>
     </>
