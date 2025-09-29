@@ -402,9 +402,6 @@ app.post("/", verifyToken(), async (req, res, next) => {
       state: "lobby",
       map: getMapData(map),
       answerTimeLimit,
-      chat: {
-        messages: [],
-      },
     });
 
     res.status(201).json({
@@ -450,67 +447,6 @@ app.post("/:id/start", verifyToken(), async (req, res, next) => {
     await db.collection("quiz-sessions").doc(id).update({
       state: "in-progress",
     });
-    res.json({});
-  } catch (error) {
-    next(error);
-  }
-});
-
-function getMessage(message: string, authorName: string): string {
-  if (Math.random() < 0.1) return message;
-
-  const MESSAGES = [
-    "Hello friends! 👋",
-    "I AM ZORG, THE MAP QUIZ GOD OF THE PLANET XTURGOTH 3000. I WILL CRUSH YOU IN THIS SILLY HUMAN GAME.",
-    `Hi! I am "${authorName}". That's not my real name, though. My real name is actually Flompy Flompwaters. Maybe you knew that already.`,
-    "Howdy partners! 🤠",
-    "What is love? Baby don't hurt me.",
-    "Hey! 👋 I am ready!",
-    "Hello. I am very familiar with maps. In fact, my father was a map.",
-    "OMG. A chat. All games have chats. Why do I need to chat?! 🤮",
-    `Hi everyone! This is your President ${authorName}. I have arrived!`,
-    `Okay, it's a bit embarassing, but I'm just gonna go ahead and say it: "${message}".`,
-    `Geography? Is this ... GEOGRAPHY!?!??! YAAAAAAAAAAAAASSSS!!!!!!`,
-    `Wanna hear a fun fact? I just learned TODAY how to write this: "${message}".`,
-    `Okay everybody, repeat after me: "${message}".`,
-    `${message} 💩`,
-    `${message}. ${message}? ${message.toUpperCase()} !!!`,
-    `${authorName} has arrived!`,
-    `Knock knock. Who's there? It's ${authorName}!`,
-    message.toUpperCase(),
-    "👏" + message.split(/\s/).join("👏") + "👏",
-  ];
-
-  const randomIndex = Math.floor(Math.random() * MESSAGES.length);
-  return MESSAGES[randomIndex];
-}
-
-const ChatSchema = z.object({
-  author: z.object({
-    name: z.string().min(1),
-  }),
-  message: z.string().min(1),
-});
-
-app.post("/:id/chat", verifyToken(), async (req, res, next) => {
-  try {
-    const { uid } = getUserContext();
-    const { id } = req.params;
-    const { author, message } = ChatSchema.parse(req.body);
-
-    await getFirestore()
-      .collection("quiz-sessions")
-      .doc(id)
-      .update({
-        "chat.messages": FieldValue.arrayUnion({
-          author: {
-            uid,
-            name: author.name,
-          },
-          message: getMessage(message, author.name),
-          timestamp: Timestamp.now(),
-        }),
-      });
     res.json({});
   } catch (error) {
     next(error);

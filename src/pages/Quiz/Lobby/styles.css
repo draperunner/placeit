@@ -1,11 +1,11 @@
 .lobby__grid {
   display: flex;
   flex-direction: row;
+  gap: 16px;
 }
 
 .lobby__grid > div {
   flex: 1;
-  margin: 0.5rem;
 }
 
 .lobby__grid .profile-pic {

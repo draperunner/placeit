@@ -69,14 +69,4 @@ export interface QuizSession {
     distance: number;
     name: string;
   }>;
-  chat: {
-    messages: Array<{
-      author: {
-        uid: string;
-        name: string;
-      };
-      message: string;
-      timestamp: Timestamp;
-    }>;
-  };
 }

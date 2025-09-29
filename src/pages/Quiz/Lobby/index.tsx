@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 import AppWrapper from "../../../AppWrapper";
 
@@ -11,17 +11,8 @@ import { getLanguageName } from "../../../utils";
 import { post } from "../../../http";
 
 import "./styles.css";
-import { Timestamp } from "firebase/firestore";
 import { User } from "firebase/auth";
 import { SESSIONS_URL } from "../../../constants";
-
-function timestampToTime(timestamp: Timestamp): string {
-  const date = timestamp.toDate();
-  const hours = `${date.getHours()}`.padStart(2, "0");
-  const min = `${date.getMinutes()}`.padStart(2, "0");
-
-  return `${hours}:${min}`;
-}
 
 function getMapPreview(url: string): string {
   const s = "a";
@@ -45,15 +36,6 @@ function start(quizId: string) {
   return post(`${SESSIONS_URL}/${quizId}/start`, {});
 }
 
-function sendChatMessage(quizId: string, message: string, authorName: string) {
-  return post(`${SESSIONS_URL}/${quizId}/chat`, {
-    message,
-    author: {
-      name: authorName,
-    },
-  });
-}
-
 interface Props {
   quiz: QuizSession;
   user: User | null | undefined;
@@ -62,13 +44,11 @@ interface Props {
 export default function Lobby({ quiz, user }: Props) {
   const [name, setName] = useState<string>(user?.displayName || "");
   const [loading, setLoading] = useState<boolean>(false);
-  const [chatSent, setChatSent] = useState<boolean>(false);
-  const [chatMessage, setChatMessage] = useState<string>("");
 
   const joined =
     !!user && quiz.participants.some(({ uid }) => uid === user.uid);
 
-  const { host, quizDetails, map, chat, answerTimeLimit } = quiz;
+  const { host, quizDetails, map, answerTimeLimit } = quiz;
 
   const participants = quiz.participants.filter(({ uid }) => uid !== host.uid);
 
@@ -83,15 +63,6 @@ export default function Lobby({ quiz, user }: Props) {
     setLoading(true);
     await start(quiz.id);
     setLoading(false);
-  };
-
-  const postChat = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!chatMessage) {
-      return;
-    }
-    setChatSent(true);
-    await sendChatMessage(quiz.id, chatMessage, name);
   };
 
   return (
@@ -188,73 +159,6 @@ export default function Lobby({ quiz, user }: Props) {
             src={getMapPreview(map.url)}
             alt={`${map.name} by ${map.author}`}
           />
-        </div>
-        <div>
-          <h2>Chat</h2>
-          <p>Please be friendly in the chat.</p>
-          {chat.messages.map(({ author, message, timestamp }) => (
-            <div
-              key={author.uid}
-              className="chat__entry"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
-                <img
-                  alt={author.name}
-                  className="profile-pic"
-                  style={{
-                    marginRight: 5,
-                  }}
-                  src={`https://joesch.moe/api/v1/${author.uid}`}
-                />
-                <span>{`said at ${timestampToTime(timestamp)}:`}</span>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  paddingLeft: 20,
-                }}
-              >
-                <p>{message}</p>
-              </div>
-            </div>
-          ))}
-          {joined && !chatSent ? (
-            <form
-              onSubmit={postChat}
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "flex-end",
-              }}
-            >
-              <TextField
-                value={chatMessage}
-                onChange={(e) => {
-                  setChatMessage(e.target.value);
-                }}
-                label="Chat message"
-                style={{ flex: 1 }}
-              />
-              <Button
-                type="submit"
-                style={{ height: 33, margin: "0.5rem", padding: "0.5rem" }}
-              >
-                Send
-              </Button>
-            </form>
-          ) : null}
-          {!joined ? <p>You need to join before you can chat.</p> : null}
         </div>
       </div>
 
