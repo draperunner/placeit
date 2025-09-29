@@ -41,6 +41,15 @@
             "value": "geolocation=(self), microphone=()"
           }
         ]
+      },
+      {
+        "source": "/assets/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "immutable"
+          }
+        ]
       }
     ]
   },
