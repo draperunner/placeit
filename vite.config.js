@@ -9,5 +9,9 @@ export default defineConfig({
   },
   server: {
     port: 5423,
+    headers: {
+      "Content-Security-Policy":
+        "default-src 'none'; connect-src 'self' http://127.0.0.1:9099 http://127.0.0.1:8080 http://localhost:5001 https://securetoken.googleapis.com https://firestore.googleapis.com https://europe-west1-mapquiz-app.cloudfunctions.net; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.osm.org https://joesch.moe; style-src 'self' 'unsafe-inline'; font-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; base-uri 'none';",
+    },
   },
 });
