@@ -42,3 +42,11 @@ ol {
 p {
   margin: 0.5rem 0;
 }
+
+a {
+  color: white;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
