@@ -21,32 +21,16 @@ import {
 import { SESSIONS_URL } from "../../constants";
 import styles from "./Host.module.css";
 
-enum Map {
-  STANDARD = "STANDARD",
-}
-
-const MAPS = [
-  {
-    id: Map.STANDARD,
-    name: "Mapnik",
-    author: "OpenStreetMap",
-    url: "https://a.tile.osm.org/5/15/12.png",
-    attribution:
-      '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
-  },
-];
-
 async function createQuizSession(
   hostName: string,
   quizId: string,
-  map: Map,
   hostParticipates: boolean,
   answerTimeLimit: number,
 ) {
   const { session } = await post<{ session: { id: string } }>(SESSIONS_URL, {
     hostName,
     quizId,
-    map,
+    map: "STANDARD",
     hostParticipates,
     answerTimeLimit,
   });
@@ -76,7 +60,6 @@ export default function Host() {
   const [personalQuizzes, setPersonalQuizzes] = useState<Quiz[] | undefined>();
   const [quiz, setQuiz] = useState<string | undefined>();
   const [answerTimeLimit, setAnswerTimeLimit] = useState<number>(30);
-  const [map, setMap] = useState<Map>(Map.STANDARD);
   const [hostParticipates, setHostParticipates] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -125,7 +108,6 @@ export default function Host() {
         const id = await createQuizSession(
           name,
           quiz,
-          map,
           hostParticipates,
           answerTimeLimit,
         );
@@ -134,7 +116,7 @@ export default function Host() {
         setLoading(false);
       }
     },
-    [answerTimeLimit, hostParticipates, map, name, navigate, quiz],
+    [answerTimeLimit, hostParticipates, name, navigate, quiz],
   );
 
   return (
@@ -239,30 +221,6 @@ export default function Host() {
             </div>
           </>
         ) : null}
-
-        <h2>Map Type</h2>
-        <div className={styles.mapRadioGroup}>
-          {MAPS.map(({ id, name, url, author }) => (
-            <label
-              key={id}
-              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-              className={`${styles.mapRadio} ${map === id ? styles.mapRadioSelected : ""}`}
-            >
-              <input
-                type="radio"
-                name="pick-map"
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                checked={map === id}
-                value={id}
-                onChange={() => {
-                  setMap(id);
-                }}
-              />
-              {name} by {author}
-              <img src={url} alt="" />
-            </label>
-          ))}
-        </div>
 
         <Button loading={loading} type="submit" className={styles.submitButton}>
           Host it!
