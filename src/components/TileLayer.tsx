@@ -1,6 +1,14 @@
-import { LatLng } from "leaflet";
+import { LatLng, Icon } from "leaflet";
 import { FC } from "react";
 import { TileLayer as LeafletTileLayer, useMapEvent } from "react-leaflet";
+import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
+import shadowUrl from "leaflet/dist/images/marker-shadow.png";
+
+// Fix bundling of icons other than the default
+Icon.Default.mergeOptions({
+  iconRetinaUrl,
+  shadowUrl,
+});
 
 type Props = {
   attribution: string;
