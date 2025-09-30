@@ -338,7 +338,7 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
   }
 });
 
-const SessionSchema = z.object({
+const CreateSessionSchema = z.object({
   hostName: z.string().min(1),
   quizId: z.string().min(1),
   map: z.enum(Map),
@@ -354,7 +354,7 @@ app.post("/", verifyToken(), async (req, res, next) => {
       map,
       hostParticipates,
       answerTimeLimit = ANSWER_TIME_LIMIT,
-    } = SessionSchema.parse(req.body);
+    } = CreateSessionSchema.parse(req.body);
 
     const uid = getUserContext().uid;
 
@@ -407,6 +407,75 @@ app.post("/", verifyToken(), async (req, res, next) => {
     res.status(201).json({
       session: {
         id: docRef.id,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+const UpdateSessionSchema = z.object({
+  map: z.enum(Map).optional(),
+  hostParticipates: z.boolean().optional(),
+  answerTimeLimit: z.number().min(5).max(120).optional(),
+});
+
+app.patch("/:id", verifyToken(), async (req, res, next) => {
+  try {
+    const { id: sessionId } = req.params;
+
+    const { map, hostParticipates, answerTimeLimit } =
+      UpdateSessionSchema.parse(req.body);
+
+    const uid = getUserContext().uid;
+    const db = getFirestore();
+
+    const updatedSession = await db.runTransaction(async (transaction) => {
+      const session = await getQuizSession(sessionId, transaction);
+
+      if (!session) {
+        throw new Error("Could not find session with this ID.");
+      }
+
+      if (session.host.uid !== uid) {
+        throw new Error("Only the host can update the session.");
+      }
+
+      if (session.state !== "lobby") {
+        throw new Error("Can only update session while in the lobby.");
+      }
+
+      const updates: Partial<QuizSession> = {
+        map: map ? getMapData(map) : session.map,
+        answerTimeLimit: answerTimeLimit ?? session.answerTimeLimit,
+        participants: session.participants,
+      };
+
+      if (hostParticipates) {
+        if (!session.participants.some(({ uid }) => uid === session.host.uid)) {
+          updates.participants = [
+            { uid: session.host.uid, name: session.host.name },
+            ...session.participants,
+          ];
+        }
+      } else if (hostParticipates === false) {
+        updates.participants = session.participants.filter(
+          ({ uid }) => uid !== session.host.uid,
+        );
+      }
+
+      transaction.update(
+        db.collection("quiz-sessions").doc(sessionId),
+        updates,
+      );
+
+      return updates;
+    });
+
+    res.status(200).json({
+      session: {
+        id: sessionId,
+        ...updatedSession,
       },
     });
   } catch (error) {

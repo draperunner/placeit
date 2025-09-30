@@ -8,7 +8,7 @@ import TextField from "../../../components/TextField";
 import { QuizSession } from "../../../interfaces";
 import { getLanguageName } from "../../../utils";
 
-import { post } from "../../../http";
+import { patch, post } from "../../../http";
 
 import styles from "./Lobby.module.css";
 import { User } from "firebase/auth";
@@ -41,14 +41,30 @@ interface Props {
   user: User | null | undefined;
 }
 
+async function updateQuizSession(
+  sessionId: string,
+  hostParticipates: boolean,
+  answerTimeLimit: number,
+): Promise<void> {
+  await patch<{ session: { id: string } }>(`${SESSIONS_URL}/${sessionId}`, {
+    hostParticipates,
+    answerTimeLimit,
+  });
+}
+
 export default function Lobby({ quiz, user }: Props) {
   const [name, setName] = useState<string>(user?.displayName || "");
   const [loading, setLoading] = useState<boolean>(false);
+  const [editingAnswerTimeLimit, setEditingAnswerTimeLimit] =
+    useState<boolean>(false);
+  const [answerTimeLimit, setAnswerTimeLimit] = useState<number>(
+    quiz.answerTimeLimit,
+  );
 
   const joined =
     !!user && quiz.participants.some(({ uid }) => uid === user.uid);
 
-  const { host, quizDetails, map, answerTimeLimit } = quiz;
+  const { host, quizDetails, map } = quiz;
 
   const participants = quiz.participants.filter(({ uid }) => uid !== host.uid);
 
@@ -151,7 +167,52 @@ export default function Lobby({ quiz, user }: Props) {
           <p>{quizDetails.description}</p>
           <p>{quizDetails.numberOfQuestions} questions.</p>
           <p>Language: {getLanguageName(quizDetails.language)}.</p>
-          <p>{answerTimeLimit} seconds per question.</p>
+
+          {!isHost && <p>{quiz.answerTimeLimit} seconds per question.</p>}
+
+          {isHost && editingAnswerTimeLimit && (
+            <>
+              <TextField
+                type="number"
+                autoFocus
+                label="Seconds per question"
+                value={`${answerTimeLimit}`}
+                min={5}
+                max={180}
+                onChange={(event) => {
+                  setAnswerTimeLimit(Number(event.target.value));
+                }}
+              />
+              <Button
+                variant="info"
+                onClick={async () => {
+                  setEditingAnswerTimeLimit(false);
+                  await updateQuizSession(
+                    quiz.id,
+                    hostIsParticipating,
+                    answerTimeLimit,
+                  );
+                }}
+              >
+                Save
+              </Button>
+            </>
+          )}
+
+          {isHost && !editingAnswerTimeLimit && (
+            <>
+              <p>{answerTimeLimit} seconds per question.</p>
+              <Button
+                variant="info"
+                onClick={() => {
+                  setEditingAnswerTimeLimit(true);
+                }}
+              >
+                Edit time per question
+              </Button>
+            </>
+          )}
+
           <h3>Map Style:</h3>
           <p style={{ display: "block", flexDirection: "column" }}>
             {map.name} by {map.author}
