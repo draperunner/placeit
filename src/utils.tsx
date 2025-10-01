@@ -18,3 +18,13 @@ export function getLanguageName(languageCode: string): string {
     languages.find(({ code }) => code === languageCode)?.name || languageCode
   );
 }
+
+export function getBounds(
+  points: [longitude: number, latitude: number][],
+): [sw: [number, number], ne: [number, number]] {
+  const lats = points.map(([, lat]) => lat);
+  const lngs = points.map(([lng]) => lng);
+  const sw: [number, number] = [Math.min(...lngs), Math.min(...lats)];
+  const ne: [number, number] = [Math.max(...lngs), Math.max(...lats)];
+  return [sw, ne];
+}

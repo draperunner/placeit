@@ -14,18 +14,6 @@ import styles from "./Lobby.module.css";
 import { User } from "firebase/auth";
 import { SESSIONS_URL } from "../../../constants";
 
-function getMapPreview(url: string): string {
-  const s = "a";
-  const z = 5;
-  const x = 15;
-  const y = 12;
-  return url
-    .replace("{s}", s)
-    .replace("{z}", z.toString())
-    .replace("{x}", x.toString())
-    .replace("{y}", y.toString());
-}
-
 function join(quizId: string, name: string) {
   return post(`${SESSIONS_URL}/${quizId}/join`, {
     name,
@@ -64,7 +52,7 @@ export default function Lobby({ quiz, user }: Props) {
   const joined =
     !!user && quiz.participants.some(({ uid }) => uid === user.uid);
 
-  const { host, quizDetails, map } = quiz;
+  const { host, quizDetails } = quiz;
 
   const participants = quiz.participants.filter(({ uid }) => uid !== host.uid);
 
@@ -212,16 +200,6 @@ export default function Lobby({ quiz, user }: Props) {
               </Button>
             </>
           )}
-
-          <h3>Map Style:</h3>
-          <p style={{ display: "block", flexDirection: "column" }}>
-            {map.name} by {map.author}
-          </p>
-          <img
-            style={{ borderRadius: 4 }}
-            src={getMapPreview(map.url)}
-            alt={`${map.name} by ${map.author}`}
-          />
         </div>
       </div>
 

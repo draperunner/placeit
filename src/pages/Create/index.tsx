@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { MapContainer, Marker, Tooltip } from "react-leaflet";
 import { useNavigate } from "react-router-dom";
+import { Map, MapLayerMouseEvent, Marker } from "react-map-gl/maplibre";
 import "firebase/firestore";
 
 import { useUser } from "../../auth";
@@ -14,7 +14,6 @@ import Navbar from "../../Navbar";
 
 import languages from "../../languages";
 import { getAuth } from "firebase/auth";
-import { TileLayer } from "../../components/TileLayer";
 import { QUIZZES_URL } from "../../constants";
 import styles from "./Create.module.css";
 
@@ -84,7 +83,8 @@ export default function Create() {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
 
-  const onMapClick = useCallback((coordinates: LatLng) => {
+  const onMapClick = useCallback((event: MapLayerMouseEvent) => {
+    const coordinates = event.lngLat;
     setAnswerMarker(coordinates);
     setCurrentQuestion((prevCurrentQuestion) => ({
       ...prevCurrentQuestion,
@@ -316,32 +316,27 @@ export default function Create() {
   return (
     <div className={styles.create}>
       <Navbar />
-      <MapContainer
-        center={[0, 0]}
-        zoom={2}
+      <Map
+        initialViewState={{
+          longitude: 0,
+          latitude: 0,
+          zoom: 2,
+        }}
         style={{ height: "100vh" }}
-        zoomControl={false}
+        mapStyle="https://tiles.openfreemap.org/styles/liberty"
+        onClick={onMapClick}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.osm.org/{z}/{x}/{y}.png"
-          onMapClick={onMapClick}
-        />
-        {answerMarker ? <Marker position={answerMarker} /> : null}
+        {answerMarker ? (
+          <Marker latitude={answerMarker.lat} longitude={answerMarker.lng} />
+        ) : null}
         {questions.map(({ correctAnswer }, index) => (
           <Marker
-            key={index}
-            position={{
-              lat: correctAnswer.latitude,
-              lng: correctAnswer.longitude,
-            }}
-          >
-            <Tooltip direction="top" permanent offset={[0, -10]}>{`Q${
-              index + 1
-            }`}</Tooltip>
-          </Marker>
+            key={`marker-${index}`}
+            latitude={correctAnswer.latitude}
+            longitude={correctAnswer.longitude}
+          />
         ))}
-      </MapContainer>
+      </Map>
       {renderLeftMargin()}
       <Modal visible={submitted}>
         <h2>Hooray!</h2>

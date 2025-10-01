@@ -1,12 +1,11 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import Leaflet from "leaflet";
-import { MapContainer, Marker, Polygon, Tooltip } from "react-leaflet";
+import { useState, useCallback, useEffect, useRef, Fragment } from "react";
+import { Map, MapRef, Marker, Popup } from "react-map-gl/maplibre";
 
 import { usePrevious } from "../../utils";
 import { QuizSession, GivenAnswer } from "../../interfaces";
 import { User } from "firebase/auth";
-import { TileLayer } from "../../components/TileLayer";
 import styles from "./GameOver.module.css";
+import { LineString } from "../../components/map/LineString";
 
 interface Props {
   quiz: QuizSession;
@@ -23,22 +22,24 @@ function formatDistance(meters: number): string {
   return `${Math.round(meters)} m`;
 }
 
+function getBounds(
+  points: [longitude: number, latitude: number][],
+): [sw: [number, number], ne: [number, number]] {
+  const lats = points.map(([, lat]) => lat);
+  const lngs = points.map(([lng]) => lng);
+  const sw: [number, number] = [Math.min(...lngs), Math.min(...lats)];
+  const ne: [number, number] = [Math.max(...lngs), Math.max(...lats)];
+  return [sw, ne];
+}
+
 const DEFAULT_POSITION: [number, number] = [0, 0];
 const DEFAULT_ZOOM = 2;
 const REVEAL_INTERVAL = 5 * 1000;
 
 export default function QuizSessionInProgress({ quiz }: Props) {
-  const [position, setPosition] = useState<[number, number]>(DEFAULT_POSITION);
-  const [zoom, setZoom] = useState<number>(DEFAULT_ZOOM);
   const { correctAnswer, givenAnswers = [] } = quiz.currentQuestion || {};
   const [shownAnswers, setShowAnswers] = useState<GivenAnswer[]>([]);
-  const [allowMapMove, setAllowMapMove] = useState<boolean>(false);
-
-  const [bounds, setBounds] = useState<Leaflet.LatLngBounds | undefined>(
-    undefined,
-  );
-
-  const map = useRef(null);
+  const map = useRef<MapRef>(null);
 
   const previousCorrectAnswer = usePrevious(correctAnswer);
 
@@ -47,8 +48,10 @@ export default function QuizSessionInProgress({ quiz }: Props) {
 
   useEffect(() => {
     if (!previousCorrectAnswer && correctAnswer) {
-      setPosition([correctAnswer.latitude, correctAnswer.longitude]);
-      setZoom(10);
+      map.current?.flyTo({
+        center: [correctAnswer.longitude, correctAnswer.latitude],
+        zoom: 10,
+      });
     }
   }, [correctAnswer, previousCorrectAnswer]);
 
@@ -116,35 +119,28 @@ export default function QuizSessionInProgress({ quiz }: Props) {
 
         if (!winnersAnswer) return null;
 
-        const bounds = Leaflet.latLngBounds(
-          {
-            lat: winnersAnswer.latitude,
-            lng: winnersAnswer.longitude,
-          },
-          {
-            lat: correctAnswer.latitude,
-            lng: correctAnswer.longitude,
-          },
+        map.current?.fitBounds(
+          getBounds([
+            [winnersAnswer.longitude, winnersAnswer.latitude],
+            [correctAnswer.longitude, correctAnswer.latitude],
+          ]),
+          { padding: 100 },
         );
-        setBounds(bounds);
+
         return;
       }
 
       const numShown = shownAnswers.length;
       const givenAnswer = givenAnswers[numShown];
-      const coords = givenAnswer.answer;
-      const bounds = Leaflet.latLngBounds(
-        {
-          lat: coords.latitude,
-          lng: coords.longitude,
-        },
-        {
-          lat: correctAnswer.latitude,
-          lng: correctAnswer.longitude,
-        },
-      );
       setShowAnswers((prevShownAnswers) => [...prevShownAnswers, givenAnswer]);
-      setBounds(bounds);
+
+      map.current?.fitBounds(
+        getBounds([
+          [givenAnswer.answer.longitude, givenAnswer.answer.latitude],
+          [correctAnswer.longitude, correctAnswer.latitude],
+        ]),
+        { padding: 100 },
+      );
     }, REVEAL_INTERVAL);
     return () => {
       clearInterval(interval);
@@ -157,90 +153,51 @@ export default function QuizSessionInProgress({ quiz }: Props) {
     winner.participantId,
   ]);
 
-  useEffect(() => {
-    const timeout = setTimeout(
-      () => {
-        setAllowMapMove(true);
-      },
-      (givenAnswers.length + 1) * REVEAL_INTERVAL,
-    );
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [givenAnswers.length]);
-
   return (
     <div>
-      <MapContainer
-        center={position}
-        zoom={zoom}
-        style={{ height: "100vh" }}
-        zoomControl={false}
-        // useFlyTo
-        bounds={bounds}
-        boundsOptions={{
-          animate: true,
-          duration: 2,
-          paddingTopLeft: [40, 40],
-          paddingBottomRight: [40, 40],
-        }}
+      <Map
+        mapStyle="https://tiles.openfreemap.org/styles/liberty"
         ref={map}
-        dragging={allowMapMove}
-        keyboard={allowMapMove}
-        touchZoom={allowMapMove}
-        scrollWheelZoom={allowMapMove}
-        doubleClickZoom={allowMapMove}
+        initialViewState={{
+          latitude: DEFAULT_POSITION[0],
+          longitude: DEFAULT_POSITION[1],
+          zoom: DEFAULT_ZOOM,
+        }}
+        style={{ height: "100vh" }}
       >
-        <TileLayer
-          attribution={
-            quiz.map.attribution ||
-            '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
-          }
-          url={quiz.map.url || "https://{s}.tile.osm.org/{z}/{x}/{y}.png"}
-        />
         {correctAnswer ? (
           <Marker
-            position={{
-              lat: correctAnswer.latitude,
-              lng: correctAnswer.longitude,
-            }}
+            latitude={correctAnswer.latitude}
+            longitude={correctAnswer.longitude}
           />
         ) : null}
         {shownAnswers.map(({ participantId, answer }) => (
-          <>
+          <Fragment key={participantId}>
             {correctAnswer ? (
-              <Polygon
-                weight={1}
-                positions={[
-                  [answer.latitude, answer.longitude],
-                  [correctAnswer.latitude, correctAnswer.longitude],
-                ]}
-              ></Polygon>
+              <LineString points={[answer, correctAnswer]} />
             ) : null}
-            <Marker
-              key={participantId}
-              icon={
-                new Leaflet.Icon({
-                  iconUrl: `https://joesch.moe/api/v1/${participantId}`,
-                  iconSize: [40, 40],
-                  iconAnchor: [20, 20],
-                  popupAnchor: [0, -22],
-                  className: styles.mapUserIcon,
-                })
-              }
-              position={{
-                lat: answer.latitude,
-                lng: answer.longitude,
-              }}
-            >
-              <Tooltip direction="top" permanent offset={[0, -20]}>
-                {quiz.participants.find((p) => p.uid === participantId)?.name ||
-                  ""}
-              </Tooltip>
+            <Marker latitude={answer.latitude} longitude={answer.longitude}>
+              <img
+                alt={participantId}
+                height={40}
+                width={40}
+                style={{ borderRadius: "50%", background: "white" }}
+                src={`https://joesch.moe/api/v1/${participantId}`}
+              />
             </Marker>
-          </>
+            <Popup
+              longitude={answer.longitude}
+              latitude={answer.latitude}
+              style={{ color: "black" }}
+              offset={[0, -20]}
+              closeButton={false}
+            >
+              {quiz.participants.find((p) => p.uid === participantId)?.name ||
+                ""}
+            </Popup>
+          </Fragment>
         ))}
-      </MapContainer>
+      </Map>
       {renderResults()}
     </div>
   );

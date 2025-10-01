@@ -1,15 +1,20 @@
-import { useState, useCallback, useEffect, Fragment } from "react";
-import Leaflet from "leaflet";
-import { MapContainer, Marker, Polygon, Tooltip } from "react-leaflet";
+import { useState, useCallback, useEffect, Fragment, useRef } from "react";
+import {
+  Map,
+  MapLayerMouseEvent,
+  MapRef,
+  Marker,
+  Popup,
+} from "react-map-gl/maplibre";
 import "firebase/firestore";
 
 import Button from "../../components/Button";
 import { QuizSession } from "../../interfaces";
-import { usePrevious } from "../../utils";
+import { getBounds, usePrevious } from "../../utils";
 import { getAuth, type User } from "firebase/auth";
-import { TileLayer } from "../../components/TileLayer";
 import { SESSIONS_URL } from "../../constants";
 import styles from "./QuizInProgress.module.css";
+import { LineString } from "../../components/map/LineString";
 
 type LatLng = { lat: number; lng: number };
 
@@ -34,12 +39,11 @@ function randomLatLng(): LatLng {
   return { lat: randomLatitude, lng: randomLongitude };
 }
 
-const DEFAULT_POSITION: [number, number] = [0, 0];
+const DEFAULT_POSITION: [latitude: number, longitude: number] = [0, 0];
 const DEFAULT_ZOOM = 2;
 
 export default function QuizSessionInProgress({ quiz, user }: Props) {
-  const [position, setPosition] = useState<[number, number]>(DEFAULT_POSITION);
-  const [zoom, setZoom] = useState<number>(DEFAULT_ZOOM);
+  const map = useRef<MapRef>(null);
   const [loadingNextQuestion, setLoadingNextQuestion] =
     useState<boolean>(false);
 
@@ -50,8 +54,9 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   const previousCountDown = usePrevious(countDown);
 
   const onMapClick = useCallback(
-    (coordinates: LatLng) => {
+    (event: MapLayerMouseEvent) => {
       if (answerSubmitted) return;
+      const coordinates = event.lngLat;
       setAnswerMarker(coordinates);
     },
     [answerSubmitted],
@@ -137,11 +142,21 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   }, [countDown, deadline, quiz.answerTimeLimit]);
 
   useEffect(() => {
-    if (!previousCorrectAnswer && correctAnswer) {
-      setPosition([correctAnswer.latitude, correctAnswer.longitude]);
-      setZoom(10);
+    if (!previousCorrectAnswer && correctAnswer && map.current) {
+      map.current.fitBounds(
+        getBounds([
+          [answerMarker.lng, answerMarker.lat],
+          [correctAnswer.longitude, correctAnswer.latitude],
+        ]),
+        { padding: 100 },
+      );
     }
-  }, [correctAnswer, previousCorrectAnswer]);
+  }, [
+    answerMarker.lat,
+    answerMarker.lng,
+    correctAnswer,
+    previousCorrectAnswer,
+  ]);
 
   const renderResults = () => {
     if (!correctAnswer || !givenAnswers) return null;
@@ -174,8 +189,11 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   useEffect(() => {
     setAnswerMarker(randomLatLng());
     setAnswerSubmitted(false);
-    setZoom(DEFAULT_ZOOM);
-    setPosition(DEFAULT_POSITION);
+    map.current?.flyTo({
+      center: DEFAULT_POSITION,
+      zoom: DEFAULT_ZOOM,
+      duration: 0,
+    });
   }, [quiz.currentQuestion?.id]);
 
   const isHost = !!user && quiz.host.uid === user.uid;
@@ -266,79 +284,64 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
 
   return (
     <div>
-      <MapContainer
-        center={position}
-        zoom={zoom}
+      <Map
+        ref={map}
+        mapStyle="https://tiles.openfreemap.org/styles/liberty"
+        initialViewState={{
+          latitude: DEFAULT_POSITION[0],
+          longitude: DEFAULT_POSITION[1],
+          zoom: DEFAULT_ZOOM,
+        }}
         style={{ height: "100vh" }}
-        zoomControl={false}
+        onClick={onMapClick}
+        renderWorldCopies={false}
       >
-        <TileLayer
-          attribution={
-            quiz.map.attribution ||
-            '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
-          }
-          url={quiz.map.url || "https://{s}.tile.osm.org/{z}/{x}/{y}.png"}
-          onMapClick={onMapClick}
-        />
         {!correctAnswer ? (
-          <Marker
-            position={answerMarker}
-            icon={
-              new Leaflet.Icon({
-                iconUrl: `https://joesch.moe/api/v1/${user?.uid}`,
-                iconSize: [40, 40],
-                iconAnchor: [20, 20],
-                popupAnchor: [0, -22],
-                className: styles.mapUserIcon,
-              })
-            }
-          />
+          <Marker latitude={answerMarker.lat} longitude={answerMarker.lng}>
+            <img
+              alt="Your answer"
+              height={40}
+              width={40}
+              style={{ borderRadius: "50%" }}
+              src={`https://joesch.moe/api/v1/${user?.uid}`}
+            />
+          </Marker>
         ) : null}
         {correctAnswer ? (
           <Marker
-            position={{
-              lat: correctAnswer.latitude,
-              lng: correctAnswer.longitude,
-            }}
+            latitude={correctAnswer.latitude}
+            longitude={correctAnswer.longitude}
           />
         ) : null}
         {givenAnswers
           ? givenAnswers.map(({ participantId, answer }) => (
               <Fragment key={participantId}>
                 {correctAnswer ? (
-                  <Polygon
-                    weight={1}
-                    positions={[
-                      [answer.latitude, answer.longitude],
-                      [correctAnswer.latitude, correctAnswer.longitude],
-                    ]}
-                  ></Polygon>
+                  <LineString points={[answer, correctAnswer]} />
                 ) : null}
-                <Marker
-                  key={participantId}
-                  icon={
-                    new Leaflet.Icon({
-                      iconUrl: `https://joesch.moe/api/v1/${participantId}`,
-                      iconSize: [40, 40],
-                      iconAnchor: [20, 20],
-                      popupAnchor: [0, -22],
-                      className: styles.mapUserIcon,
-                    })
-                  }
-                  position={{
-                    lat: answer.latitude,
-                    lng: answer.longitude,
-                  }}
-                >
-                  <Tooltip direction="top" permanent offset={[0, -20]}>
-                    {quiz.participants.find((p) => p.uid === participantId)
-                      ?.name || ""}
-                  </Tooltip>
+                <Marker latitude={answer.latitude} longitude={answer.longitude}>
+                  <img
+                    alt="Your answer"
+                    height={40}
+                    width={40}
+                    style={{ borderRadius: "50%" }}
+                    src={`https://joesch.moe/api/v1/${user?.uid}`}
+                  />
                 </Marker>
+                <Popup
+                  offset={[0, -20]}
+                  longitude={answer.longitude}
+                  latitude={answer.latitude}
+                  style={{ color: "black" }}
+                  closeButton={false}
+                >
+                  {quiz.participants.find((p) => p.uid === participantId)
+                    ?.name || ""}
+                </Popup>
               </Fragment>
             ))
           : null}
-      </MapContainer>
+      </Map>
       {renderQuestion()}
     </div>
   );
