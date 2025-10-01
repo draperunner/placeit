@@ -25,14 +25,12 @@ async function createQuizSession(
   hostName: string,
   quizId: string,
   hostParticipates: boolean,
-  answerTimeLimit: number,
 ) {
   const { session } = await post<{ session: { id: string } }>(SESSIONS_URL, {
     hostName,
     quizId,
     map: "STANDARD",
     hostParticipates,
-    answerTimeLimit,
   });
 
   return session.id;
@@ -59,7 +57,6 @@ export default function Host() {
   const [publicQuizzes, setPublicQuizzes] = useState<Quiz[] | undefined>();
   const [personalQuizzes, setPersonalQuizzes] = useState<Quiz[] | undefined>();
   const [quiz, setQuiz] = useState<string | undefined>();
-  const [answerTimeLimit, setAnswerTimeLimit] = useState<number>(30);
   const [hostParticipates, setHostParticipates] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -105,18 +102,13 @@ export default function Host() {
 
       try {
         setLoading(true);
-        const id = await createQuizSession(
-          name,
-          quiz,
-          hostParticipates,
-          answerTimeLimit,
-        );
+        const id = await createQuizSession(name, quiz, hostParticipates);
         await navigate(`/q/${id}`);
       } finally {
         setLoading(false);
       }
     },
-    [answerTimeLimit, hostParticipates, name, navigate, quiz],
+    [hostParticipates, name, navigate, quiz],
   );
 
   return (
@@ -143,21 +135,6 @@ export default function Host() {
             }}
           />
           Participate yourself?
-        </label>
-
-        <h2>Time Limit</h2>
-        <p>How hard do you want this to be?</p>
-        <label>
-          Seconds per answer:&nbsp;
-          <input
-            type="number"
-            value={answerTimeLimit}
-            min={5}
-            max={60}
-            onChange={(e) => {
-              setAnswerTimeLimit(Number(e.currentTarget.value));
-            }}
-          />
         </label>
 
         <h2>Select a Quiz</h2>
