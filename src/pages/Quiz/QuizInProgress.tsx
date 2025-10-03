@@ -109,22 +109,20 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   const { correctAnswer, givenAnswers, deadline } = quiz.currentQuestion || {};
 
   const previousCorrectAnswer = usePrevious(correctAnswer);
-  const previousDeadline = usePrevious(deadline);
 
-  // Init count down on new deadline
+  // Set countdown based on question's deadline
   useEffect(() => {
     if (!deadline) {
       setCountDown(undefined);
       return;
     }
 
-    if (previousDeadline && deadline.isEqual(previousDeadline)) {
-      return;
-    }
+    const secondsUntilDeadline = Math.floor(
+      (deadline.toMillis() - Date.now()) / 1000,
+    );
 
-    const newCountDown = quiz.answerTimeLimit;
-    setCountDown(newCountDown);
-  }, [deadline, previousDeadline, quiz.answerTimeLimit]);
+    setCountDown(Math.max(0, secondsUntilDeadline));
+  }, [deadline]);
 
   useEffect(() => {
     const interval = setInterval(() => {
