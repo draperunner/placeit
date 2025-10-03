@@ -492,17 +492,33 @@ app.post("/:id/join", verifyToken(), async (req, res, next) => {
     const { id } = req.params;
     const { uid } = getUserContext();
     const { name } = JoinSchema.parse(req.body);
-
     const db = getFirestore();
-    await db
-      .collection("quiz-sessions")
-      .doc(id)
-      .update({
+
+    await db.runTransaction(async (transaction) => {
+      const quizSession = await getQuizSession(id, transaction);
+
+      if (!quizSession) {
+        throw new Error("Quiz session does not exist");
+      }
+
+      if (quizSession.state !== "lobby") {
+        throw new Error("Cannot join a quiz that has already started.");
+      }
+
+      if (
+        quizSession.participants.some((participant) => participant.uid === uid)
+      ) {
+        return;
+      }
+
+      transaction.update(db.collection("quiz-sessions").doc(id), {
         participants: FieldValue.arrayUnion({
           uid,
           name,
         }),
       });
+    });
+
     res.json({});
   } catch (error) {
     next(error);
@@ -513,8 +529,25 @@ app.post("/:id/start", verifyToken(), async (req, res, next) => {
   try {
     const { id } = req.params;
     const db = getFirestore();
-    await db.collection("quiz-sessions").doc(id).update({
-      state: "in-progress",
+
+    await db.runTransaction(async (transaction) => {
+      const quizSession = await getQuizSession(id, transaction);
+
+      if (!quizSession) {
+        throw new Error("Quiz session does not exist");
+      }
+
+      if (quizSession.host.uid !== getUserContext().uid) {
+        throw new Error("Only the host can start the quiz");
+      }
+
+      if (quizSession.state !== "lobby") {
+        throw new Error("Quiz has already started");
+      }
+
+      transaction.update(db.collection("quiz-sessions").doc(id), {
+        state: "in-progress",
+      });
     });
     res.json({});
   } catch (error) {
