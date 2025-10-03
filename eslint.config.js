@@ -17,7 +17,14 @@ export default defineConfig(
   },
   {
     rules: {
-      "@typescript-eslint/no-misused-promises": "off",
+      "@typescript-eslint/no-misused-promises": [
+        "error",
+        {
+          checksVoidReturn: {
+            attributes: false,
+          },
+        },
+      ],
       "@typescript-eslint/restrict-template-expressions": [
         "error",
         { allowNumber: true },

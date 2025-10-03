@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import "firebase/firestore";
 
@@ -88,8 +88,8 @@ export default function Host() {
     });
   }, [user]);
 
-  const onCreateQuiz: React.FormEventHandler<HTMLFormElement> = useCallback(
-    async (event) => {
+  const onCreateQuiz = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       if (!name) {
         alert("You need to choose a name!");

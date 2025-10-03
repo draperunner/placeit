@@ -130,7 +130,7 @@ export default function Lobby({ quiz, user }: Props) {
               onSubmit={(e) => {
                 e.preventDefault();
                 if (user) {
-                  return join(quiz.id, name);
+                  void join(quiz.id, name);
                 }
               }}
             >
