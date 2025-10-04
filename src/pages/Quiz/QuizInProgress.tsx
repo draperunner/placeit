@@ -293,34 +293,37 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
             longitude={correctAnswer.longitude}
           />
         ) : null}
-        {givenAnswers
-          ? givenAnswers.map(({ participantId, answer }) => (
-              <Fragment key={participantId}>
-                {correctAnswer ? (
-                  <LineString points={[answer, correctAnswer]} />
-                ) : null}
-                <Marker latitude={answer.latitude} longitude={answer.longitude}>
-                  <img
-                    alt="Your answer"
-                    height={40}
-                    width={40}
-                    style={{ borderRadius: "50%" }}
-                    src={`https://joesch.moe/api/v1/${participantId}`}
-                  />
-                </Marker>
-                <Popup
-                  offset={[0, -20]}
-                  longitude={answer.longitude}
-                  latitude={answer.latitude}
-                  style={{ color: "black" }}
-                  closeButton={false}
-                >
+        {givenAnswers?.map(({ participantId, answer, points }) => (
+          <Fragment key={participantId}>
+            {correctAnswer ? (
+              <LineString points={[answer, correctAnswer]} />
+            ) : null}
+            <Marker latitude={answer.latitude} longitude={answer.longitude}>
+              <img
+                alt="Your answer"
+                height={40}
+                width={40}
+                style={{ borderRadius: "50%" }}
+                src={`https://joesch.moe/api/v1/${participantId}`}
+              />
+            </Marker>
+            <Popup
+              offset={[0, -20]}
+              longitude={answer.longitude}
+              latitude={answer.latitude}
+              style={{ color: "black" }}
+              closeButton={false}
+            >
+              <div>
+                <div>
                   {quiz.participants.find((p) => p.uid === participantId)
                     ?.name || ""}
-                </Popup>
-              </Fragment>
-            ))
-          : null}
+                </div>
+                <div>{points} points</div>
+              </div>
+            </Popup>
+          </Fragment>
+        ))}
       </Map>
       {renderQuestion()}
     </div>

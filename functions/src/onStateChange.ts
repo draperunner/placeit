@@ -37,35 +37,12 @@ async function revealAnswerIfQuestionDeadlinePassed(
       throw new Error("Quiz session does not exist");
     }
 
-    const { currentQuestion } = quizSession;
+    const { currentCorrectAnswer, givenAnswers } = quizState;
+    const { state, currentQuestion, participants } = quizSession;
 
-    if (!currentQuestion) {
-      throw new Error(
-        "Current question is undefined, although quiz has started.",
-      );
-    }
-
-    // Deadline has not yet passed, not revealing answer yet.
-    if (currentQuestion.deadline.toMillis() >= Date.now()) {
-      return;
-    }
-
-    const { givenAnswers } = quizState;
-
-    const givenAnswersForThisQuestion = givenAnswers.filter(
-      ({ questionId }) => questionId === currentQuestion.id,
-    );
-
-    const gameOver =
-      quizSession.quizDetails.numberOfQuestions ===
-      Number.parseInt(currentQuestion.id) + 1;
-
-    transaction.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
-      "currentQuestion.correctAnswer":
-        quizState.currentCorrectAnswer.correctAnswer,
-      "currentQuestion.givenAnswers": givenAnswersForThisQuestion,
-      state: gameOver ? "over" : "in-progress",
-      results: quizSession.participants
+    // Reveal final results if game is over
+    if (state === "over") {
+      const results = participants
         .map((participant) => {
           const totalPoints = givenAnswers
             .filter(({ participantId }) => participantId === participant.uid)
@@ -78,7 +55,37 @@ async function revealAnswerIfQuestionDeadlinePassed(
             points: totalPoints,
           };
         })
-        .sort((a, b) => b.points - a.points),
+        .sort((a, b) => b.points - a.points);
+
+      transaction.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
+        results,
+      });
+
+      return;
+    }
+
+    if (state !== "in-progress") {
+      return;
+    }
+
+    if (!currentQuestion) {
+      throw new Error(
+        "Current question is undefined, although quiz has started.",
+      );
+    }
+
+    // Deadline has not yet passed, not revealing answer yet.
+    if (currentQuestion.deadline.toMillis() >= Date.now()) {
+      return;
+    }
+
+    const givenAnswersForThisQuestion = givenAnswers.filter(
+      ({ questionId }) => questionId === currentQuestion.id,
+    );
+
+    transaction.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
+      "currentQuestion.correctAnswer": currentCorrectAnswer.correctAnswer,
+      "currentQuestion.givenAnswers": givenAnswersForThisQuestion,
     });
   });
 }

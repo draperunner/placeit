@@ -270,27 +270,31 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
         );
       }
 
-      if (currentQuestionIndex === quiz.questions.length - 1) {
-        throw new Error(
-          "There are no more questions. We should be done already.",
-        );
-      }
+      // No more questions left, game should be over
+      const gameOver = currentQuestionIndex === quiz.questions.length - 1;
 
-      const nextQuestion = quiz.questions[currentQuestionIndex + 1];
+      const nextQuestion = gameOver
+        ? null
+        : quiz.questions[currentQuestionIndex + 1];
 
       transaction.update(db.collection(Collections.QUIZ_STATES).doc(id), {
-        currentCorrectAnswer: {
-          questionId: nextQuestion.id,
-          correctAnswer: nextQuestion.correctAnswer,
-        },
+        currentCorrectAnswer: nextQuestion
+          ? {
+              questionId: nextQuestion.id,
+              correctAnswer: nextQuestion.correctAnswer,
+            }
+          : null,
       });
 
       transaction.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
-        currentQuestion: {
-          id: nextQuestion.id,
-          text: nextQuestion.text,
-          deadline: getDeadline(quizSession.answerTimeLimit),
-        },
+        state: gameOver ? "over" : "in-progress",
+        currentQuestion: nextQuestion
+          ? {
+              id: nextQuestion.id,
+              text: nextQuestion.text,
+              deadline: getDeadline(quizSession.answerTimeLimit),
+            }
+          : null,
       });
     });
 
