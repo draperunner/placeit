@@ -12,16 +12,6 @@ interface Props {
   user: User | null | undefined;
 }
 
-function formatDistance(meters: number): string {
-  if (meters > 10000) {
-    return `${Math.round(meters / 1000)} km`;
-  }
-  if (meters > 1000) {
-    return `${(meters / 1000).toFixed(1)} km`;
-  }
-  return `${Math.round(meters)} m`;
-}
-
 function getBounds(
   points: [longitude: number, latitude: number][],
 ): [sw: [number, number], ne: [number, number]] {
@@ -43,7 +33,7 @@ export default function QuizSessionInProgress({ quiz }: Props) {
 
   const previousCorrectAnswer = usePrevious(correctAnswer);
 
-  const winner = quiz.results[0];
+  const winner = quiz.results?.[0];
   const allShown = shownAnswers.length === givenAnswers.length;
 
   useEffect(() => {
@@ -58,16 +48,19 @@ export default function QuizSessionInProgress({ quiz }: Props) {
   const renderResults = useCallback(() => {
     if (!correctAnswer) return null;
 
-    const resultsToShow = quiz.results
-      .filter(({ participantId }) =>
-        shownAnswers.some((a) => a.participantId === participantId),
-      )
-      .sort((a, b) => a.distance - b.distance);
+    const resultsToShow =
+      quiz.results
+        ?.filter(({ participantId }) =>
+          shownAnswers.some((a) => a.participantId === participantId),
+        )
+        .sort((a, b) => b.points - a.points) ?? [];
 
     let description = "Time for the big reveal ...";
 
     if (allShown) {
-      description = `Congratulations, ${winner.name} 🎉`;
+      description = winner
+        ? `Congratulations, ${winner.name} 🎉`
+        : "Congratulations!";
     }
 
     return (
@@ -75,35 +68,40 @@ export default function QuizSessionInProgress({ quiz }: Props) {
         <h1>Game Over</h1>
         <p>{description}</p>
         <ol>
-          {resultsToShow.map(({ participantId, distance, name }) => {
-            const accumulated = formatDistance(distance);
-
+          {resultsToShow.map(({ participantId, points, name }) => {
             const givenAnswer = givenAnswers.find(
               (givenAns) => givenAns.participantId === participantId,
             );
-            const thisQuestionDistance = formatDistance(
-              givenAnswer?.distance || 0,
-            );
+            const thisQuestionPoints = givenAnswer?.points;
 
             return (
               <li key={participantId}>
-                {`${name} ${accumulated}`}
-                <span
-                  style={{
-                    color:
-                      (givenAnswer?.distance || 0) < 1000 ? "green" : "red",
-                  }}
-                >
-                  {" "}
-                  +{thisQuestionDistance}
-                </span>
+                {name} – {points} points
+                {typeof thisQuestionPoints === "number" ? (
+                  <span
+                    style={{
+                      color: "green",
+                    }}
+                  >
+                    {` +${thisQuestionPoints}`}
+                  </span>
+                ) : (
+                  <span style={{ color: "red" }}> (no answer!)</span>
+                )}
               </li>
             );
           })}
         </ol>
       </div>
     );
-  }, [allShown, correctAnswer, givenAnswers, quiz, shownAnswers, winner.name]);
+  }, [
+    allShown,
+    correctAnswer,
+    givenAnswers,
+    quiz.results,
+    shownAnswers,
+    winner,
+  ]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -114,7 +112,7 @@ export default function QuizSessionInProgress({ quiz }: Props) {
       if (allShown) {
         clearInterval(interval);
         const winnersAnswer = givenAnswers.find(
-          ({ participantId }) => participantId === winner.participantId,
+          ({ participantId }) => participantId === winner?.participantId,
         )?.answer;
 
         if (!winnersAnswer) return null;
@@ -145,13 +143,7 @@ export default function QuizSessionInProgress({ quiz }: Props) {
     return () => {
       clearInterval(interval);
     };
-  }, [
-    allShown,
-    correctAnswer,
-    givenAnswers,
-    shownAnswers.length,
-    winner.participantId,
-  ]);
+  }, [allShown, correctAnswer, givenAnswers, shownAnswers.length, winner]);
 
   return (
     <div>

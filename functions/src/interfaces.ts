@@ -38,9 +38,9 @@ export interface QuizSession {
     }>;
     deadline: Timestamp;
   };
-  results: Array<{
+  results?: Array<{
     participantId: string;
-    distance: number;
+    points: number;
     name: string;
   }>;
   createdAt: Timestamp;
@@ -62,6 +62,8 @@ export interface GivenAnswer {
   participantId: string;
   answer: GeoPoint;
   distance: number;
+  points: number;
+  timestamp: Timestamp;
 }
 
 export interface QuizState {

@@ -24,7 +24,10 @@ async function getQuizSession(
   return doc.data() as QuizSession;
 }
 
-async function checkIfAllAnswersGiven(quizState: QuizState, id: string) {
+async function revealAnswerIfQuestionDeadlinePassed(
+  quizState: QuizState,
+  id: string,
+) {
   const db = getFirestore();
 
   await db.runTransaction(async (transaction) => {
@@ -42,24 +45,16 @@ async function checkIfAllAnswersGiven(quizState: QuizState, id: string) {
       );
     }
 
+    // Deadline has not yet passed, not revealing answer yet.
+    if (currentQuestion.deadline.toMillis() >= Date.now()) {
+      return;
+    }
+
     const { givenAnswers } = quizState;
 
     const givenAnswersForThisQuestion = givenAnswers.filter(
       ({ questionId }) => questionId === currentQuestion.id,
     );
-
-    const participantsThatHaveAnswered = givenAnswersForThisQuestion.map(
-      ({ participantId }) => participantId,
-    );
-
-    const haveAllParticipantsAnswered = quizSession.participants.every(
-      (participant) => participantsThatHaveAnswered.includes(participant.uid),
-    );
-
-    if (!haveAllParticipantsAnswered) {
-      console.log("Not all participants have answered yet.");
-      return;
-    }
 
     const gameOver =
       quizSession.quizDetails.numberOfQuestions ===
@@ -71,19 +66,19 @@ async function checkIfAllAnswersGiven(quizState: QuizState, id: string) {
       "currentQuestion.givenAnswers": givenAnswersForThisQuestion,
       state: gameOver ? "over" : "in-progress",
       results: quizSession.participants
-        .map((parti) => {
-          const distance = givenAnswers
-            .filter(({ participantId }) => participantId === parti.uid)
-            .map((gans) => gans.distance || 0)
+        .map((participant) => {
+          const totalPoints = givenAnswers
+            .filter(({ participantId }) => participantId === participant.uid)
+            .map((answer) => answer.points)
             .reduce((a, b) => a + b, 0);
 
           return {
-            name: parti.name,
-            participantId: parti.uid,
-            distance,
+            name: participant.name,
+            participantId: participant.uid,
+            points: totalPoints,
           };
         })
-        .sort((a, b) => a.distance - b.distance),
+        .sort((a, b) => b.points - a.points),
     });
   });
 }
@@ -102,11 +97,6 @@ export const onStateChange2ndGen = onDocumentUpdated(
       return;
     }
 
-    if (newValue.givenAnswers.length === previousValue.givenAnswers.length) {
-      console.log("Same number of given answers.");
-      return;
-    }
-
-    await checkIfAllAnswersGiven(newValue, params.id);
+    await revealAnswerIfQuestionDeadlinePassed(newValue, params.id);
   },
 );

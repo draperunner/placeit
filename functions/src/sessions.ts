@@ -1,12 +1,11 @@
 import { onRequest } from "firebase-functions/v2/https";
 import express, { Request, Response } from "express";
 import haversine from "haversine";
-import destination from "@turf/rhumb-destination";
 
 import cors from "./cors.js";
 import { GivenAnswer, Quiz, QuizSession, QuizState } from "./interfaces.js";
 import { getUserContext, verifyToken } from "./auth.js";
-import { ANSWER_TIME_LIMIT, ANSWER_TIME_SLACK } from "./constants.js";
+import { ANSWER_TIME_LIMIT } from "./constants.js";
 import {
   FieldValue,
   GeoPoint,
@@ -52,6 +51,29 @@ function getMapData(map: Map): MapData {
           '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
       };
   }
+}
+
+function scoreFromDistance(
+  distanceMeters: number | null,
+  cutoffMeters = 2_000_000,
+) {
+  if (distanceMeters === null || distanceMeters >= cutoffMeters) {
+    return 0;
+  }
+
+  if (distanceMeters <= 0) {
+    return 1000;
+  }
+
+  const HALF_RATIO = 0.075; // Score 500 is given at a distance of 150 km if cutoff 2000 km
+  const h = HALF_RATIO * cutoffMeters;
+  const k = Math.log(2) / h;
+
+  const tail = Math.exp(-k * cutoffMeters);
+  const top = Math.exp(-k * distanceMeters) - tail;
+  const denominator = 1 - tail;
+
+  return Math.round((1000 * top) / denominator);
 }
 
 async function getQuizSession(
@@ -119,7 +141,10 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
     const currentUserUid = getUserContext().uid;
 
     await db.runTransaction(async (transaction) => {
-      const quizSession = await getQuizSession(id, transaction);
+      const [quizSession, quizState] = await Promise.all([
+        getQuizSession(id, transaction),
+        getQuizState(id, transaction),
+      ]);
 
       if (!quizSession) {
         throw new Error("Quiz session does not exist");
@@ -142,28 +167,12 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
       }
 
       const diff = currentQuestion.deadline.toMillis() - now.getTime();
-      if (diff < ANSWER_TIME_SLACK * -1000) {
+      if (diff <= 0) {
         throw new Error(`Answered too late: ${diff} ms`);
       }
 
-      const quizState = await getQuizState(id, transaction);
-
       if (!quizState) {
         throw new Error("Quiz state does not exist");
-      }
-
-      const { givenAnswers } = quizState;
-
-      const givenAnswersForThisQuestion = givenAnswers.filter(
-        ({ questionId }) => questionId === currentQuestion.id,
-      );
-
-      const participantsThatHaveAnswered = givenAnswersForThisQuestion.map(
-        ({ participantId }) => participantId,
-      );
-
-      if (participantsThatHaveAnswered.includes(currentUserUid)) {
-        throw new Error("User has already answered this question!");
       }
 
       if (quizState.currentCorrectAnswer.questionId !== currentQuestion.id) {
@@ -177,16 +186,28 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
         parsedBody,
       );
 
-      const givenAnswer = {
+      const points = scoreFromDistance(distance);
+
+      const givenAnswer: GivenAnswer = {
         questionId: currentQuestion.id,
         participantId: currentUserUid,
-        answer: parsedBody,
+        answer: new GeoPoint(parsedBody.latitude, parsedBody.longitude),
         distance,
+        points,
         timestamp: Timestamp.fromDate(now),
       };
 
+      const updatedGivenAnswers = [
+        ...quizState.givenAnswers.filter(
+          (ans) =>
+            ans.participantId !== currentUserUid ||
+            ans.questionId !== currentQuestion.id,
+        ),
+        givenAnswer,
+      ];
+
       transaction.update(db.collection(Collections.QUIZ_STATES).doc(id), {
-        givenAnswers: FieldValue.arrayUnion(givenAnswer),
+        givenAnswers: updatedGivenAnswers,
       });
     });
 
@@ -233,8 +254,7 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
         );
       }
 
-      const { currentCorrectAnswer } = quizState;
-      const { currentQuestion, participants } = quizSession;
+      const { currentQuestion } = quizSession;
 
       if (!currentQuestion) {
         throw new Error("Huh. There is no currentQuestion. Strange.");
@@ -248,64 +268,6 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
         throw new Error(
           "The current question is not part of this quiz's questions. What?",
         );
-      }
-
-      const { givenAnswers } = quizState;
-
-      const givenAnswersForThisQuestion = givenAnswers.filter(
-        ({ questionId }) => questionId === currentQuestion.id,
-      );
-
-      const participantsThatHaventAnswered = participants.filter(
-        ({ uid }) =>
-          !givenAnswersForThisQuestion.some(
-            ({ participantId }) => participantId === uid,
-          ),
-      );
-
-      // If not all participants have answered, they either dropped out or timed out somehow.
-      // We need to assign some dummy answer so the quiz can continue.
-      if (participantsThatHaventAnswered.length > 0) {
-        const editedGivenAnswers = [...givenAnswers];
-
-        const worstAnswer = [...givenAnswersForThisQuestion].sort(
-          (a, b) => b.distance - a.distance,
-        )[0] as GivenAnswer | undefined;
-
-        participantsThatHaventAnswered.forEach(({ uid }) => {
-          const distance = (worstAnswer?.distance || 10e6) * 2;
-          const randomAnswerPoint = destination(
-            [
-              currentCorrectAnswer.correctAnswer.longitude,
-              currentCorrectAnswer.correctAnswer.latitude,
-            ],
-            distance / 1000, // kilometers
-            Math.random() * 360 - 180,
-          );
-
-          const latitude = Math.max(
-            -90,
-            Math.min(90, randomAnswerPoint.geometry.coordinates[1]),
-          );
-
-          const longitude = Math.max(
-            -180,
-            Math.min(180, randomAnswerPoint.geometry.coordinates[0]),
-          );
-
-          editedGivenAnswers.push({
-            answer: new GeoPoint(latitude, longitude),
-            distance,
-            participantId: uid,
-            questionId: currentQuestion.id,
-          });
-        });
-
-        transaction.update(db.collection(Collections.QUIZ_STATES).doc(id), {
-          givenAnswers: editedGivenAnswers,
-        });
-
-        return;
       }
 
       if (currentQuestionIndex === quiz.questions.length - 1) {
@@ -549,6 +511,20 @@ app.post("/:id/start", verifyToken(), async (req, res, next) => {
         state: "in-progress",
       });
     });
+    res.json({});
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/:id/ping", verifyToken(), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    await getFirestore().collection(Collections.QUIZ_STATES).doc(id).update({
+      lastPing: FieldValue.serverTimestamp(),
+    });
+
     res.json({});
   } catch (error) {
     next(error);

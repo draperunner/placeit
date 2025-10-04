@@ -23,22 +23,6 @@ interface Props {
   user: User | null | undefined;
 }
 
-function formatDistance(meters: number): string {
-  if (meters > 10000) {
-    return `${Math.round(meters / 1000)} km`;
-  }
-  if (meters > 1000) {
-    return `${(meters / 1000).toFixed(1)} km`;
-  }
-  return `${Math.round(meters)} m`;
-}
-
-function randomLatLng(): LatLng {
-  const randomLatitude = Math.random() * 180 - 90;
-  const randomLongitude = Math.random() * 360 - 180;
-  return { lat: randomLatitude, lng: randomLongitude };
-}
-
 const DEFAULT_POSITION: [latitude: number, longitude: number] = [0, 0];
 const DEFAULT_ZOOM = 2;
 
@@ -47,42 +31,44 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   const [loadingNextQuestion, setLoadingNextQuestion] =
     useState<boolean>(false);
 
-  const [answerMarker, setAnswerMarker] = useState<LatLng>(randomLatLng());
-  const [answerSubmitted, setAnswerSubmitted] = useState<boolean>(false);
+  const [answerMarker, setAnswerMarker] = useState<LatLng | null>(null);
   const [countDown, setCountDown] = useState<number | undefined>();
 
-  const previousCountDown = usePrevious(countDown);
+  const submitAnswer = useCallback(
+    async (answer: LatLng) => {
+      const currentUser = getAuth().currentUser;
+      if (!currentUser) {
+        console.log("No current user");
+        return;
+      }
+      const token = await currentUser.getIdToken();
 
-  const onMapClick = useCallback(
-    (event: MapLayerMouseEvent) => {
-      if (answerSubmitted) return;
-      const coordinates = event.lngLat;
-      setAnswerMarker(coordinates);
+      await fetch(`${SESSIONS_URL}/${quiz.id}/answer`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          latitude: answer.lat,
+          longitude: answer.lng,
+        }),
+      });
     },
-    [answerSubmitted],
+    [quiz.id],
   );
 
-  const submitAnswer = useCallback(async () => {
-    setAnswerSubmitted(true);
-    const currentUser = getAuth().currentUser;
-    if (!currentUser) {
-      console.log("No current user");
-      return;
-    }
-    const token = await currentUser.getIdToken();
+  const onMapClick = useCallback(
+    async (event: MapLayerMouseEvent) => {
+      const coordinates = event.lngLat;
 
-    await fetch(`${SESSIONS_URL}/${quiz.id}/answer`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        latitude: answerMarker.lat,
-        longitude: answerMarker.lng,
-      }),
-    });
-  }, [answerMarker, quiz.id]);
+      if (countDown) {
+        setAnswerMarker(coordinates);
+        await submitAnswer(coordinates);
+      }
+    },
+    [countDown, submitAnswer],
+  );
 
   const nextQuestion = useCallback(async () => {
     const currentUser = getAuth().currentUser;
@@ -105,6 +91,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   }, [quiz.id]);
 
   const gameOver = quiz.state === "over";
+  const isHost = !!user && quiz.host.uid === user.uid;
 
   const { correctAnswer, givenAnswers, deadline } = quiz.currentQuestion || {};
 
@@ -125,6 +112,33 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   }, [deadline]);
 
   useEffect(() => {
+    if (!isHost || !quiz.id) {
+      return;
+    }
+
+    const ping = async () => {
+      const currentUser = getAuth().currentUser;
+      if (!currentUser) {
+        return;
+      }
+      const token = await currentUser.getIdToken();
+      await fetch(`${SESSIONS_URL}/${quiz.id}/ping`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    };
+
+    const interval = setInterval(ping, 5000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isHost, quiz.id]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       if (typeof countDown === "undefined" || countDown === 0) {
         clearInterval(interval);
@@ -140,7 +154,12 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
   }, [countDown, deadline, quiz.answerTimeLimit]);
 
   useEffect(() => {
-    if (!previousCorrectAnswer && correctAnswer && map.current) {
+    if (
+      !previousCorrectAnswer &&
+      correctAnswer &&
+      answerMarker &&
+      map.current
+    ) {
       map.current.fitBounds(
         getBounds([
           [answerMarker.lng, answerMarker.lat],
@@ -149,35 +168,31 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
         { padding: 100 },
       );
     }
-  }, [
-    answerMarker.lat,
-    answerMarker.lng,
-    correctAnswer,
-    previousCorrectAnswer,
-  ]);
+  }, [answerMarker, correctAnswer, previousCorrectAnswer]);
 
   const renderResults = () => {
     if (!correctAnswer || !givenAnswers) return null;
 
-    return quiz.results.map(({ participantId, distance, name }) => {
-      const accumulated = formatDistance(distance);
-
+    return quiz.results?.map(({ participantId, points, name }) => {
       const givenAnswer = givenAnswers.find(
         (givenAns) => givenAns.participantId === participantId,
       );
-      const thisQuestionDistance = formatDistance(givenAnswer?.distance || 0);
+      const thisQuestionPoints = givenAnswer?.points;
 
       return (
         <li key={participantId}>
-          {`${name} ${accumulated}`}
-          <span
-            style={{
-              color: (givenAnswer?.distance || 0) < 1000 ? "green" : "red",
-            }}
-          >
-            {" "}
-            +{thisQuestionDistance}
-          </span>
+          {name} – {points} points
+          {typeof thisQuestionPoints === "number" ? (
+            <span
+              style={{
+                color: "green",
+              }}
+            >
+              {` +${thisQuestionPoints}`}
+            </span>
+          ) : (
+            <span style={{ color: "red" }}> (no answer!)</span>
+          )}
         </li>
       );
     });
@@ -185,8 +200,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
 
   // New question
   useEffect(() => {
-    setAnswerMarker(randomLatLng());
-    setAnswerSubmitted(false);
+    setAnswerMarker(null);
     map.current?.flyTo({
       center: DEFAULT_POSITION,
       zoom: DEFAULT_ZOOM,
@@ -194,32 +208,20 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     });
   }, [quiz.currentQuestion?.id]);
 
-  const isHost = !!user && quiz.host.uid === user.uid;
-
-  // Submit on deadline
-  useEffect(() => {
-    if (
-      typeof previousCountDown === "number" &&
-      previousCountDown > 0 &&
-      countDown === 0 &&
-      !answerSubmitted
-    ) {
-      void submitAnswer();
-    }
-  }, [previousCountDown, countDown, answerSubmitted, submitAnswer, isHost]);
-
   const { results = [] } = quiz;
 
   const renderQuestion = () => {
     let question = "";
     let helpText = "Loading question...";
 
+    console.log(quiz);
+
     if (quiz.currentQuestion) {
       question = quiz.currentQuestion.text;
       helpText = "Click the map to place a marker.";
     }
 
-    if (answerSubmitted || countDown === 0) {
+    if (countDown === 0) {
       helpText = "Answer submitted! Waiting for the results...";
     }
 
@@ -228,7 +230,6 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     }
 
     const inBetweenQuestions = !gameOver && countDown === 0 && !!results;
-    const showForceButton = !correctAnswer && inBetweenQuestions && isHost;
     const showNextButton = !!correctAnswer && inBetweenQuestions && isHost;
 
     return (
@@ -252,25 +253,6 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
           </div>
         </div>
         {correctAnswer ? <ol>{renderResults()}</ol> : null}
-        {showForceButton ? (
-          <div>
-            <p>
-              Stuck? If some users quit or had network issues, this can happen.
-            </p>
-            <p>
-              You can use the button below to force the quiz to continue.
-              Participants that have a missing answer will get assigned a random
-              answer that is twice the distance of the worst answer.
-            </p>
-            <Button
-              variant="warning"
-              loading={loadingNextQuestion}
-              onClick={nextQuestion}
-            >
-              Force next question
-            </Button>
-          </div>
-        ) : null}
         {showNextButton ? (
           <Button loading={loadingNextQuestion} onClick={nextQuestion}>
             Next question
@@ -294,7 +276,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
         onClick={onMapClick}
         renderWorldCopies={false}
       >
-        {!correctAnswer ? (
+        {answerMarker && !correctAnswer ? (
           <Marker latitude={answerMarker.lat} longitude={answerMarker.lng}>
             <img
               alt="Your answer"
@@ -323,7 +305,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
                     height={40}
                     width={40}
                     style={{ borderRadius: "50%" }}
-                    src={`https://joesch.moe/api/v1/${user?.uid}`}
+                    src={`https://joesch.moe/api/v1/${participantId}`}
                   />
                 </Marker>
                 <Popup
