@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction } from "express";
 
 import cors from "./cors.js";
 import { getUserContext, verifyToken } from "./auth.js";
-import { getFirestore } from "firebase-admin/firestore";
+import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import z from "zod";
 
 const app = express();
@@ -68,6 +68,7 @@ app.post(
           name: displayName,
         },
         isPrivate,
+        createdAt: FieldValue.serverTimestamp(),
       });
 
       const createdQuiz = await db

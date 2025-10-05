@@ -14,6 +14,7 @@ export interface Quiz {
     uid: string;
     name: string;
   };
+  createdAt?: Timestamp;
 }
 
 interface MapData {

@@ -13,6 +13,7 @@ export interface Quiz {
     uid: string;
   };
   isPrivate: boolean;
+  createdAt?: Timestamp;
 }
 
 export interface QuizSession {
