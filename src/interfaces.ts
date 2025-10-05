@@ -17,6 +17,7 @@ export interface Quiz {
 }
 
 interface MapData {
+  id: "STANDARD" | "NO_LABELS" | "NO_LABELS_NO_BORDERS";
   name: string;
   author: string;
   url: string;

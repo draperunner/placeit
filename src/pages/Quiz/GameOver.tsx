@@ -21,7 +21,7 @@ export default function GameOver({ quiz }: Props) {
   return (
     <div>
       <Map
-        mapStyle="https://tiles.openfreemap.org/styles/liberty"
+        mapStyle={quiz.map.url}
         initialViewState={DEFAULT_VIEW}
         style={{ height: "100vh" }}
       />

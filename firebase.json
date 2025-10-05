@@ -43,6 +43,15 @@
         ]
       },
       {
+        "source": "/maps/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=3600"
+          }
+        ]
+      },
+      {
         "source": "/assets/**",
         "headers": [
           {

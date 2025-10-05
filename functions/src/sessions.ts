@@ -27,28 +27,40 @@ enum Collections {
 
 enum Map {
   STANDARD = "STANDARD",
-  DARK_MATTER = "DARK_MATTER",
-  VOYAGER = "VOYAGER",
-  VOYAGER_NO_LABELS = "VOYAGER_NO_LABELS",
+  NO_LABELS = "NO_LABELS",
+  NO_LABELS_NO_BORDERS = "NO_LABELS_NO_BORDERS",
 }
 
 interface MapData {
+  id: Map;
   name: string;
   author: string;
   url: string;
-  attribution: string;
 }
 
 function getMapData(map: Map): MapData {
   switch (map) {
+    case Map.NO_LABELS:
+      return {
+        id: Map.NO_LABELS,
+        name: "Liberty",
+        author: "OpenFreeMap",
+        url: "/maps/liberty-no-labels.json",
+      };
+    case Map.NO_LABELS_NO_BORDERS:
+      return {
+        id: Map.NO_LABELS_NO_BORDERS,
+        name: "Liberty",
+        author: "OpenFreeMap",
+        url: "/maps/liberty-no-labels-no-borders.json",
+      };
     case Map.STANDARD:
     default:
       return {
-        name: "Mapnik",
-        author: "OpenStreetMap",
-        url: "https://{s}.tile.osm.org/{z}/{x}/{y}.png",
-        attribution:
-          '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+        id: Map.STANDARD,
+        name: "Liberty",
+        author: "OpenFreeMap",
+        url: "https://tiles.openfreemap.org/styles/liberty",
       };
   }
 }

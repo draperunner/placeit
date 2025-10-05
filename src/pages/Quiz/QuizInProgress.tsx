@@ -214,8 +214,6 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     let question = "";
     let helpText = "Loading question...";
 
-    console.log(quiz);
-
     if (quiz.currentQuestion) {
       question = quiz.currentQuestion.text;
       helpText = "Click the map to place a marker.";
@@ -266,7 +264,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     <div>
       <Map
         ref={map}
-        mapStyle="https://tiles.openfreemap.org/styles/liberty"
+        mapStyle={quiz.map.url}
         initialViewState={{
           latitude: DEFAULT_POSITION[0],
           longitude: DEFAULT_POSITION[1],

@@ -46,8 +46,10 @@ export interface QuizSession {
   createdAt: Timestamp;
   startedAt: Timestamp;
   map: {
+    id: "STANDARD" | "NO_LABELS" | "NO_LABELS_NO_BORDERS";
     url: string;
-    attribution: string;
+    name: string;
+    author: string;
   };
   quizDetails: {
     id: string;

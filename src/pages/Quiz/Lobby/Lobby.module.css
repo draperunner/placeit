@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: row;
   gap: 16px;
+  margin-bottom: 32px;
 
   > div {
     flex: 1;
@@ -11,6 +12,47 @@
 .profilePic {
   height: 40px;
   width: 40px;
+}
+
+.mapRadioGroup {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  legend {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+}
+
+.mapRadio {
+  border: 2px solid #dde;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 16px;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+
+  &:not(.mapRadioSelected):hover {
+    background-color: #0582d2;
+    border-color: white;
+  }
+
+  input {
+    appearance: none;
+    margin: 0;
+  }
+
+  &.mapRadioSelected {
+    font-weight: bold;
+    border-color: white;
+    cursor: default;
+  }
 }
 
 @media (max-width: 800px) {

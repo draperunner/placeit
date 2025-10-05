@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Map } from "react-map-gl/maplibre";
 
 import AppWrapper from "../../../AppWrapper";
 
@@ -33,12 +34,20 @@ async function updateQuizSession(
   sessionId: string,
   hostParticipates: boolean,
   answerTimeLimit: number,
+  map: "STANDARD" | "NO_LABELS" | "NO_LABELS_NO_BORDERS",
 ): Promise<void> {
   await patch<{ session: { id: string } }>(`${SESSIONS_URL}/${sessionId}`, {
     hostParticipates,
     answerTimeLimit,
+    map,
   });
 }
+
+const MAP_STYLES = [
+  { id: "STANDARD", name: "Standard" },
+  { id: "NO_LABELS", name: "No labels" },
+  { id: "NO_LABELS_NO_BORDERS", name: "No labels, no borders" },
+];
 
 export default function Lobby({ quiz, user }: Props) {
   const [name, setName] = useState<string>(user?.displayName || "");
@@ -149,8 +158,8 @@ export default function Lobby({ quiz, user }: Props) {
           ) : null}
         </div>
         <div>
-          <h2>Quiz Details</h2>
-          <h3>{quizDetails.name}</h3>
+          <h2>Quiz</h2>
+          <h3 style={{ marginBottom: 2 }}>{quizDetails.name}</h3>
           <i>by {quizDetails.author.name}</i>
           <p>{quizDetails.description}</p>
           <p>{quizDetails.numberOfQuestions} questions.</p>
@@ -179,6 +188,7 @@ export default function Lobby({ quiz, user }: Props) {
                     quiz.id,
                     hostIsParticipating,
                     answerTimeLimit,
+                    quiz.map.id,
                   );
                 }}
               >
@@ -200,6 +210,60 @@ export default function Lobby({ quiz, user }: Props) {
               </Button>
             </>
           )}
+        </div>
+
+        <div>
+          <h2>Map</h2>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <h3 style={{ marginTop: 0, marginBottom: 2 }}>
+                {MAP_STYLES.find((style) => style.id === quiz.map.id)?.name}
+              </h3>
+            </div>
+
+            <Map
+              mapStyle={quiz.map.url}
+              style={{
+                width: "100%",
+                height: 256,
+                borderRadius: 8,
+              }}
+            />
+
+            {isHost && (
+              <fieldset
+                className={styles.mapRadioGroup}
+                onChange={(e) => {
+                  e.preventDefault();
+                  const target = e.target as HTMLInputElement;
+                  void updateQuizSession(
+                    quiz.id,
+                    hostIsParticipating,
+                    answerTimeLimit,
+                    target.value as
+                      | "STANDARD"
+                      | "NO_LABELS"
+                      | "NO_LABELS_NO_BORDERS",
+                  );
+                }}
+              >
+                <legend>Other styles</legend>
+
+                {MAP_STYLES.map((mapStyle) => (
+                  <label
+                    key={mapStyle.id}
+                    className={`${styles.mapRadio} ${
+                      quiz.map.id === mapStyle.id ? styles.mapRadioSelected : ""
+                    }`}
+                  >
+                    <input type="radio" name="pick-map" value={mapStyle.id} />
+                    {mapStyle.name}
+                  </label>
+                ))}
+              </fieldset>
+            )}
+          </div>
         </div>
       </div>
 
