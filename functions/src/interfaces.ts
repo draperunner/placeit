@@ -57,6 +57,7 @@ export interface QuizSession {
     name: string;
     description: string;
     numberOfQuestions: number;
+    language: string;
   };
 }
 
