@@ -280,7 +280,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
               alt="Your answer"
               height={40}
               width={40}
-              style={{ borderRadius: "50%" }}
+              className={styles.avatar}
               src={`https://joesch.moe/api/v1/${user?.uid}`}
             />
           </Marker>
@@ -301,7 +301,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
                 alt="Your answer"
                 height={40}
                 width={40}
-                style={{ borderRadius: "50%" }}
+                className={styles.avatar}
                 src={`https://joesch.moe/api/v1/${participantId}`}
               />
             </Marker>

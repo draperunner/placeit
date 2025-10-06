@@ -19,6 +19,13 @@
   font-size: 120px;
 }
 
+.avatar {
+  background-color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+}
+
 @media (max-width: 800px) {
   .quizPanel {
     max-width: unset;
