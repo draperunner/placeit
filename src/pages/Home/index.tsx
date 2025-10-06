@@ -14,17 +14,15 @@ export default function Home() {
     <div className={styles.home}>
       <h1>Place it!</h1>
       <p>Get closest to the right answer – in meters!</p>
-      <Button as={Link} to="/host" className={styles.homeButton}>
-        Play now!
-      </Button>
-      <Button
-        as={Link}
-        to="/create"
-        className={styles.homeButton}
-        variant="info"
-      >
-        Create your own quiz
-      </Button>
+
+      <div className={styles.buttons}>
+        <Button as={Link} to="/host">
+          Play now!
+        </Button>
+        <Button as={Link} to="/create" variant="info">
+          Create your own quiz
+        </Button>
+      </div>
 
       <div className={styles.homeIllustration}>
         <Blob

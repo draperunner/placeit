@@ -6,9 +6,11 @@
   }
 }
 
-.homeButton {
-  margin: 10px;
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
   margin-top: 100px;
+  gap: 16px;
 }
 
 .homeIllustration {
