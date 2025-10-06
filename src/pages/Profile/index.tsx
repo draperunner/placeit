@@ -46,7 +46,7 @@ export default function Profile() {
   if (!user || user.isAnonymous) {
     return (
       <div>
-        <h1>Profil</h1>
+        <h1>Profile</h1>
         <Button onClick={login}>Log in?</Button>
       </div>
     );
@@ -54,7 +54,7 @@ export default function Profile() {
 
   return (
     <div>
-      <h1>Profil</h1>
+      <h1>Profile</h1>
       <h2>{user.displayName}</h2>
       <TextField
         disabled
@@ -77,7 +77,7 @@ export default function Profile() {
       >
         Update profile
       </Button>
-      <Button style={{ marginTop: 20 }} onClick={logout}>
+      <Button variant="info" style={{ marginTop: 20 }} onClick={logout}>
         Log out
       </Button>
     </div>

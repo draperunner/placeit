@@ -4,124 +4,101 @@ import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import TextField from "../../components/TextField";
 
-import { usePrevious } from "../../utils";
-
 import {
-  EmailAuthProvider,
+  ActionCodeSettings,
   getAuth,
-  linkWithCredential,
-  sendEmailVerification,
-  signInWithEmailAndPassword,
-  User,
+  isSignInWithEmailLink,
+  sendSignInLinkToEmail,
+  signInWithEmailLink,
 } from "firebase/auth";
-
-async function sendVerificationEmail(user: User | null) {
-  try {
-    if (!user) return;
-    await sendEmailVerification(user);
-    console.log("sendEmailVerification success");
-  } catch (error) {
-    console.log("sendEmailVerification error");
-    console.error(error);
-  }
-}
-
-function isAuthError(error: unknown): error is { code: string } {
-  return (
-    !!error &&
-    typeof error === "object" &&
-    "code" in error &&
-    typeof error.code === "string"
-  );
-}
 
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
-  const [needsVerification, setNeedsVerification] = useState<boolean>(false);
-
-  const [user, setUser] = useState<User | null>(null);
-  const previousUser = usePrevious(user);
+  const [linkSent, setLinkSent] = useState<boolean>(false);
+  const [success, setSuccess] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!previousUser && user && user.email && !user.emailVerified) {
-      setNeedsVerification(true);
+    const auth = getAuth();
+
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      let email: string | null = window.localStorage.getItem("emailForSignIn");
+      if (!email) {
+        email = window.prompt("Please provide your email for confirmation");
+      }
+
+      if (!email) {
+        return;
+      }
+
+      signInWithEmailLink(auth, email, window.location.href)
+        .then(() => {
+          setSuccess(true);
+        })
+        .catch((error: unknown) => {
+          console.error(error);
+        })
+        .finally(() => {
+          void navigate("/login", { replace: true });
+          window.localStorage.removeItem("emailForSignIn");
+        });
     }
-  }, [previousUser, user]);
+  }, [navigate]);
 
-  const onLoginSuccess = async (usr: User | null) => {
-    if (!usr) return;
-
-    setUser(usr);
-
-    if (!usr.emailVerified) {
-      setNeedsVerification(true);
-      await sendVerificationEmail(usr);
-      return;
-    }
-
-    await navigate("/profile");
-  };
-
-  const upgradeUser = (event: React.FormEvent<HTMLFormElement>) => {
+  const sendMagicLink = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!email || !password) {
-      setError("Both email and password are needed!");
+    if (!email) {
+      setError("Email is needed!");
       return;
     }
 
-    const currentUser = getAuth().currentUser;
+    const actionCodeSettings: ActionCodeSettings = {
+      url: `${window.location.origin}/login`,
+      linkDomain: window.location.host,
+      handleCodeInApp: true,
+    };
+    const auth = getAuth();
 
-    if (!currentUser) {
-      console.log("No currentUser");
-      return;
-    }
-
-    const credential = EmailAuthProvider.credential(email, password);
-
-    linkWithCredential(currentUser, credential)
-      .then(({ user }) => onLoginSuccess(user))
+    sendSignInLinkToEmail(auth, email, actionCodeSettings)
+      .then(() => {
+        window.localStorage.setItem("emailForSignIn", email);
+        setLinkSent(true);
+      })
       .catch((error: unknown) => {
-        if (
-          isAuthError(error) &&
-          (error.code === "auth/email-already-in-use" ||
-            error.code === "auth/provider-already-linked")
-        ) {
-          signInWithEmailAndPassword(getAuth(), email, password)
-            .then(({ user }) => onLoginSuccess(user))
-            .catch((err: unknown) => {
-              if (isAuthError(err)) {
-                setError(err.code);
-              } else {
-                setError("Unknown error");
-              }
-            });
-        } else if (isAuthError(error)) {
-          console.log("Error upgrading anonymous account", error);
-          setError(error.code);
-        }
+        console.error(error);
       });
   };
 
-  if (needsVerification) {
+  if (success) {
     return (
       <div>
-        <h1>Please verify your email.</h1>
-        <p>
-          We sent an email to {user?.email}. You need to verify your email
-          before you can start using your account.
-        </p>
-        <Button onClick={() => sendVerificationEmail(user)}>
-          Resend verification email
-        </Button>
+        <h1>Success!</h1>
+        <p>You are now logged in.</p>
+
+        <div style={{ display: "flex", gap: 16, marginTop: 32 }}>
+          <Button variant="success" onClick={() => navigate("/create")}>
+            Create a new quiz
+          </Button>
+          <Button variant="info" onClick={() => navigate("/profile")}>
+            Go to profile
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (linkSent) {
+    return (
+      <div>
+        <h1>Login link sent!</h1>
+        <p>Check your inbox for the login link.</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={upgradeUser}>
+    <form onSubmit={sendMagicLink}>
       <h1>You need to log in.</h1>
       <p>
         In order to create new awesome quizzes, you need a good, old user
@@ -137,15 +114,6 @@ export default function Login() {
         }}
       />
 
-      <TextField
-        label="Password"
-        value={password}
-        type="password"
-        onChange={(event) => {
-          setPassword(event.target.value);
-        }}
-      />
-
       {error ? (
         <div role="alert">
           <p style={{ color: "red" }}>{error}</p>
@@ -153,7 +121,7 @@ export default function Login() {
       ) : null}
 
       <Button style={{ marginTop: 20 }} type="submit">
-        Sign up or in
+        Get login link
       </Button>
     </form>
   );
