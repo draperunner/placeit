@@ -13,7 +13,7 @@ import Modal from "../../components/Modal";
 import Navbar from "../../Navbar";
 
 import languages from "../../languages";
-import { getAuth } from "firebase/auth";
+import { updateProfile } from "firebase/auth";
 import { QUIZZES_URL } from "../../constants";
 import styles from "./Create.module.css";
 
@@ -52,7 +52,6 @@ export default function Create() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // if (user && (user.isAnonymous || !user.emailVerified)) {
     if (user && user.isAnonymous) {
       void navigate("/login", { replace: true });
     }
@@ -104,13 +103,21 @@ export default function Create() {
       );
       return;
     }
-    const currentUser = getAuth().currentUser;
-    if (!currentUser) {
-      console.log("No current user");
+    if (!user || user.isAnonymous) {
       return;
     }
 
-    const token = await currentUser.getIdToken();
+    if (!user.displayName) {
+      const name = window.prompt(
+        "Please provide your display name, which will be public on quizzes you create. You can change it later in your profile.",
+      );
+      await updateProfile(user, {
+        ...user,
+        displayName: name || "",
+      });
+    }
+
+    const token = await user.getIdToken();
 
     await fetch(QUIZZES_URL, {
       method: "POST",
