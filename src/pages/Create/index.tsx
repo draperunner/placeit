@@ -186,6 +186,10 @@ export default function Create() {
     return Boolean(name.length && description.length && questions.length);
   };
 
+  if (!user || user.isAnonymous) {
+    return null;
+  }
+
   const renderLeftMargin = () => {
     return (
       <div
