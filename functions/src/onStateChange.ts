@@ -1,7 +1,11 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 
 import { QuizSession, QuizState } from "./interfaces.js";
-import { getFirestore, Transaction } from "firebase-admin/firestore";
+import {
+  getFirestore,
+  Transaction,
+  UpdateData,
+} from "firebase-admin/firestore";
 
 enum Collections {
   QUIZZES = "quizzes",
@@ -59,7 +63,7 @@ async function revealAnswerIfQuestionDeadlinePassed(
 
       transaction.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
         results,
-      });
+      } satisfies UpdateData<QuizSession>);
 
       return;
     }
@@ -84,9 +88,9 @@ async function revealAnswerIfQuestionDeadlinePassed(
     );
 
     transaction.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
-      "currentQuestion.correctAnswer": currentCorrectAnswer.correctAnswer,
+      "currentQuestion.correctAnswer": currentCorrectAnswer,
       "currentQuestion.givenAnswers": givenAnswersForThisQuestion,
-    });
+    } satisfies UpdateData<QuizSession>);
   });
 }
 

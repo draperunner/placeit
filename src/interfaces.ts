@@ -1,15 +1,24 @@
 import type { GeoPoint, Timestamp } from "firebase/firestore";
 
+export type Question = {
+  id: string;
+  type: "Feature";
+  geometry: {
+    type: "Polygon";
+    coordinates: GeoPoint[];
+  };
+  properties: {
+    text: string;
+  };
+};
+
 export interface Quiz {
   id: string;
   description: string;
   name: string;
   language: string;
   isPrivate: boolean;
-  questions: Array<{
-    id: string;
-    text: string;
-  }>;
+  questions: Question[];
   author: {
     uid: string;
     name: string;
@@ -60,10 +69,7 @@ export interface QuizSession {
   currentQuestion?: {
     id: string;
     text: string;
-    correctAnswer?: {
-      latitude: number;
-      longitude: number;
-    };
+    correctAnswer?: Question;
     givenAnswers?: GivenAnswer[];
     deadline?: Timestamp;
   };

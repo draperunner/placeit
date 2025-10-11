@@ -6,6 +6,7 @@
   "scripts": {
     "start": "vite",
     "build": "tsc && vite build",
+    "ts": "tsc --noEmit",
     "emulators": "firebase emulators:start --import=./emulators-export",
     "lint": "eslint \"./src/**/*.{ts,tsx}\" \"./functions/src/**/*.ts\"",
     "deploy": "firebase deploy",
@@ -24,6 +25,7 @@
     ]
   },
   "dependencies": {
+    "@turf/turf": "^7.2.0",
     "blobs": "^2.2.0",
     "firebase": "^12.3.0",
     "maplibre-gl": "^5.8.0",

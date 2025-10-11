@@ -1,23 +1,19 @@
 import { FC } from "react";
 import { Layer, Source } from "react-map-gl/maplibre";
-import type { Feature, LineString as GeoJSONLineString } from "geojson";
+import { Feature, Polygon as GeoJSONPolygon } from "geojson";
 
 type Props = {
-  feature: Feature<GeoJSONLineString>;
+  feature: Feature<GeoJSONPolygon>;
 };
 
-export const LineString: FC<Props> = ({ feature }) => {
+export const Polygon: FC<Props> = ({ feature }) => {
   return (
     <Source type="geojson" data={feature}>
       <Layer
-        type="line"
-        layout={{
-          "line-cap": "round",
-          "line-join": "round",
-        }}
+        type="fill"
         paint={{
-          "line-color": "#fff",
-          "line-width": 5,
+          "fill-color": "#00f",
+          "fill-opacity": 0.2,
         }}
       />
       <Layer

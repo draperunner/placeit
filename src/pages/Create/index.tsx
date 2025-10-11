@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Map, MapLayerMouseEvent, Marker } from "react-map-gl/maplibre";
+import { LngLat, Map, MapLayerMouseEvent, Marker } from "react-map-gl/maplibre";
 import "firebase/firestore";
+import { Feature, Polygon as GeoJSONPolygon } from "geojson";
+import circle from "@turf/circle";
 
 import { useUser } from "../../auth";
 
@@ -16,36 +18,20 @@ import languages from "../../languages";
 import { updateProfile } from "firebase/auth";
 import { QUIZZES_URL } from "../../constants";
 import styles from "./Create.module.css";
+import { Circle } from "../../components/map/Circle";
+import { Polygon } from "../../components/map/Polygon";
 
-type LatLng = { lat: number; lng: number };
+const DEFAULT_RADIUS = 1000; // meters
 
-interface Question {
-  text: string;
-  correctAnswer: {
-    latitude: number;
-    longitude: number;
-  };
-}
-
-interface IncompleteQuestion {
-  text: string;
-  correctAnswer: undefined;
-}
+type Question = Feature<GeoJSONPolygon, { text: string }>;
 
 type QuizDraft = {
   name: string;
   description: string;
   isPrivate: boolean;
   questions: Question[];
-  currentQuestion: IncompleteQuestion | Question;
+  currentQuestion: Question;
 };
-
-function newQuestion(): IncompleteQuestion {
-  return {
-    text: "",
-    correctAnswer: undefined,
-  };
-}
 
 export default function Create() {
   const user = useUser();
@@ -69,34 +55,25 @@ export default function Create() {
   const [questions, setQuestions] = useState<Question[]>(
     draftQuiz?.questions || [],
   );
+  const [radius, setRadius] = useState<number>(DEFAULT_RADIUS);
 
   const [isPrivate, setIsPrivate] = useState<boolean>(
     draftQuiz?.isPrivate || false,
   );
-  const [currentQuestion, setCurrentQuestion] = useState<
-    IncompleteQuestion | Question
-  >(draftQuiz?.currentQuestion || newQuestion());
 
-  const [answerMarker, setAnswerMarker] = useState<LatLng | undefined>();
+  const [currentText, setCurrentText] = useState<string>("");
+  const [coordinates, setCurrentCoordinates] = useState<LngLat | undefined>();
 
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
 
   const onMapClick = useCallback((event: MapLayerMouseEvent) => {
     const coordinates = event.lngLat;
-    setAnswerMarker(coordinates);
-    setCurrentQuestion((prevCurrentQuestion) => ({
-      ...prevCurrentQuestion,
-      correctAnswer: {
-        latitude: coordinates.lat,
-        longitude: coordinates.lng,
-      },
-    }));
+    setCurrentCoordinates(coordinates);
   }, []);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitting(true);
     if (!isValid()) {
       alert(
         "You need to fill out name, description and add at least one question!",
@@ -117,6 +94,7 @@ export default function Create() {
       });
     }
 
+    setSubmitting(true);
     const token = await user.getIdToken();
 
     await fetch(QUIZZES_URL, {
@@ -133,7 +111,11 @@ export default function Create() {
         isPrivate,
       }),
     })
-      .then(() => {
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Request failed");
+        }
+
         localStorage.removeItem("quiz-draft");
         setSubmitting(false);
         setSubmitted(true);
@@ -144,16 +126,25 @@ export default function Create() {
   };
 
   const addQuestion = () => {
-    if (!currentQuestion.text) {
+    if (!currentText.trim()) {
       alert("Your question needs text!");
+      return;
     }
 
-    if (currentQuestion.correctAnswer) {
-      setQuestions((prevQuestions) => [...prevQuestions, currentQuestion]);
-      setCurrentQuestion(newQuestion());
-    } else {
-      alert("You need to specify coordinates for your question.");
-    }
+    const newQuestion: Question = circle(
+      [coordinates?.lng ?? 0, coordinates?.lat ?? 0],
+      radius,
+      {
+        steps: 64,
+        units: "meters",
+        properties: {
+          text: currentText,
+        },
+      },
+    );
+
+    setCurrentText("");
+    setQuestions((prevQuestions) => [...prevQuestions, newQuestion]);
   };
 
   const removeQuestion = (index: number) => {
@@ -166,7 +157,7 @@ export default function Create() {
     setName("");
     setDescription("");
     setQuestions([]);
-    setCurrentQuestion(newQuestion());
+    setCurrentText("");
     setSubmitted(false);
   };
 
@@ -176,11 +167,11 @@ export default function Create() {
       description,
       isPrivate,
       questions,
-      currentQuestion,
+      currentText,
     };
 
     localStorage.setItem("quiz-draft", JSON.stringify(quiz));
-  }, [name, description, questions, isPrivate, currentQuestion]);
+  }, [name, description, questions, isPrivate, currentText]);
 
   const isValid = (): boolean => {
     return Boolean(name.length && description.length && questions.length);
@@ -253,7 +244,7 @@ export default function Create() {
 
           {questions.map((question, index) => (
             <div
-              key={question.text}
+              key={question.properties.text}
               style={{
                 marginBottom: 10,
                 display: "flex",
@@ -267,7 +258,7 @@ export default function Create() {
                   overflow: "hidden",
                   whiteSpace: "nowrap",
                 }}
-              >{`Q${index + 1}: ${question.text}`}</p>
+              >{`Q${index + 1}: ${question.properties.text}`}</p>
               <button
                 onClick={() => {
                   removeQuestion(index);
@@ -280,33 +271,35 @@ export default function Create() {
 
           <TextField
             label={`Question ${questions.length + 1}:`}
-            value={currentQuestion.text}
+            value={currentText}
             onChange={(event) => {
               const value = event.target.value;
-              setCurrentQuestion((prev) => ({
-                ...prev,
-                text: value,
-              }));
+              setCurrentText(value);
             }}
           />
 
           <p>Correct answer: </p>
-          <div>{`Latitude: ${
-            typeof currentQuestion.correctAnswer === "undefined"
-              ? "?"
-              : currentQuestion.correctAnswer.latitude
-          }`}</div>
-          <div>{`Longitude: ${
-            typeof currentQuestion.correctAnswer === "undefined"
-              ? "?"
-              : currentQuestion.correctAnswer.longitude
-          }`}</div>
+          <div>{`Latitude: ${coordinates?.lat ?? "?"}`}</div>
+          <div>{`Longitude: ${coordinates?.lng ?? "?"}`}</div>
+          <div>{`Radius: ${radius} meters`}</div>
+
+          <input
+            type="range"
+            max="100000"
+            step="10"
+            value={radius}
+            style={{ width: "100%" }}
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              setRadius(value);
+            }}
+          />
 
           <Button
             type="button"
+            variant="info"
             style={{ display: "block", marginTop: 32 }}
             onClick={addQuestion}
-            security=""
           >
             Add question
           </Button>
@@ -337,15 +330,20 @@ export default function Create() {
         mapStyle="https://tiles.openfreemap.org/styles/liberty"
         onClick={onMapClick}
       >
-        {answerMarker ? (
-          <Marker latitude={answerMarker.lat} longitude={answerMarker.lng} />
+        {coordinates ? (
+          <>
+            <Marker latitude={coordinates.lat} longitude={coordinates.lng} />
+            <Circle
+              coordinates={{
+                longitude: coordinates.lng,
+                latitude: coordinates.lat,
+              }}
+              radius={radius}
+            />
+          </>
         ) : null}
-        {questions.map(({ correctAnswer }, index) => (
-          <Marker
-            key={`marker-${index}`}
-            latitude={correctAnswer.latitude}
-            longitude={correctAnswer.longitude}
-          />
+        {questions.map((question, index) => (
+          <Polygon feature={question} key={`polygon-${index}`} />
         ))}
       </Map>
       {renderLeftMargin()}

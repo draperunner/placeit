@@ -1,6 +1,14 @@
 import { useRef, useEffect } from "react";
+import { Feature, Point, Polygon } from "geojson";
 
 import languages from "./languages";
+import {
+  booleanPointInPolygon,
+  nearestPointOnLine,
+  polygon,
+  polygonToLine,
+} from "@turf/turf";
+import { Question } from "./interfaces";
 
 // From https://usehooks.com/usePrevious/
 export function usePrevious<T>(value: T): T | undefined {
@@ -27,4 +35,35 @@ export function getBounds(
   const sw: [number, number] = [Math.min(...lngs), Math.min(...lats)];
   const ne: [number, number] = [Math.max(...lngs), Math.max(...lats)];
   return [sw, ne];
+}
+
+export function getClosestPointOnPolygon(
+  point: Feature<Point>,
+  polygon: Feature<Polygon>,
+): Feature<Point> {
+  const inside = booleanPointInPolygon(point, polygon, {
+    ignoreBoundary: false,
+  });
+
+  if (inside) {
+    return point;
+  }
+
+  const boundary = polygonToLine(polygon);
+
+  if (boundary.type === "FeatureCollection") {
+    // Don't consider inner rings/holes:
+    const exteriorRing = boundary.features[0];
+    return nearestPointOnLine(exteriorRing, point);
+  }
+
+  return nearestPointOnLine(boundary, point);
+}
+
+export function questionToPolygon(question: Question): Feature<Polygon> {
+  const coordinates = question.geometry.coordinates.map(
+    (coord) => [coord.longitude, coord.latitude] as [number, number],
+  );
+
+  return polygon([coordinates]);
 }

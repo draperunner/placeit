@@ -10,11 +10,18 @@ import "firebase/firestore";
 
 import Button from "../../components/Button";
 import { QuizSession } from "../../interfaces";
-import { getBounds, usePrevious } from "../../utils";
+import {
+  getBounds,
+  getClosestPointOnPolygon,
+  questionToPolygon,
+  usePrevious,
+} from "../../utils";
 import { getAuth, type User } from "firebase/auth";
 import { SESSIONS_URL } from "../../constants";
 import styles from "./QuizInProgress.module.css";
 import { LineString } from "../../components/map/LineString";
+import { Polygon } from "../../components/map/Polygon";
+import { lineString, point } from "@turf/turf";
 
 type LatLng = { lat: number; lng: number };
 
@@ -163,7 +170,9 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
       map.current.fitBounds(
         getBounds([
           [answerMarker.lng, answerMarker.lat],
-          [correctAnswer.longitude, correctAnswer.latitude],
+          ...correctAnswer.geometry.coordinates.map(
+            (coord) => [coord.longitude, coord.latitude] as [number, number],
+          ),
         ]),
         { padding: 100 },
       );
@@ -286,15 +295,20 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
           </Marker>
         ) : null}
         {correctAnswer ? (
-          <Marker
-            latitude={correctAnswer.latitude}
-            longitude={correctAnswer.longitude}
-          />
+          <Polygon feature={questionToPolygon(correctAnswer)} />
         ) : null}
         {givenAnswers?.map(({ participantId, answer, points }) => (
           <Fragment key={participantId}>
             {correctAnswer ? (
-              <LineString points={[answer, correctAnswer]} />
+              <LineString
+                feature={lineString([
+                  [answer.longitude, answer.latitude],
+                  getClosestPointOnPolygon(
+                    point([answer.longitude, answer.latitude]),
+                    questionToPolygon(correctAnswer),
+                  ).geometry.coordinates,
+                ])}
+              />
             ) : null}
             <Marker latitude={answer.latitude} longitude={answer.longitude}>
               <img

@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction } from "express";
 
 import cors from "./cors.js";
 import { getUserContext, verifyToken } from "./auth.js";
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { FieldValue, GeoPoint, getFirestore } from "firebase-admin/firestore";
 import z from "zod";
 
 const app = express();
@@ -18,15 +18,28 @@ enum Collections {
 const QuizSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
-  questions: z.array(
-    z.object({
-      text: z.string().min(1),
-      correctAnswer: z.object({
-        latitude: z.number().min(-90).max(90),
-        longitude: z.number().min(-180).max(180),
+  questions: z
+    .array(
+      z.object({
+        geometry: z.object({
+          type: z.literal("Polygon"),
+          coordinates: z.array(
+            z
+              .array(
+                z.tuple([
+                  z.number().min(-180).max(180),
+                  z.number().min(-90).max(90),
+                ]),
+              )
+              .min(3),
+          ),
+        }),
+        properties: z.object({
+          text: z.string().min(1),
+        }),
       }),
-    }),
-  ),
+    )
+    .min(1),
   language: z.string().min(2).max(2),
   isPrivate: z.boolean().default(false),
 });
@@ -47,22 +60,23 @@ app.post(
 
       const { uid, displayName } = getUserContext();
 
-      if (typeof name !== "string") {
-        throw new Error("`name` is not string");
-      }
-
-      if (!Array.isArray(questions) || !questions.length) {
-        throw new Error("No questions passed. A quiz needs its questions.");
-      }
+      const convertedQuestions = questions.map((question, index) => ({
+        ...question,
+        id: `${index}`,
+        geometry: {
+          ...question.geometry,
+          // Firestore does not support nested arrays
+          coordinates: question.geometry.coordinates[0].map(
+            (coord) => new GeoPoint(coord[1], coord[0]),
+          ),
+        },
+      }));
 
       const ref = await db.collection(Collections.QUIZZES).add({
         name,
         description,
         language,
-        questions: questions.map((question, index) => ({
-          ...question,
-          id: `${index}`,
-        })),
+        questions: convertedQuestions,
         author: {
           uid,
           name: displayName,

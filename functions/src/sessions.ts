@@ -1,6 +1,6 @@
 import { onRequest } from "firebase-functions/v2/https";
 import express, { Request, Response } from "express";
-import haversine from "haversine";
+import * as turf from "@turf/turf";
 
 import cors from "./cors.js";
 import { GivenAnswer, Quiz, QuizSession, QuizState } from "./interfaces.js";
@@ -12,9 +12,12 @@ import {
   getFirestore,
   Timestamp,
   Transaction,
+  UpdateData,
 } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import z from "zod";
+import { Feature, Polygon } from "geojson";
+import { polygon } from "@turf/turf";
 
 const app = express();
 app.use(cors);
@@ -119,17 +122,28 @@ async function getQuizState(
 }
 
 function calculateDistance(
-  correctAnswer: GeoPoint,
+  correctAnswer: Feature<Polygon>,
   givenAnswer: { latitude: number; longitude: number },
 ): number {
-  return haversine(
-    {
-      latitude: correctAnswer.latitude,
-      longitude: correctAnswer.longitude,
-    },
-    givenAnswer,
-    { unit: "meter" },
-  );
+  const pt = turf.point([givenAnswer.longitude, givenAnswer.latitude]);
+
+  const inside = turf.booleanPointInPolygon(pt, correctAnswer, {
+    ignoreBoundary: false,
+  });
+
+  if (inside) {
+    return 0;
+  }
+
+  const boundary = turf.polygonToLine(correctAnswer); // returns LineString or MultiLineString
+
+  if (boundary.type === "FeatureCollection") {
+    const nearestPoint = turf.nearestPointOnLine(boundary.features[0], pt);
+    return turf.distance(pt, nearestPoint, { units: "meters" });
+  }
+
+  const nearestPoint = turf.nearestPointOnLine(boundary, pt);
+  return turf.distance(pt, nearestPoint, { units: "meters" });
 }
 
 function getDeadline(answerTimeLimit = ANSWER_TIME_LIMIT): Timestamp {
@@ -187,14 +201,18 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
         throw new Error("Quiz state does not exist");
       }
 
-      if (quizState.currentCorrectAnswer.questionId !== currentQuestion.id) {
+      if (quizState.currentCorrectAnswer?.id !== currentQuestion.id) {
         throw new Error(
           "The quiz state current answer is not for the current question",
         );
       }
 
       const distance = calculateDistance(
-        quizState.currentCorrectAnswer.correctAnswer,
+        polygon([
+          quizState.currentCorrectAnswer.geometry.coordinates.map(
+            (geoPoint) => [geoPoint.longitude, geoPoint.latitude],
+          ),
+        ]),
         parsedBody,
       );
 
@@ -220,7 +238,7 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
 
       transaction.update(db.collection(Collections.QUIZ_STATES).doc(id), {
         givenAnswers: updatedGivenAnswers,
-      });
+      } satisfies UpdateData<QuizState>);
     });
 
     res.json({});
@@ -290,24 +308,19 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
         : quiz.questions[currentQuestionIndex + 1];
 
       transaction.update(db.collection(Collections.QUIZ_STATES).doc(id), {
-        currentCorrectAnswer: nextQuestion
-          ? {
-              questionId: nextQuestion.id,
-              correctAnswer: nextQuestion.correctAnswer,
-            }
-          : null,
-      });
+        currentCorrectAnswer: nextQuestion || null,
+      } satisfies UpdateData<QuizState>);
 
       transaction.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
         state: gameOver ? "over" : "in-progress",
         currentQuestion: nextQuestion
           ? {
               id: nextQuestion.id,
-              text: nextQuestion.text,
+              text: nextQuestion.properties.text,
               deadline: getDeadline(quizSession.answerTimeLimit),
             }
           : null,
-      });
+      } satisfies UpdateData<QuizSession>);
     });
 
     res.json({});
@@ -363,7 +376,8 @@ app.post("/", verifyToken(), async (req, res, next) => {
       },
     };
 
-    const docRef = await db.collection("quiz-sessions").add({
+    const session: QuizSession = {
+      createdAt: Timestamp.now(),
       host: {
         uid,
         name: hostName,
@@ -380,7 +394,11 @@ app.post("/", verifyToken(), async (req, res, next) => {
       state: "lobby",
       map: getMapData(map),
       answerTimeLimit,
-    });
+      currentQuestion: null,
+      startedAt: null,
+    };
+
+    const docRef = await db.collection("quiz-sessions").add(session);
 
     res.status(201).json({
       session: {
@@ -423,7 +441,7 @@ app.patch("/:id", verifyToken(), async (req, res, next) => {
         throw new Error("Can only update session while in the lobby.");
       }
 
-      const updates: Partial<QuizSession> = {
+      const updates: UpdateData<QuizSession> = {
         map: map ? getMapData(map) : session.map,
         answerTimeLimit: answerTimeLimit ?? session.answerTimeLimit,
         participants: session.participants,
@@ -494,7 +512,7 @@ app.post("/:id/join", verifyToken(), async (req, res, next) => {
           uid,
           name,
         }),
-      });
+      } satisfies UpdateData<QuizSession>);
     });
 
     res.json({});
@@ -525,7 +543,7 @@ app.post("/:id/start", verifyToken(), async (req, res, next) => {
 
       transaction.update(db.collection("quiz-sessions").doc(id), {
         state: "in-progress",
-      });
+      } satisfies UpdateData<QuizSession>);
     });
     res.json({});
   } catch (error) {
