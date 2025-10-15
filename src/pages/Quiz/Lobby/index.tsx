@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { Map } from "react-map-gl/maplibre";
+import { User } from "firebase/auth";
 
 import AppWrapper from "../../../AppWrapper";
 
 import Button from "../../../components/Button";
 import TextField from "../../../components/TextField";
+import Slider from "../../../components/Slider/Slider";
 
+import { SESSIONS_URL } from "../../../constants";
 import { QuizSession } from "../../../interfaces";
 import { getLanguageName } from "../../../utils";
-
 import { patch, post } from "../../../http";
 
 import styles from "./Lobby.module.css";
-import { User } from "firebase/auth";
-import { SESSIONS_URL } from "../../../constants";
 
 function join(quizId: string, name: string) {
   return post(`${SESSIONS_URL}/${quizId}/join`, {
@@ -52,8 +52,6 @@ const MAP_STYLES = [
 export default function Lobby({ quiz, user }: Props) {
   const [name, setName] = useState<string>(user?.displayName || "");
   const [loading, setLoading] = useState<boolean>(false);
-  const [editingAnswerTimeLimit, setEditingAnswerTimeLimit] =
-    useState<boolean>(false);
   const [answerTimeLimit, setAnswerTimeLimit] = useState<number>(
     quiz.answerTimeLimit,
   );
@@ -167,48 +165,24 @@ export default function Lobby({ quiz, user }: Props) {
 
           {!isHost && <p>{quiz.answerTimeLimit} seconds per question.</p>}
 
-          {isHost && editingAnswerTimeLimit && (
-            <>
-              <TextField
-                type="number"
-                autoFocus
-                label="Seconds per question"
-                value={`${answerTimeLimit}`}
-                min={5}
-                max={180}
-                onChange={(event) => {
-                  setAnswerTimeLimit(Number(event.target.value));
-                }}
-              />
-              <Button
-                variant="info"
-                onClick={async () => {
-                  setEditingAnswerTimeLimit(false);
-                  await updateQuizSession(
-                    quiz.id,
-                    hostIsParticipating,
-                    answerTimeLimit,
-                    quiz.map.id,
-                  );
-                }}
-              >
-                Save
-              </Button>
-            </>
-          )}
-
-          {isHost && !editingAnswerTimeLimit && (
-            <>
-              <p>{answerTimeLimit} seconds per question.</p>
-              <Button
-                variant="info"
-                onClick={() => {
-                  setEditingAnswerTimeLimit(true);
-                }}
-              >
-                Edit time per question
-              </Button>
-            </>
+          {isHost && (
+            <Slider
+              label={`${answerTimeLimit} seconds per question`}
+              value={answerTimeLimit}
+              onChange={(event) => {
+                setAnswerTimeLimit(Number(event.target.value));
+              }}
+              onPointerUp={(event) => {
+                void updateQuizSession(
+                  quiz.id,
+                  hostIsParticipating,
+                  (event.target as HTMLInputElement).valueAsNumber,
+                  quiz.map.id,
+                );
+              }}
+              min={5}
+              max={180}
+            />
           )}
         </div>
 

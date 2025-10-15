@@ -20,6 +20,8 @@ import { QUIZZES_URL } from "../../constants";
 import styles from "./Create.module.css";
 import { Circle } from "../../components/map/Circle";
 import { Polygon } from "../../components/map/Polygon";
+import Slider from "../../components/Slider/Slider";
+import { formatDistance } from "../../utils";
 
 const DEFAULT_RADIUS = 1000; // meters
 
@@ -281,10 +283,9 @@ export default function Create() {
           <p>Correct answer: </p>
           <div>{`Latitude: ${coordinates?.lat ?? "?"}`}</div>
           <div>{`Longitude: ${coordinates?.lng ?? "?"}`}</div>
-          <div>{`Radius: ${radius} meters`}</div>
 
-          <input
-            type="range"
+          <Slider
+            label={`Radius: ${formatDistance(radius)}`}
             max="100000"
             step="10"
             value={radius}

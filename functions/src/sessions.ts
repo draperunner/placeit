@@ -334,7 +334,7 @@ const CreateSessionSchema = z.object({
   quizId: z.string().min(1),
   map: z.enum(Map),
   hostParticipates: z.boolean().optional(),
-  answerTimeLimit: z.number().min(5).max(120).optional(),
+  answerTimeLimit: z.number().min(5).max(180).optional(),
 });
 
 app.post("/", verifyToken(), async (req, res, next) => {
