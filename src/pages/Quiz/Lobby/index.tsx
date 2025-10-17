@@ -35,11 +35,13 @@ async function updateQuizSession(
   hostParticipates: boolean,
   answerTimeLimit: number,
   map: "STANDARD" | "NO_LABELS" | "NO_LABELS_NO_BORDERS",
+  hostName?: string,
 ): Promise<void> {
   await patch<{ session: { id: string } }>(`${SESSIONS_URL}/${sessionId}`, {
     hostParticipates,
     answerTimeLimit,
     map,
+    hostName,
   });
 }
 
@@ -50,6 +52,8 @@ const MAP_STYLES = [
 ];
 
 export default function Lobby({ quiz, user }: Props) {
+  const [hostName, setHostName] = useState<string>(quiz.host.name);
+  const [editingHostName, setEditingHostName] = useState<boolean>(false);
   const [name, setName] = useState<string>(user?.displayName || "");
   const [loading, setLoading] = useState<boolean>(false);
   const [answerTimeLimit, setAnswerTimeLimit] = useState<number>(
@@ -71,6 +75,10 @@ export default function Lobby({ quiz, user }: Props) {
   const isYou = (id: string) => user && user.uid === id;
 
   const startQuiz = async () => {
+    if (!participants.length && !hostIsParticipating) {
+      alert("At least one participant is required to start the quiz.");
+      return;
+    }
     setLoading(true);
     await start(quiz.id);
     setLoading(false);
@@ -78,8 +86,8 @@ export default function Lobby({ quiz, user }: Props) {
 
   return (
     <AppWrapper>
-      <h1>Quiz hosted by {host.name}</h1>
-      <p>We are now in the lobby, waiting for people to join.</p>
+      <h1>It&apos;s Quiz Time!</h1>
+      <p>We are in the lobby, waiting for people to join.</p>
       <div className={styles.lobbyGrid}>
         <div>
           <h2>Host</h2>
@@ -99,8 +107,91 @@ export default function Lobby({ quiz, user }: Props) {
                 marginRight: 10,
               }}
             />
-            {`${host.name}${hostIsParticipating ? " (participating)" : ""}`}
+            {editingHostName ? (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <TextField
+                  value={hostName}
+                  onChange={(e) => {
+                    setHostName(e.target.value);
+                  }}
+                  autoFocus
+                  label={"Nickname"}
+                  onBlur={() => {
+                    setEditingHostName(false);
+                    void updateQuizSession(
+                      quiz.id,
+                      hostIsParticipating,
+                      answerTimeLimit,
+                      quiz.map.id,
+                      hostName,
+                    );
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      setEditingHostName(false);
+                      void updateQuizSession(
+                        quiz.id,
+                        hostIsParticipating,
+                        answerTimeLimit,
+                        quiz.map.id,
+                        hostName,
+                      );
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  width: "100%",
+                }}
+              >
+                <span>{host.name}</span>
+                {isHost ? (
+                  <button
+                    className={styles.editNameButton}
+                    onClick={() => {
+                      setEditingHostName(true);
+                    }}
+                  >
+                    Edit
+                  </button>
+                ) : null}
+              </div>
+            )}
           </div>
+
+          {isHost ? (
+            <label style={{ display: "block", marginTop: 20 }}>
+              <input
+                type="checkbox"
+                checked={hostIsParticipating}
+                onChange={() => {
+                  void updateQuizSession(
+                    quiz.id,
+                    !hostIsParticipating,
+                    answerTimeLimit,
+                    quiz.map.id,
+                  );
+                }}
+              />
+              Participate yourself?
+            </label>
+          ) : (
+            <p>
+              The host is{" "}
+              {`${hostIsParticipating ? "also" : "not"} participating.`}
+            </p>
+          )}
           <h2 style={{ marginTop: 32 }}>Participants</h2>
           {!participants.length ? (
             <p>None yet! Share the URL with your friends to invite them.</p>
@@ -131,6 +222,10 @@ export default function Lobby({ quiz, user }: Props) {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
+                if (!name.trim()) {
+                  alert("Please enter a nickname to join the quiz.");
+                  return;
+                }
                 if (user) {
                   void join(quiz.id, name);
                 }

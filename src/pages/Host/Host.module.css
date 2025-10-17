@@ -11,6 +11,7 @@
 }
 
 .quizRadio {
+  background-color: white;
   border: 4px dashed #dde;
   border-radius: 16px;
   cursor: pointer;

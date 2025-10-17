@@ -3,12 +3,11 @@ import { useNavigate } from "react-router-dom";
 import "firebase/firestore";
 
 import Button from "../../components/Button";
-import TextField from "../../components/TextField";
 
 import { Quiz } from "../../interfaces";
 import { useUser } from "../../auth";
 import { post } from "../../http";
-import { usePrevious, getLanguageName } from "../../utils";
+import { getLanguageName } from "../../utils";
 
 import {
   collection,
@@ -21,16 +20,11 @@ import {
 import { SESSIONS_URL } from "../../constants";
 import styles from "./Host.module.css";
 
-async function createQuizSession(
-  hostName: string,
-  quizId: string,
-  hostParticipates: boolean,
-) {
+async function createQuizSession(quizId: string) {
   const { session } = await post<{ session: { id: string } }>(SESSIONS_URL, {
-    hostName,
     quizId,
     map: "STANDARD",
-    hostParticipates,
+    hostParticipates: true,
   });
 
   return session.id;
@@ -53,20 +47,10 @@ function docsToData<T>(docs: QuerySnapshot): T[] {
 export default function Host() {
   const user = useUser();
   const navigate = useNavigate();
-  const [name, setName] = useState<string>(user?.displayName || "");
   const [publicQuizzes, setPublicQuizzes] = useState<Quiz[] | undefined>();
   const [personalQuizzes, setPersonalQuizzes] = useState<Quiz[] | undefined>();
   const [quiz, setQuiz] = useState<string | undefined>();
-  const [hostParticipates, setHostParticipates] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
-
-  const previousUser = usePrevious(user);
-
-  useEffect(() => {
-    if (!previousUser && user) {
-      setName(user.displayName || "");
-    }
-  }, [previousUser, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -91,10 +75,6 @@ export default function Host() {
   const onCreateQuiz = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      if (!name) {
-        alert("You need to choose a name!");
-        return;
-      }
       if (!quiz) {
         alert("You need to choose a quiz!");
         return;
@@ -102,47 +82,25 @@ export default function Host() {
 
       try {
         setLoading(true);
-        const id = await createQuizSession(name, quiz, hostParticipates);
+        const id = await createQuizSession(quiz);
         await navigate(`/q/${id}`);
       } finally {
         setLoading(false);
       }
     },
-    [hostParticipates, name, navigate, quiz],
+    [navigate, quiz],
   );
 
   return (
     <div className={styles.host}>
-      <h1>Host a new Quiz Session</h1>
+      <h1>Select a Quiz</h1>
 
       <form onSubmit={onCreateQuiz}>
-        <h2>About you</h2>
-        <TextField
-          autoFocus
-          label="Your nickname"
-          value={name}
-          onChange={(event) => {
-            setName(event.target.value);
-          }}
-        />
-
-        <label style={{ display: "block", marginTop: 20 }}>
-          <input
-            type="checkbox"
-            checked={hostParticipates}
-            onChange={() => {
-              setHostParticipates((prev) => !prev);
-            }}
-          />
-          Participate yourself?
-        </label>
-
-        <h2>Select a Quiz</h2>
         {!publicQuizzes ? <p>Loading quizzes...</p> : null}
 
         {personalQuizzes?.length ? (
           <>
-            <h3>Your quizzes</h3>
+            <h2>Your quizzes</h2>
             <div className={styles.quizRadioGroup}>
               {personalQuizzes.map((q) => (
                 <label
@@ -172,7 +130,7 @@ export default function Host() {
 
         {publicQuizzes?.length ? (
           <>
-            <h3>Public quizzes</h3>
+            {personalQuizzes?.length ? <h2>Public quizzes</h2> : null}
             <div className={styles.quizRadioGroup}>
               {publicQuizzes.map((q) => (
                 <label

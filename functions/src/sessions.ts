@@ -330,9 +330,9 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
 });
 
 const CreateSessionSchema = z.object({
-  hostName: z.string().min(1),
   quizId: z.string().min(1),
   map: z.enum(Map),
+  hostName: z.string().min(1).optional(),
   hostParticipates: z.boolean().optional(),
   answerTimeLimit: z.number().min(5).max(180).optional(),
 });
@@ -347,7 +347,8 @@ app.post("/", verifyToken(), async (req, res, next) => {
       answerTimeLimit = ANSWER_TIME_LIMIT,
     } = CreateSessionSchema.parse(req.body);
 
-    const uid = getUserContext().uid;
+    const { uid, displayName } = getUserContext();
+    const name = hostName ?? displayName ?? "Your Hostness";
 
     const db = getFirestore();
     const quizRef = await db.collection(Collections.QUIZZES).doc(quizId).get();
@@ -380,14 +381,14 @@ app.post("/", verifyToken(), async (req, res, next) => {
       createdAt: Timestamp.now(),
       host: {
         uid,
-        name: hostName,
+        name,
       },
       quizDetails,
       participants: hostParticipates
         ? [
             {
               uid,
-              name: hostName,
+              name,
             },
           ]
         : [],
@@ -414,13 +415,14 @@ const UpdateSessionSchema = z.object({
   map: z.enum(Map).optional(),
   hostParticipates: z.boolean().optional(),
   answerTimeLimit: z.number().min(5).max(120).optional(),
+  hostName: z.string().min(1).optional(),
 });
 
 app.patch("/:id", verifyToken(), async (req, res, next) => {
   try {
     const { id: sessionId } = req.params;
 
-    const { map, hostParticipates, answerTimeLimit } =
+    const { map, hostParticipates, answerTimeLimit, hostName } =
       UpdateSessionSchema.parse(req.body);
 
     const uid = getUserContext().uid;
@@ -447,10 +449,17 @@ app.patch("/:id", verifyToken(), async (req, res, next) => {
         participants: session.participants,
       };
 
+      if (hostName) {
+        updates.host = {
+          ...session.host,
+          name: hostName,
+        };
+      }
+
       if (hostParticipates) {
         if (!session.participants.some(({ uid }) => uid === session.host.uid)) {
           updates.participants = [
-            { uid: session.host.uid, name: session.host.name },
+            { uid: session.host.uid, name: hostName ?? session.host.name },
             ...session.participants,
           ];
         }
