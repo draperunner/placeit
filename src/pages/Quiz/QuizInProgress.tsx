@@ -233,7 +233,7 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
     }
 
     if (correctAnswer) {
-      helpText = `The correct answer was of course at the blue marker.`;
+      helpText = `The correct answer was of course in the blue area.`;
     }
 
     const inBetweenQuestions = !gameOver && countDown === 0 && !!results;

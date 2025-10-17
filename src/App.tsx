@@ -49,7 +49,7 @@ function App() {
           <Route
             path="/"
             element={
-              <AppWrapper>
+              <AppWrapper backgroundColor="#0693e3">
                 <Home />
               </AppWrapper>
             }

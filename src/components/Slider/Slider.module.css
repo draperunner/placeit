@@ -1,3 +1,7 @@
+.label {
+  font-weight: 500;
+}
+
 .slider {
   appearance: none;
   width: 100%;
@@ -12,7 +16,7 @@
 .slider::-webkit-slider-runnable-track {
   width: 100%;
   cursor: pointer;
-  background: #eee;
+  background: #dde;
   border-radius: 8px;
   height: 12px;
 }
@@ -20,7 +24,7 @@
 .slider::-moz-range-track {
   width: 100%;
   cursor: pointer;
-  background: #eee;
+  background: #dde;
   border-radius: 8px;
   height: 12px;
 }
@@ -33,7 +37,7 @@
   border-radius: 50%;
   cursor: grab;
   background-color: #33f;
-  border: 4px solid #eee;
+  border: 4px solid #dde;
   box-shadow: 0 1px 4px 0 rgba(100, 100, 255, 0.5);
   box-sizing: border-box;
   transition: all 200ms ease;
@@ -57,7 +61,7 @@
   border-radius: 50%;
   cursor: grab;
   background-color: #33f;
-  border: 4px solid #eee;
+  border: 4px solid #dde;
   box-shadow: 0 1px 4px 0 rgba(100, 100, 255, 0.5);
   box-sizing: border-box;
   transition: all 200ms ease;

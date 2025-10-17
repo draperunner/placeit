@@ -6,21 +6,29 @@
   }
 }
 
+.homeContent {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  > div {
+    min-width: 300px;
+  }
+}
+
 .buttons {
   display: flex;
   flex-wrap: wrap;
+  flex-direction: row;
   margin-top: 100px;
   gap: 16px;
 }
 
 .homeIllustration {
-  position: absolute;
   display: flex;
   align-items: center;
   justify-content: center;
-  right: 20%;
-  top: 20%;
-  z-index: -1;
+  flex: 1;
 }
 
 .homeIsland {
@@ -31,6 +39,16 @@
   height: 90px;
   position: absolute;
   animation: scale 1s ease-in infinite alternate;
+}
+
+.createQuizButton {
+  background-color: transparent;
+  border: 3px solid white;
+  color: white;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
 }
 
 @media (max-width: 1000px) {

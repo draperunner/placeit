@@ -77,3 +77,7 @@ export function formatDistance(meters: number): string {
   }
   return `${Math.round(meters)} m`;
 }
+
+export function classNames(...classes: (string | false | null | undefined)[]) {
+  return classes.filter(Boolean).join(" ");
+}

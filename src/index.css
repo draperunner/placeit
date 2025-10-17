@@ -5,8 +5,8 @@
 
 body {
   margin: 0;
-  background-color: #0693e3;
-  color: white;
+  background-color: #f9f9f9;
+  color: #114;
   font-family:
     "Rubik",
     sans-serif,
@@ -44,7 +44,7 @@ p {
 }
 
 a {
-  color: white;
+  color: #114;
 
   &:hover {
     text-decoration: none;

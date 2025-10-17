@@ -101,12 +101,7 @@ export default function Lobby({ quiz, user }: Props) {
             />
             {`${host.name}${hostIsParticipating ? " (participating)" : ""}`}
           </div>
-          <h2>
-            Partici
-            <span role="img" aria-label="pants">
-              👖
-            </span>
-          </h2>
+          <h2 style={{ marginTop: 32 }}>Participants</h2>
           {!participants.length ? (
             <p>None yet! Share the URL with your friends to invite them.</p>
           ) : null}

@@ -30,17 +30,17 @@
 }
 
 .mapRadio {
-  border: 2px solid #dde;
-  border-radius: 4px;
+  border: 3px dashed #dde;
+  border-radius: 8px;
   cursor: pointer;
   padding: 16px;
+  color: #114;
   min-width: 100px;
   display: flex;
   flex-direction: column;
 
   &:not(.mapRadioSelected):hover {
-    background-color: #0582d2;
-    border-color: white;
+    border-color: #33f;
   }
 
   input {
@@ -50,8 +50,9 @@
 
   &.mapRadioSelected {
     font-weight: bold;
-    border-color: white;
+    border-color: #33f;
     cursor: default;
+    border-style: solid;
   }
 }
 
