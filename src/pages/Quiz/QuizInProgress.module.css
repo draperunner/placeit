@@ -17,6 +17,8 @@
 
 .deadline {
   font-size: 120px;
+  min-width: 120px;
+  text-align: right;
 }
 
 .avatar {

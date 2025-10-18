@@ -3,6 +3,14 @@
   margin-top: 2rem;
 }
 
+@media (max-width: 800px) {
+  .submitButton {
+    position: sticky;
+    bottom: 16px;
+    box-shadow: 2px 2px 6px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
 .quizRadioGroup {
   display: flex;
   flex-direction: row;
@@ -24,6 +32,13 @@
 
   &:hover {
     border-color: #33f;
+  }
+}
+
+@media (max-width: 800px) {
+  .quizRadio {
+    width: 100%;
+    max-width: unset;
   }
 }
 
