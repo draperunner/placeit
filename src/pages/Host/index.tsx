@@ -120,7 +120,7 @@ export default function Host() {
                   <b>{q.name}</b>
                   <i>by {q.author.name}</i>
                   <p>{q.description}</p>
-                  <p>Language: {getLanguageName(q.language)}</p>
+                  <p>{`${q.questions.length} questions in ${getLanguageName(q.language)}.`}</p>
                   <p>{q.isPrivate ? "Private." : "Public."}</p>
                 </label>
               ))}
