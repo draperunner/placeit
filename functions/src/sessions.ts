@@ -3,7 +3,7 @@ import express, { Request, Response } from "express";
 import * as turf from "@turf/turf";
 
 import cors from "./cors.js";
-import { GivenAnswer, QuizSession, QuizState } from "./interfaces.js";
+import { QuizSession } from "./interfaces.js";
 import { getUserContext, verifyToken } from "./auth.js";
 import { ANSWER_TIME_LIMIT } from "./constants.js";
 import {
@@ -19,15 +19,18 @@ import z from "zod";
 import { Feature, Polygon } from "geojson";
 import { polygon } from "@turf/turf";
 import { db } from "./models/db.js";
-import { convertQuestionToDb } from "./models/quizzes.js";
+import { QuizStateAppType, QuizStateDbType } from "./models/quizStates.js";
+import { convertQuestionToDb } from "./models/questions.js";
+import {
+  convertGivenAnswerToDb,
+  GivenAnswerDbType,
+} from "./models/givenAnswers.js";
 
 const app = express();
 app.use(cors);
 
 enum Collections {
-  QUIZZES = "quizzes",
   QUIZ_SESSIONS = "quiz-sessions",
-  QUIZ_STATES = "quiz-states",
 }
 
 enum Map {
@@ -111,16 +114,15 @@ async function getQuizSession(
 async function getQuizState(
   id: string,
   transaction?: Transaction,
-): Promise<QuizState | null> {
-  const db = getFirestore();
-  const ref = db.collection("quiz-states").doc(id);
+): Promise<QuizStateAppType | null> {
+  const ref = db.quizStates.doc(id);
   const doc = transaction ? await transaction.get(ref) : await ref.get();
 
   if (!doc.exists) {
     return null;
   }
 
-  return doc.data() as QuizState;
+  return doc.data() ?? null;
 }
 
 function calculateDistance(
@@ -160,7 +162,7 @@ const CoordinatesSchema = z.object({
 
 app.post("/:id/answer", verifyToken(), async (req, res, next) => {
   try {
-    const db = getFirestore();
+    const firestore = getFirestore();
     const now = new Date();
     const id = req.params.id;
 
@@ -168,7 +170,7 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
 
     const currentUserUid = getUserContext().uid;
 
-    await db.runTransaction(async (transaction) => {
+    await firestore.runTransaction(async (transaction) => {
       const [quizSession, quizState] = await Promise.all([
         getQuizSession(id, transaction),
         getQuizState(id, transaction),
@@ -210,17 +212,13 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
       }
 
       const distance = calculateDistance(
-        polygon([
-          quizState.currentCorrectAnswer.geometry.coordinates.map(
-            (geoPoint) => [geoPoint.longitude, geoPoint.latitude],
-          ),
-        ]),
+        polygon([quizState.currentCorrectAnswer.geometry.coordinates[0]]),
         parsedBody,
       );
 
       const points = scoreFromDistance(distance);
 
-      const givenAnswer: GivenAnswer = {
+      const givenAnswer: GivenAnswerDbType = {
         questionId: currentQuestion.id,
         participantId: currentUserUid,
         answer: new GeoPoint(parsedBody.latitude, parsedBody.longitude),
@@ -229,18 +227,20 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
         timestamp: Timestamp.fromDate(now),
       };
 
-      const updatedGivenAnswers = [
-        ...quizState.givenAnswers.filter(
-          (ans) =>
-            ans.participantId !== currentUserUid ||
-            ans.questionId !== currentQuestion.id,
-        ),
+      const updatedGivenAnswers: UpdateData<QuizStateDbType>["givenAnswers"] = [
+        ...quizState.givenAnswers
+          .filter(
+            (ans) =>
+              ans.participantId !== currentUserUid ||
+              ans.questionId !== currentQuestion.id,
+          )
+          .map(convertGivenAnswerToDb),
         givenAnswer,
       ];
 
-      transaction.update(db.collection(Collections.QUIZ_STATES).doc(id), {
+      transaction.update(db.quizStates.doc(id), {
         givenAnswers: updatedGivenAnswers,
-      } satisfies UpdateData<QuizState>);
+      });
     });
 
     res.json({});
@@ -309,24 +309,26 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
         ? null
         : convertQuestionToDb(quiz.questions[currentQuestionIndex + 1]);
 
-      transaction.update(
-        firestore.collection(Collections.QUIZ_STATES).doc(id),
-        {
-          currentCorrectAnswer: nextQuestion || null,
-        } satisfies UpdateData<QuizState>,
-      );
+      transaction.update(db.quizStates.doc(id), {
+        currentCorrectAnswer: nextQuestion || null,
+      });
 
       transaction.update(
         firestore.collection(Collections.QUIZ_SESSIONS).doc(id),
         {
           state: gameOver ? "over" : "in-progress",
-          currentQuestion: nextQuestion
-            ? {
-                id: nextQuestion.id,
-                text: nextQuestion.properties.text,
-                deadline: getDeadline(quizSession.answerTimeLimit),
-              }
-            : null,
+          currentQuestion:
+            nextQuestion && !(nextQuestion instanceof FieldValue)
+              ? {
+                  id: nextQuestion.id,
+                  text:
+                    !nextQuestion.properties ||
+                    nextQuestion.properties instanceof FieldValue
+                      ? nextQuestion.properties
+                      : nextQuestion.properties.text,
+                  deadline: getDeadline(quizSession.answerTimeLimit),
+                }
+              : null,
         } satisfies UpdateData<QuizSession>,
       );
     });
@@ -572,7 +574,7 @@ app.post("/:id/ping", verifyToken(), async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    await getFirestore().collection(Collections.QUIZ_STATES).doc(id).update({
+    await db.quizStates.doc(id).update({
       lastPing: FieldValue.serverTimestamp(),
     });
 

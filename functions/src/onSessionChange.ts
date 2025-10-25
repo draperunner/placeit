@@ -1,6 +1,6 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 
-import { QuizSession, QuizState } from "./interfaces.js";
+import { QuizSession } from "./interfaces.js";
 import { ANSWER_TIME_LIMIT } from "./constants.js";
 import {
   FieldValue,
@@ -9,11 +9,9 @@ import {
   UpdateData,
 } from "firebase-admin/firestore";
 import { db } from "./models/db.js";
-import { convertQuestionToDb } from "./models/quizzes.js";
 
 enum Collections {
   QUIZ_SESSIONS = "quiz-sessions",
-  QUIZ_STATES = "quiz-states",
 }
 
 function getDeadline(answerTimeLimit = ANSWER_TIME_LIMIT): Timestamp {
@@ -36,11 +34,11 @@ async function startSession(newValue: QuizSession, id: string): Promise<void> {
 
   const batch = firestore.batch();
 
-  batch.set(firestore.collection(Collections.QUIZ_STATES).doc(id), {
+  batch.set(db.quizStates.doc(id), {
     quiz: quizId,
     givenAnswers: [],
-    currentCorrectAnswer: convertQuestionToDb(firstQuestion),
-  } satisfies QuizState);
+    currentCorrectAnswer: firstQuestion,
+  });
 
   batch.update(firestore.collection(Collections.QUIZ_SESSIONS).doc(id), {
     startedAt: FieldValue.serverTimestamp(),

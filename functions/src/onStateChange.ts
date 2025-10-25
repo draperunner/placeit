@@ -1,15 +1,15 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 
-import { QuizSession, QuizState } from "./interfaces.js";
+import { QuizSession } from "./interfaces.js";
 import {
   getFirestore,
   Transaction,
   UpdateData,
 } from "firebase-admin/firestore";
+import { QuizStateDbType } from "./models/quizStates.js";
 
 enum Collections {
   QUIZ_SESSIONS = "quiz-sessions",
-  QUIZ_STATES = "quiz-states",
 }
 
 async function getQuizSession(
@@ -28,7 +28,7 @@ async function getQuizSession(
 }
 
 async function revealAnswerIfQuestionDeadlinePassed(
-  quizState: QuizState,
+  quizState: QuizStateDbType,
   id: string,
 ) {
   const db = getFirestore();
@@ -99,8 +99,8 @@ export const onStateChange2ndGen = onDocumentUpdated(
     region: "europe-west1",
   },
   async ({ data, params }) => {
-    const newValue = data?.after.data() as QuizState | undefined;
-    const previousValue = data?.before.data() as QuizState | undefined;
+    const newValue = data?.after.data() as QuizStateDbType | undefined;
+    const previousValue = data?.before.data() as QuizStateDbType | undefined;
 
     if (!newValue || !previousValue) {
       console.log("Either newValue or previousValue is undefined");

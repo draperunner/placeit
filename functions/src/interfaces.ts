@@ -1,5 +1,5 @@
 import type { GeoPoint, Timestamp } from "firebase-admin/firestore";
-import type { QuestionDbType } from "./models/quizzes.js";
+import { QuestionDbType } from "./models/questions.js";
 
 export interface QuizSession {
   host: {
@@ -44,19 +44,4 @@ export interface QuizSession {
     numberOfQuestions: number;
     language: string;
   };
-}
-
-export interface GivenAnswer {
-  questionId: string;
-  participantId: string;
-  answer: GeoPoint;
-  distance: number;
-  points: number;
-  timestamp: Timestamp;
-}
-
-export interface QuizState {
-  quiz: string;
-  currentCorrectAnswer: QuestionDbType | null;
-  givenAnswers: GivenAnswer[];
 }
