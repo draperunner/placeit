@@ -3,7 +3,6 @@ import express, { Request, Response } from "express";
 import * as turf from "@turf/turf";
 
 import cors from "./cors.js";
-import { QuizSession } from "./interfaces.js";
 import { getUserContext, verifyToken } from "./auth.js";
 import { ANSWER_TIME_LIMIT } from "./constants.js";
 import {
@@ -25,13 +24,13 @@ import {
   convertGivenAnswerToDb,
   GivenAnswerDbType,
 } from "./models/givenAnswers.js";
+import {
+  QuizSessionAppType,
+  QuizSessionDbType,
+} from "./models/quizSessions.js";
 
 const app = express();
 app.use(cors);
-
-enum Collections {
-  QUIZ_SESSIONS = "quiz-sessions",
-}
 
 enum Map {
   STANDARD = "STANDARD",
@@ -99,16 +98,15 @@ function scoreFromDistance(
 async function getQuizSession(
   id: string,
   transaction?: Transaction,
-): Promise<QuizSession | null> {
-  const db = getFirestore();
-  const ref = db.collection("quiz-sessions").doc(id);
+): Promise<QuizSessionAppType | null> {
+  const ref = db.quizSessions.doc(id);
   const doc = transaction ? await transaction.get(ref) : await ref.get();
 
   if (!doc.exists) {
     return null;
   }
 
-  return doc.data() as QuizSession;
+  return doc.data() ?? null;
 }
 
 async function getQuizState(
@@ -196,7 +194,7 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
         );
       }
 
-      const diff = currentQuestion.deadline.toMillis() - now.getTime();
+      const diff = currentQuestion.deadline.getTime() - now.getTime();
       if (diff <= 0) {
         throw new Error(`Answered too late: ${diff} ms`);
       }
@@ -313,24 +311,21 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
         currentCorrectAnswer: nextQuestion || null,
       });
 
-      transaction.update(
-        firestore.collection(Collections.QUIZ_SESSIONS).doc(id),
-        {
-          state: gameOver ? "over" : "in-progress",
-          currentQuestion:
-            nextQuestion && !(nextQuestion instanceof FieldValue)
-              ? {
-                  id: nextQuestion.id,
-                  text:
-                    !nextQuestion.properties ||
-                    nextQuestion.properties instanceof FieldValue
-                      ? nextQuestion.properties
-                      : nextQuestion.properties.text,
-                  deadline: getDeadline(quizSession.answerTimeLimit),
-                }
-              : null,
-        } satisfies UpdateData<QuizSession>,
-      );
+      transaction.update(db.quizSessions.doc(id), {
+        state: gameOver ? "over" : "in-progress",
+        currentQuestion:
+          nextQuestion && !(nextQuestion instanceof FieldValue)
+            ? {
+                id: nextQuestion.id,
+                text:
+                  !nextQuestion.properties ||
+                  nextQuestion.properties instanceof FieldValue
+                    ? nextQuestion.properties
+                    : nextQuestion.properties.text,
+                deadline: getDeadline(quizSession.answerTimeLimit),
+              }
+            : null,
+      });
     });
 
     res.json({});
@@ -387,8 +382,8 @@ app.post("/", verifyToken(), async (req, res, next) => {
       },
     };
 
-    const session: QuizSession = {
-      createdAt: Timestamp.now(),
+    const session: QuizSessionAppType = {
+      createdAt: new Date(),
       host: {
         uid,
         name,
@@ -436,56 +431,56 @@ app.patch("/:id", verifyToken(), async (req, res, next) => {
       UpdateSessionSchema.parse(req.body);
 
     const uid = getUserContext().uid;
-    const db = getFirestore();
 
-    const updatedSession = await db.runTransaction(async (transaction) => {
-      const session = await getQuizSession(sessionId, transaction);
+    const updatedSession = await getFirestore().runTransaction(
+      async (transaction) => {
+        const session = await getQuizSession(sessionId, transaction);
 
-      if (!session) {
-        throw new Error("Could not find session with this ID.");
-      }
-
-      if (session.host.uid !== uid) {
-        throw new Error("Only the host can update the session.");
-      }
-
-      if (session.state !== "lobby") {
-        throw new Error("Can only update session while in the lobby.");
-      }
-
-      const updates: UpdateData<QuizSession> = {
-        map: map ? getMapData(map) : session.map,
-        answerTimeLimit: answerTimeLimit ?? session.answerTimeLimit,
-        participants: session.participants,
-      };
-
-      if (hostName) {
-        updates.host = {
-          ...session.host,
-          name: hostName,
-        };
-      }
-
-      if (hostParticipates) {
-        if (!session.participants.some(({ uid }) => uid === session.host.uid)) {
-          updates.participants = [
-            { uid: session.host.uid, name: hostName ?? session.host.name },
-            ...session.participants,
-          ];
+        if (!session) {
+          throw new Error("Could not find session with this ID.");
         }
-      } else if (hostParticipates === false) {
-        updates.participants = session.participants.filter(
-          ({ uid }) => uid !== session.host.uid,
-        );
-      }
 
-      transaction.update(
-        db.collection("quiz-sessions").doc(sessionId),
-        updates,
-      );
+        if (session.host.uid !== uid) {
+          throw new Error("Only the host can update the session.");
+        }
 
-      return updates;
-    });
+        if (session.state !== "lobby") {
+          throw new Error("Can only update session while in the lobby.");
+        }
+
+        const updates: UpdateData<QuizSessionDbType> = {
+          map: map ? getMapData(map) : session.map,
+          answerTimeLimit: answerTimeLimit ?? session.answerTimeLimit,
+          participants: session.participants,
+        };
+
+        if (hostName) {
+          updates.host = {
+            ...session.host,
+            name: hostName,
+          };
+        }
+
+        if (hostParticipates) {
+          if (
+            !session.participants.some(({ uid }) => uid === session.host.uid)
+          ) {
+            updates.participants = [
+              { uid: session.host.uid, name: hostName ?? session.host.name },
+              ...session.participants,
+            ];
+          }
+        } else if (hostParticipates === false) {
+          updates.participants = session.participants.filter(
+            ({ uid }) => uid !== session.host.uid,
+          );
+        }
+
+        transaction.update(db.quizSessions.doc(sessionId), updates);
+
+        return updates;
+      },
+    );
 
     res.status(200).json({
       session: {
@@ -507,9 +502,8 @@ app.post("/:id/join", verifyToken(), async (req, res, next) => {
     const { id } = req.params;
     const { uid } = getUserContext();
     const { name } = JoinSchema.parse(req.body);
-    const db = getFirestore();
 
-    await db.runTransaction(async (transaction) => {
+    await getFirestore().runTransaction(async (transaction) => {
       const quizSession = await getQuizSession(id, transaction);
 
       if (!quizSession) {
@@ -526,12 +520,12 @@ app.post("/:id/join", verifyToken(), async (req, res, next) => {
         return;
       }
 
-      transaction.update(db.collection("quiz-sessions").doc(id), {
+      transaction.update(db.quizSessions.doc(id), {
         participants: FieldValue.arrayUnion({
           uid,
           name,
         }),
-      } satisfies UpdateData<QuizSession>);
+      });
     });
 
     res.json({});
@@ -543,9 +537,8 @@ app.post("/:id/join", verifyToken(), async (req, res, next) => {
 app.post("/:id/start", verifyToken(), async (req, res, next) => {
   try {
     const { id } = req.params;
-    const db = getFirestore();
 
-    await db.runTransaction(async (transaction) => {
+    await getFirestore().runTransaction(async (transaction) => {
       const quizSession = await getQuizSession(id, transaction);
 
       if (!quizSession) {
@@ -560,9 +553,9 @@ app.post("/:id/start", verifyToken(), async (req, res, next) => {
         throw new Error("Quiz has already started");
       }
 
-      transaction.update(db.collection("quiz-sessions").doc(id), {
+      transaction.update(db.quizSessions.doc(id), {
         state: "in-progress",
-      } satisfies UpdateData<QuizSession>);
+      });
     });
     res.json({});
   } catch (error) {

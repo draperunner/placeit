@@ -5,9 +5,14 @@ import {
   Transaction,
 } from "firebase-admin/firestore";
 import { onSchedule } from "firebase-functions/scheduler";
-import { QuizSession } from "./interfaces.js";
 import * as logger from "firebase-functions/logger";
 import { getAuth } from "firebase-admin/auth";
+import { db } from "./models/db.js";
+import {
+  QuizSessionAppType,
+  QuizSessionDbType,
+} from "./models/quizSessions.js";
+import { QuizAppType, QuizDbType } from "./models/quizzes.js";
 
 const DELETE_ANONYMOUS_USERS_AFTER_DAYS = 7;
 const DELETE_REGISTERED_USERS_AFTER_DAYS = 365;
@@ -16,25 +21,22 @@ const DELETE_QUIZ_SESSIONS_AFTER_HOURS = 6;
 async function getQuizSession(
   id: string,
   transaction?: Transaction,
-): Promise<QuizSession | null> {
-  const db = getFirestore();
-  const ref = db.collection("quiz-sessions").doc(id);
+): Promise<QuizSessionAppType | null> {
+  const ref = db.quizSessions.doc(id);
   const doc = transaction ? await transaction.get(ref) : await ref.get();
 
   if (!doc.exists) {
     return null;
   }
 
-  return doc.data() as QuizSession;
+  return doc.data() || null;
 }
 
 async function cleanSessions() {
-  const db = getFirestore();
-
+  const firestore = getFirestore();
   logger.info("Starting cleanup of old quiz sessions");
 
-  const query = db
-    .collection("quiz-sessions")
+  const query = db.quizSessions
     .where(
       "startedAt",
       "<=",
@@ -47,13 +49,16 @@ async function cleanSessions() {
     .select();
 
   for await (const doc of query.stream()) {
-    const sessionDoc = doc as unknown as QueryDocumentSnapshot;
+    const sessionDoc = doc as unknown as QueryDocumentSnapshot<
+      QuizSessionAppType,
+      QuizSessionDbType
+    >;
     const id = sessionDoc.id;
 
     logger.info(`Deleting quiz session with ID: ${id}`);
 
     try {
-      await db.runTransaction(async (transaction) => {
+      await firestore.runTransaction(async (transaction) => {
         const session = await getQuizSession(id, transaction);
 
         if (!session) {
@@ -71,9 +76,9 @@ async function cleanSessions() {
           answerTimeLimit: session.answerTimeLimit,
         };
 
-        transaction.delete(db.collection("quiz-sessions").doc(id));
-        transaction.delete(db.collection("quiz-states").doc(id));
-        transaction.set(db.collection("session-stats").doc(id), stats);
+        transaction.delete(db.quizSessions.doc(id));
+        transaction.delete(db.quizStates.doc(id));
+        transaction.set(firestore.collection("session-stats").doc(id), stats);
       });
     } catch (error) {
       logger.error(`Error deleting session with ID: ${id}`, error);
@@ -83,7 +88,7 @@ async function cleanSessions() {
 
 async function cleanUsers(pageToken?: string): Promise<string | undefined> {
   const auth = getAuth();
-  const db = getFirestore();
+  const firestore = getFirestore();
 
   logger.info(
     `Starting cleanup of old users ${pageToken ? "with" : "without"} page token`,
@@ -134,15 +139,15 @@ async function cleanUsers(pageToken?: string): Promise<string | undefined> {
       }
 
       // Delete all quizzes created by this user, private and public
-      const query = db
-        .collection("quizzes")
-        .where("author.uid", "==", user.uid)
-        .select();
+      const query = db.quizzes.where("author.uid", "==", user.uid).select();
 
-      const bulkWriter = db.bulkWriter();
+      const bulkWriter = firestore.bulkWriter();
 
       for await (const doc of query.stream()) {
-        const quizDoc = doc as unknown as QueryDocumentSnapshot;
+        const quizDoc = doc as unknown as QueryDocumentSnapshot<
+          QuizAppType,
+          QuizDbType
+        >;
         const id = quizDoc.id;
 
         logger.info(`Deleting quiz with ID: ${id}`, {
@@ -150,7 +155,7 @@ async function cleanUsers(pageToken?: string): Promise<string | undefined> {
           quizId: id,
         });
 
-        void bulkWriter.delete(db.collection("quizzes").doc(id));
+        void bulkWriter.delete(db.quizzes.doc(id));
       }
 
       await bulkWriter.close();

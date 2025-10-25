@@ -25,7 +25,7 @@ export type QuizAppType = {
   createdAt?: Date;
 };
 
-type QuizDbType = {
+export type QuizDbType = {
   name: string;
   description: string;
   language: string;

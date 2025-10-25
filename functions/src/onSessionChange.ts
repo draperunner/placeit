@@ -1,25 +1,19 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 
-import { QuizSession } from "./interfaces.js";
 import { ANSWER_TIME_LIMIT } from "./constants.js";
-import {
-  FieldValue,
-  getFirestore,
-  Timestamp,
-  UpdateData,
-} from "firebase-admin/firestore";
+import { FieldValue, getFirestore, Timestamp } from "firebase-admin/firestore";
 import { db } from "./models/db.js";
-
-enum Collections {
-  QUIZ_SESSIONS = "quiz-sessions",
-}
+import { QuizSessionDbType } from "./models/quizSessions.js";
 
 function getDeadline(answerTimeLimit = ANSWER_TIME_LIMIT): Timestamp {
   const deadline = new Date().getTime() + answerTimeLimit * 1000;
   return Timestamp.fromMillis(deadline);
 }
 
-async function startSession(newValue: QuizSession, id: string): Promise<void> {
+async function startSession(
+  newValue: QuizSessionDbType,
+  id: string,
+): Promise<void> {
   const firestore = getFirestore();
   const quizId = newValue.quizDetails.id;
   const quizSnapshot = await db.quizzes.doc(quizId).get();
@@ -40,14 +34,14 @@ async function startSession(newValue: QuizSession, id: string): Promise<void> {
     currentCorrectAnswer: firstQuestion,
   });
 
-  batch.update(firestore.collection(Collections.QUIZ_SESSIONS).doc(id), {
+  batch.update(db.quizSessions.doc(id), {
     startedAt: FieldValue.serverTimestamp(),
     currentQuestion: {
       id: firstQuestion.id,
       text: firstQuestion.properties.text,
       deadline: getDeadline(newValue.answerTimeLimit),
     },
-  } satisfies UpdateData<QuizSession>);
+  });
 
   await batch.commit();
 }
@@ -58,8 +52,8 @@ export const onSessionChange2ndGen = onDocumentUpdated(
     region: "europe-west1",
   },
   async ({ data, params }) => {
-    const newValue = data?.after.data() as QuizSession | undefined;
-    const previousValue = data?.before.data() as QuizSession | undefined;
+    const newValue = data?.after.data() as QuizSessionDbType | undefined;
+    const previousValue = data?.before.data() as QuizSessionDbType | undefined;
 
     if (!newValue || !previousValue) {
       console.log("Either newValue or previousValue is undefined");

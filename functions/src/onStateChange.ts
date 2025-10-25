@@ -1,39 +1,31 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 
-import { QuizSession } from "./interfaces.js";
-import {
-  getFirestore,
-  Transaction,
-  UpdateData,
-} from "firebase-admin/firestore";
+import { getFirestore, Transaction } from "firebase-admin/firestore";
 import { QuizStateDbType } from "./models/quizStates.js";
-
-enum Collections {
-  QUIZ_SESSIONS = "quiz-sessions",
-}
+import { db } from "./models/db.js";
+import { QuizSessionAppType } from "./models/quizSessions.js";
 
 async function getQuizSession(
   id: string,
   transaction?: Transaction,
-): Promise<QuizSession | null> {
-  const db = getFirestore();
-  const ref = db.collection("quiz-sessions").doc(id);
+): Promise<QuizSessionAppType | null> {
+  const ref = db.quizSessions.doc(id);
   const doc = transaction ? await transaction.get(ref) : await ref.get();
 
   if (!doc.exists) {
     return null;
   }
 
-  return doc.data() as QuizSession;
+  return doc.data() ?? null;
 }
 
 async function revealAnswerIfQuestionDeadlinePassed(
   quizState: QuizStateDbType,
   id: string,
 ) {
-  const db = getFirestore();
+  const firestore = getFirestore();
 
-  await db.runTransaction(async (transaction) => {
+  await firestore.runTransaction(async (transaction) => {
     const quizSession = await getQuizSession(id, transaction);
 
     if (!quizSession) {
@@ -60,9 +52,9 @@ async function revealAnswerIfQuestionDeadlinePassed(
         })
         .sort((a, b) => b.points - a.points);
 
-      transaction.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
+      transaction.update(db.quizSessions.doc(id), {
         results,
-      } satisfies UpdateData<QuizSession>);
+      });
 
       return;
     }
@@ -78,7 +70,7 @@ async function revealAnswerIfQuestionDeadlinePassed(
     }
 
     // Deadline has not yet passed, not revealing answer yet.
-    if (currentQuestion.deadline.toMillis() >= Date.now()) {
+    if (currentQuestion.deadline.getTime() >= Date.now()) {
       return;
     }
 
@@ -86,10 +78,10 @@ async function revealAnswerIfQuestionDeadlinePassed(
       ({ questionId }) => questionId === currentQuestion.id,
     );
 
-    transaction.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
+    transaction.update(db.quizSessions.doc(id), {
       "currentQuestion.correctAnswer": currentCorrectAnswer,
       "currentQuestion.givenAnswers": givenAnswersForThisQuestion,
-    } satisfies UpdateData<QuizSession>);
+    });
   });
 }
 
