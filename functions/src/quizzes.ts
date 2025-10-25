@@ -5,7 +5,7 @@ import cors from "./cors.js";
 import { getUserContext, verifyToken } from "./auth.js";
 import { FieldValue } from "firebase-admin/firestore";
 import z from "zod";
-import { db } from "./models/db.js";
+import { quizzes } from "./models/db.js";
 
 const app = express();
 app.use(cors);
@@ -55,7 +55,7 @@ app.post(
         type: "Feature" as const,
       }));
 
-      const ref = await db.quizzes.add({
+      const ref = await quizzes.add({
         name,
         description,
         language,
@@ -68,7 +68,7 @@ app.post(
         createdAt: FieldValue.serverTimestamp(),
       });
 
-      const createdQuiz = await db.quizzes.doc(ref.id).get();
+      const createdQuiz = await quizzes.doc(ref.id).get();
 
       res.status(201).json({
         quiz: createdQuiz.data(),

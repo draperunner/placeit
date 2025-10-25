@@ -17,7 +17,7 @@ import { getAuth } from "firebase-admin/auth";
 import z from "zod";
 import { Feature, Polygon } from "geojson";
 import { polygon } from "@turf/turf";
-import { db } from "./models/db.js";
+import * as db from "./models/db.js";
 import { QuizStateAppType, QuizStateDbType } from "./models/quizStates.js";
 import { convertQuestionToDb } from "./models/questions.js";
 import {

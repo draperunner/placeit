@@ -2,7 +2,7 @@ import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 
 import { ANSWER_TIME_LIMIT } from "./constants.js";
 import { FieldValue, getFirestore, Timestamp } from "firebase-admin/firestore";
-import { db } from "./models/db.js";
+import * as db from "./models/db.js";
 import { QuizSessionDbType } from "./models/quizSessions.js";
 
 function getDeadline(answerTimeLimit = ANSWER_TIME_LIMIT): Timestamp {

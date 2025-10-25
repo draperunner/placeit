@@ -2,14 +2,14 @@ import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 
 import { getFirestore, Transaction } from "firebase-admin/firestore";
 import { QuizStateDbType } from "./models/quizStates.js";
-import { db } from "./models/db.js";
+import { quizSessions } from "./models/db.js";
 import { QuizSessionAppType } from "./models/quizSessions.js";
 
 async function getQuizSession(
   id: string,
   transaction?: Transaction,
 ): Promise<QuizSessionAppType | null> {
-  const ref = db.quizSessions.doc(id);
+  const ref = quizSessions.doc(id);
   const doc = transaction ? await transaction.get(ref) : await ref.get();
 
   if (!doc.exists) {
@@ -52,7 +52,7 @@ async function revealAnswerIfQuestionDeadlinePassed(
         })
         .sort((a, b) => b.points - a.points);
 
-      transaction.update(db.quizSessions.doc(id), {
+      transaction.update(quizSessions.doc(id), {
         results,
       });
 
@@ -78,7 +78,7 @@ async function revealAnswerIfQuestionDeadlinePassed(
       ({ questionId }) => questionId === currentQuestion.id,
     );
 
-    transaction.update(db.quizSessions.doc(id), {
+    transaction.update(quizSessions.doc(id), {
       "currentQuestion.correctAnswer": currentCorrectAnswer,
       "currentQuestion.givenAnswers": givenAnswersForThisQuestion,
     });

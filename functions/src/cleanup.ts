@@ -7,7 +7,7 @@ import {
 import { onSchedule } from "firebase-functions/scheduler";
 import * as logger from "firebase-functions/logger";
 import { getAuth } from "firebase-admin/auth";
-import { db } from "./models/db.js";
+import * as db from "./models/db.js";
 import {
   QuizSessionAppType,
   QuizSessionDbType,
