@@ -8,7 +8,6 @@ import {
 } from "firebase-admin/firestore";
 
 enum Collections {
-  QUIZZES = "quizzes",
   QUIZ_SESSIONS = "quiz-sessions",
   QUIZ_STATES = "quiz-states",
 }

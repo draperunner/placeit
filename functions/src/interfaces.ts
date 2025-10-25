@@ -1,28 +1,5 @@
 import type { GeoPoint, Timestamp } from "firebase-admin/firestore";
-
-export type Question = {
-  id: string;
-  type: "Feature";
-  geometry: {
-    type: "Polygon";
-    coordinates: GeoPoint[];
-  };
-  properties: {
-    text: string;
-  };
-};
-
-export interface Quiz {
-  name: string;
-  description: string;
-  language: string;
-  questions: Question[];
-  author: {
-    uid: string;
-  };
-  isPrivate: boolean;
-  createdAt?: Timestamp;
-}
+import type { QuestionDbType } from "./models/quizzes.js";
 
 export interface QuizSession {
   host: {
@@ -38,7 +15,7 @@ export interface QuizSession {
   currentQuestion: null | {
     id: string;
     text: string;
-    correctAnswer?: Question | null;
+    correctAnswer?: QuestionDbType | null;
     givenAnswers?: Array<{
       questionId: string;
       participantId: string;
@@ -80,6 +57,6 @@ export interface GivenAnswer {
 
 export interface QuizState {
   quiz: string;
-  currentCorrectAnswer: Question | null;
+  currentCorrectAnswer: QuestionDbType | null;
   givenAnswers: GivenAnswer[];
 }

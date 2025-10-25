@@ -3,7 +3,7 @@ import express, { Request, Response } from "express";
 import * as turf from "@turf/turf";
 
 import cors from "./cors.js";
-import { GivenAnswer, Quiz, QuizSession, QuizState } from "./interfaces.js";
+import { GivenAnswer, QuizSession, QuizState } from "./interfaces.js";
 import { getUserContext, verifyToken } from "./auth.js";
 import { ANSWER_TIME_LIMIT } from "./constants.js";
 import {
@@ -18,6 +18,8 @@ import { getAuth } from "firebase-admin/auth";
 import z from "zod";
 import { Feature, Polygon } from "geojson";
 import { polygon } from "@turf/turf";
+import { db } from "./models/db.js";
+import { convertQuestionToDb } from "./models/quizzes.js";
 
 const app = express();
 app.use(cors);
@@ -252,9 +254,9 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
     const id = req.params.id;
     const currentUserUid = getUserContext().uid;
 
-    const db = getFirestore();
+    const firestore = getFirestore();
 
-    await db.runTransaction(async (transaction) => {
+    await firestore.runTransaction(async (transaction) => {
       const [quizSession, quizState] = await Promise.all([
         getQuizSession(id, transaction),
         getQuizState(id, transaction),
@@ -273,10 +275,10 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
       }
 
       const quizRef = await transaction.get(
-        db.collection(Collections.QUIZZES).doc(quizSession.quizDetails.id),
+        db.quizzes.doc(quizSession.quizDetails.id),
       );
 
-      const quiz = quizRef.data() as Quiz | undefined;
+      const quiz = quizRef.data();
 
       if (!quiz) {
         throw new Error(
@@ -305,22 +307,28 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
 
       const nextQuestion = gameOver
         ? null
-        : quiz.questions[currentQuestionIndex + 1];
+        : convertQuestionToDb(quiz.questions[currentQuestionIndex + 1]);
 
-      transaction.update(db.collection(Collections.QUIZ_STATES).doc(id), {
-        currentCorrectAnswer: nextQuestion || null,
-      } satisfies UpdateData<QuizState>);
+      transaction.update(
+        firestore.collection(Collections.QUIZ_STATES).doc(id),
+        {
+          currentCorrectAnswer: nextQuestion || null,
+        } satisfies UpdateData<QuizState>,
+      );
 
-      transaction.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
-        state: gameOver ? "over" : "in-progress",
-        currentQuestion: nextQuestion
-          ? {
-              id: nextQuestion.id,
-              text: nextQuestion.properties.text,
-              deadline: getDeadline(quizSession.answerTimeLimit),
-            }
-          : null,
-      } satisfies UpdateData<QuizSession>);
+      transaction.update(
+        firestore.collection(Collections.QUIZ_SESSIONS).doc(id),
+        {
+          state: gameOver ? "over" : "in-progress",
+          currentQuestion: nextQuestion
+            ? {
+                id: nextQuestion.id,
+                text: nextQuestion.properties.text,
+                deadline: getDeadline(quizSession.answerTimeLimit),
+              }
+            : null,
+        } satisfies UpdateData<QuizSession>,
+      );
     });
 
     res.json({});
@@ -350,14 +358,14 @@ app.post("/", verifyToken(), async (req, res, next) => {
     const { uid, displayName } = getUserContext();
     const name = hostName ?? displayName ?? "Your Hostness";
 
-    const db = getFirestore();
-    const quizRef = await db.collection(Collections.QUIZZES).doc(quizId).get();
+    const firestore = getFirestore();
+    const quizRef = await db.quizzes.doc(quizId).get();
 
     if (!quizRef.exists) {
       throw new Error("Could not find quiz with this ID.");
     }
 
-    const quiz = quizRef.data() as Quiz | undefined;
+    const quiz = quizRef.data();
 
     if (!quiz) {
       throw new Error("Could not find quiz with this ID.");
@@ -399,7 +407,7 @@ app.post("/", verifyToken(), async (req, res, next) => {
       startedAt: null,
     };
 
-    const docRef = await db.collection("quiz-sessions").add(session);
+    const docRef = await firestore.collection("quiz-sessions").add(session);
 
     res.status(201).json({
       session: {

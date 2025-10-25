@@ -3,21 +3,16 @@ import express, { Request, Response, NextFunction } from "express";
 
 import cors from "./cors.js";
 import { getUserContext, verifyToken } from "./auth.js";
-import { FieldValue, GeoPoint, getFirestore } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
 import z from "zod";
+import { db } from "./models/db.js";
 
 const app = express();
 app.use(cors);
 
-enum Collections {
-  QUIZZES = "quizzes",
-  QUIZ_SESSIONS = "quiz-sessions",
-  QUIZ_STATES = "quiz-states",
-}
-
 const QuizSchema = z.object({
   name: z.string().min(1),
-  description: z.string().optional(),
+  description: z.string(),
   questions: z
     .array(
       z.object({
@@ -49,12 +44,6 @@ app.post(
   verifyToken({ forbidAnonymous: true }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const db = getFirestore();
-
-      if (!req.body) {
-        throw new Error("Invalid body");
-      }
-
       const { name, description, questions, language, isPrivate } =
         QuizSchema.parse(req.body);
 
@@ -63,32 +52,23 @@ app.post(
       const convertedQuestions = questions.map((question, index) => ({
         ...question,
         id: `${index}`,
-        geometry: {
-          ...question.geometry,
-          // Firestore does not support nested arrays
-          coordinates: question.geometry.coordinates[0].map(
-            (coord) => new GeoPoint(coord[1], coord[0]),
-          ),
-        },
+        type: "Feature" as const,
       }));
 
-      const ref = await db.collection(Collections.QUIZZES).add({
+      const ref = await db.quizzes.add({
         name,
         description,
         language,
         questions: convertedQuestions,
         author: {
           uid,
-          name: displayName,
+          name: displayName ?? "Unknown",
         },
         isPrivate,
         createdAt: FieldValue.serverTimestamp(),
       });
 
-      const createdQuiz = await db
-        .collection(Collections.QUIZZES)
-        .doc(ref.id)
-        .get();
+      const createdQuiz = await db.quizzes.doc(ref.id).get();
 
       res.status(201).json({
         quiz: createdQuiz.data(),

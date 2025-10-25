@@ -1,6 +1,4 @@
-import { initializeApp } from "firebase-admin/app";
-
-initializeApp();
+import "./models/app.js";
 
 export { cleanup } from "./cleanup.js";
 export { sessions2ndGen } from "./sessions.js";

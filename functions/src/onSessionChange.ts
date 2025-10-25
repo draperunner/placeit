@@ -1,6 +1,6 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 
-import { Quiz, QuizSession, QuizState } from "./interfaces.js";
+import { QuizSession, QuizState } from "./interfaces.js";
 import { ANSWER_TIME_LIMIT } from "./constants.js";
 import {
   FieldValue,
@@ -8,9 +8,10 @@ import {
   Timestamp,
   UpdateData,
 } from "firebase-admin/firestore";
+import { db } from "./models/db.js";
+import { convertQuestionToDb } from "./models/quizzes.js";
 
 enum Collections {
-  QUIZZES = "quizzes",
   QUIZ_SESSIONS = "quiz-sessions",
   QUIZ_STATES = "quiz-states",
 }
@@ -21,10 +22,10 @@ function getDeadline(answerTimeLimit = ANSWER_TIME_LIMIT): Timestamp {
 }
 
 async function startSession(newValue: QuizSession, id: string): Promise<void> {
-  const db = getFirestore();
+  const firestore = getFirestore();
   const quizId = newValue.quizDetails.id;
-  const quizRef = await db.collection(Collections.QUIZZES).doc(quizId).get();
-  const quiz = quizRef.data() as Quiz | undefined;
+  const quizSnapshot = await db.quizzes.doc(quizId).get();
+  const quiz = quizSnapshot.data();
 
   if (!quiz) {
     console.log("Quiz does not exist");
@@ -33,15 +34,15 @@ async function startSession(newValue: QuizSession, id: string): Promise<void> {
 
   const firstQuestion = quiz.questions[0];
 
-  const batch = db.batch();
+  const batch = firestore.batch();
 
-  batch.set(db.collection(Collections.QUIZ_STATES).doc(id), {
+  batch.set(firestore.collection(Collections.QUIZ_STATES).doc(id), {
     quiz: quizId,
     givenAnswers: [],
-    currentCorrectAnswer: firstQuestion,
+    currentCorrectAnswer: convertQuestionToDb(firstQuestion),
   } satisfies QuizState);
 
-  batch.update(db.collection(Collections.QUIZ_SESSIONS).doc(id), {
+  batch.update(firestore.collection(Collections.QUIZ_SESSIONS).doc(id), {
     startedAt: FieldValue.serverTimestamp(),
     currentQuestion: {
       id: firstQuestion.id,
