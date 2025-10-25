@@ -13,6 +13,7 @@ import {
   QuizSessionDbType,
 } from "./models/quizSessions.js";
 import { QuizAppType, QuizDbType } from "./models/quizzes.js";
+import { SessionStatAppType } from "./models/sessionStats.js";
 
 const DELETE_ANONYMOUS_USERS_AFTER_DAYS = 7;
 const DELETE_REGISTERED_USERS_AFTER_DAYS = 365;
@@ -38,7 +39,7 @@ async function cleanSessions() {
 
   const query = db.quizSessions
     .where(
-      "startedAt",
+      "createdAt",
       "<=",
       Timestamp.fromDate(
         new Date(
@@ -65,7 +66,7 @@ async function cleanSessions() {
           throw new Error(`Session with ID ${id} does not exist.`);
         }
 
-        const stats = {
+        const stats: SessionStatAppType = {
           quizId: session.quizDetails.id,
           numberOfParticipants: session.participants.length,
           numberOfQuestions: session.quizDetails.numberOfQuestions,
@@ -78,7 +79,7 @@ async function cleanSessions() {
 
         transaction.delete(db.quizSessions.doc(id));
         transaction.delete(db.quizStates.doc(id));
-        transaction.set(firestore.collection("session-stats").doc(id), stats);
+        transaction.set(db.sessionStats.doc(id), stats);
       });
     } catch (error) {
       logger.error(`Error deleting session with ID: ${id}`, error);

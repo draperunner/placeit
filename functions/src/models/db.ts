@@ -1,9 +1,11 @@
 import { quizStates } from "./quizStates.js";
 import { quizSessions } from "./quizSessions.js";
 import { quizzes } from "./quizzes.js";
+import { sessionStats } from "./sessionStats.js";
 
 export const db = {
   quizzes,
   quizSessions,
   quizStates,
+  sessionStats,
 };
