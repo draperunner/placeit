@@ -4,10 +4,11 @@ import {
   PartialWithFieldValue,
   Timestamp,
 } from "firebase-admin/firestore";
+import { QuestionId, UserId } from "./ids.js";
 
 export type GivenAnswerAppType = {
-  questionId: string;
-  participantId: string;
+  questionId: QuestionId;
+  participantId: UserId;
   answer: [longitude: number, latitude: number];
   distance: number;
   points: number;
@@ -15,8 +16,8 @@ export type GivenAnswerAppType = {
 };
 
 export type GivenAnswerDbType = {
-  questionId: string;
-  participantId: string;
+  questionId: QuestionId;
+  participantId: UserId;
   answer: GeoPoint;
   distance: number;
   points: number;

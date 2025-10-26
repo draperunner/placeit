@@ -28,6 +28,12 @@ import {
   QuizSessionAppType,
   QuizSessionDbType,
 } from "./models/quizSessions.js";
+import {
+  QuestionId,
+  QuizId,
+  QuizSessionId,
+  QuizStateId,
+} from "./models/ids.js";
 
 const app = express();
 app.use(cors);
@@ -96,7 +102,7 @@ function scoreFromDistance(
 }
 
 async function getQuizSession(
-  id: string,
+  id: QuizSessionId,
   transaction?: Transaction,
 ): Promise<QuizSessionAppType | null> {
   const ref = db.quizSessions.doc(id);
@@ -110,7 +116,7 @@ async function getQuizSession(
 }
 
 async function getQuizState(
-  id: string,
+  id: QuizStateId,
   transaction?: Transaction,
 ): Promise<QuizStateAppType | null> {
   const ref = db.quizStates.doc(id);
@@ -162,7 +168,7 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
   try {
     const firestore = getFirestore();
     const now = new Date();
-    const id = req.params.id;
+    const id = req.params.id as QuizSessionId;
 
     const parsedBody = CoordinatesSchema.parse(req.body);
 
@@ -232,7 +238,8 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
               ans.participantId !== currentUserUid ||
               ans.questionId !== currentQuestion.id,
           )
-          .map(convertGivenAnswerToDb),
+          .map(convertGivenAnswerToDb)
+          .map((ans) => ans as GivenAnswerDbType),
         givenAnswer,
       ];
 
@@ -249,7 +256,7 @@ app.post("/:id/answer", verifyToken(), async (req, res, next) => {
 
 app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const id = req.params.id as QuizSessionId;
     const currentUserUid = getUserContext().uid;
 
     const firestore = getFirestore();
@@ -308,7 +315,13 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
         : convertQuestionToDb(quiz.questions[currentQuestionIndex + 1]);
 
       transaction.update(db.quizStates.doc(id), {
-        currentCorrectAnswer: nextQuestion || null,
+        currentCorrectAnswer:
+          nextQuestion && !(nextQuestion instanceof FieldValue)
+            ? {
+                ...nextQuestion,
+                id: nextQuestion.id as QuestionId,
+              }
+            : nextQuestion,
       });
 
       transaction.update(db.quizSessions.doc(id), {
@@ -316,7 +329,7 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
         currentQuestion:
           nextQuestion && !(nextQuestion instanceof FieldValue)
             ? {
-                id: nextQuestion.id,
+                id: nextQuestion.id as QuestionId,
                 text:
                   !nextQuestion.properties ||
                   nextQuestion.properties instanceof FieldValue
@@ -335,7 +348,10 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
 });
 
 const CreateSessionSchema = z.object({
-  quizId: z.string().min(1),
+  quizId: z
+    .string()
+    .min(1)
+    .transform((id) => id as QuizId),
   map: z.enum(Map),
   hostName: z.string().min(1).optional(),
   hostParticipates: z.boolean().optional(),
@@ -425,7 +441,7 @@ const UpdateSessionSchema = z.object({
 
 app.patch("/:id", verifyToken(), async (req, res, next) => {
   try {
-    const { id: sessionId } = req.params;
+    const sessionId = req.params.id as QuizSessionId;
 
     const { map, hostParticipates, answerTimeLimit, hostName } =
       UpdateSessionSchema.parse(req.body);
@@ -499,7 +515,7 @@ const JoinSchema = z.object({
 
 app.post("/:id/join", verifyToken(), async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as QuizSessionId;
     const { uid } = getUserContext();
     const { name } = JoinSchema.parse(req.body);
 
@@ -536,7 +552,7 @@ app.post("/:id/join", verifyToken(), async (req, res, next) => {
 
 app.post("/:id/start", verifyToken(), async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as QuizSessionId;
 
     await getFirestore().runTransaction(async (transaction) => {
       const quizSession = await getQuizSession(id, transaction);

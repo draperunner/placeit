@@ -18,16 +18,17 @@ import {
   GivenAnswerAppType,
   GivenAnswerDbType,
 } from "./givenAnswers.js";
+import { QuizId } from "./ids.js";
 
 export type QuizStateAppType = {
-  quiz: string;
+  quiz: QuizId;
   currentCorrectAnswer: QuestionAppType | null;
   givenAnswers: GivenAnswerAppType[];
   lastPing?: Date;
 };
 
 export type QuizStateDbType = {
-  quiz: string;
+  quiz: QuizId;
   currentCorrectAnswer: QuestionDbType | null;
   givenAnswers: GivenAnswerDbType[];
   lastPing?: Timestamp;

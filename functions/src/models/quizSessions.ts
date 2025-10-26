@@ -18,27 +18,28 @@ import {
   GivenAnswerAppType,
   GivenAnswerDbType,
 } from "./givenAnswers.js";
+import { QuestionId, QuizId, UserId } from "./ids.js";
 
 export type QuizSessionAppType = {
   host: {
-    uid: string;
+    uid: UserId;
     name: string;
   };
   participants: Array<{
-    uid: string;
+    uid: UserId;
     name: string;
   }>;
   state: "lobby" | "in-progress" | "over";
   answerTimeLimit: number;
   currentQuestion: null | {
-    id: string;
+    id: QuestionId;
     text: string;
     correctAnswer?: QuestionAppType | null;
     givenAnswers?: GivenAnswerAppType[];
     deadline: Date;
   };
   results?: Array<{
-    participantId: string;
+    participantId: UserId;
     points: number;
     name: string;
   }>;
@@ -51,7 +52,7 @@ export type QuizSessionAppType = {
     author: string;
   };
   quizDetails: {
-    id: string;
+    id: QuizId;
     name: string;
     description: string;
     numberOfQuestions: number;
@@ -61,24 +62,24 @@ export type QuizSessionAppType = {
 
 export type QuizSessionDbType = {
   host: {
-    uid: string;
+    uid: UserId;
     name: string;
   };
   participants: Array<{
-    uid: string;
+    uid: UserId;
     name: string;
   }>;
   state: "lobby" | "in-progress" | "over";
   answerTimeLimit: number;
   currentQuestion: null | {
-    id: string;
+    id: QuestionId;
     text: string;
     correctAnswer?: QuestionDbType | null;
     givenAnswers?: Array<GivenAnswerDbType>;
     deadline: Timestamp;
   };
   results?: Array<{
-    participantId: string;
+    participantId: UserId;
     points: number;
     name: string;
   }>;
@@ -91,7 +92,7 @@ export type QuizSessionDbType = {
     author: string;
   };
   quizDetails: {
-    id: string;
+    id: QuizId;
     name: string;
     description: string;
     numberOfQuestions: number;

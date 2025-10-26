@@ -6,6 +6,7 @@ import { getUserContext, verifyToken } from "./auth.js";
 import { FieldValue } from "firebase-admin/firestore";
 import z from "zod";
 import { quizzes } from "./models/db.js";
+import { QuestionId } from "./models/ids.js";
 
 const app = express();
 app.use(cors);
@@ -51,7 +52,7 @@ app.post(
 
       const convertedQuestions = questions.map((question, index) => ({
         ...question,
-        id: `${index}`,
+        id: `${index}` as QuestionId,
         type: "Feature" as const,
       }));
 

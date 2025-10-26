@@ -3,9 +3,10 @@ import {
   GeoPoint,
   PartialWithFieldValue,
 } from "firebase-admin/firestore";
+import { QuestionId } from "./ids.js";
 
 export type QuestionAppType = {
-  id: string;
+  id: QuestionId;
   type: "Feature";
   geometry: {
     type: "Polygon";
@@ -17,7 +18,7 @@ export type QuestionAppType = {
 };
 
 export type QuestionDbType = {
-  id: string;
+  id: QuestionId;
   type: "Feature";
   geometry: {
     type: "Polygon";

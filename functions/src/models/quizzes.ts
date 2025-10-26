@@ -11,6 +11,7 @@ import {
   QuestionAppType,
   QuestionDbType,
 } from "./questions.js";
+import { UserId } from "./ids.js";
 
 export type QuizAppType = {
   name: string;
@@ -31,7 +32,7 @@ export type QuizDbType = {
   language: string;
   questions: QuestionDbType[];
   author: {
-    uid: string;
+    uid: UserId;
     name: string;
   };
   isPrivate: boolean;
