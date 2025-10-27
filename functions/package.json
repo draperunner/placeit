@@ -18,16 +18,16 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "firebase-admin": "^13.5.0",
-    "firebase-functions": "^6.4.0",
-    "zod": "^4.1.11"
+    "firebase-functions": "^6.6.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
+    "@types/express": "^5.0.5",
     "@types/geojson": "^7946.0.16",
     "@types/haversine": "^1.1.8",
     "firebase-functions-test": "^0.1.7",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.3"
   },
   "private": true
 }
