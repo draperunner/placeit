@@ -15,6 +15,11 @@
   max-width: 300px;
 }
 
+.secondaryText {
+  font-size: 0.875rem;
+  color: #555;
+}
+
 .deadline {
   font-size: 120px;
   min-width: 120px;

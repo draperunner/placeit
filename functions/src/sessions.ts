@@ -330,6 +330,7 @@ app.post("/:id/next-question", verifyToken(), async (req, res, next) => {
           nextQuestion && !(nextQuestion instanceof FieldValue)
             ? {
                 id: nextQuestion.id as QuestionId,
+                index: currentQuestionIndex + 1,
                 text:
                   !nextQuestion.properties ||
                   nextQuestion.properties instanceof FieldValue
@@ -371,7 +372,6 @@ app.post("/", verifyToken(), async (req, res, next) => {
     const { uid, displayName } = getUserContext();
     const name = hostName ?? displayName ?? "Your Hostness";
 
-    const firestore = getFirestore();
     const quizRef = await db.quizzes.doc(quizId).get();
 
     if (!quizRef.exists) {
@@ -420,7 +420,7 @@ app.post("/", verifyToken(), async (req, res, next) => {
       startedAt: null,
     };
 
-    const docRef = await firestore.collection("quiz-sessions").add(session);
+    const docRef = await db.quizSessions.add(session);
 
     res.status(201).json({
       session: {

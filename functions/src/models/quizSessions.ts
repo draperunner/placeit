@@ -33,6 +33,7 @@ export type QuizSessionAppType = {
   answerTimeLimit: number;
   currentQuestion: null | {
     id: QuestionId;
+    index: number;
     text: string;
     correctAnswer?: QuestionAppType | null;
     givenAnswers?: GivenAnswerAppType[];
@@ -73,6 +74,7 @@ export type QuizSessionDbType = {
   answerTimeLimit: number;
   currentQuestion: null | {
     id: QuestionId;
+    index: number;
     text: string;
     correctAnswer?: QuestionDbType | null;
     givenAnswers?: Array<GivenAnswerDbType>;

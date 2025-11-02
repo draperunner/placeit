@@ -68,6 +68,7 @@ export interface QuizSession {
   state: "lobby" | "in-progress" | "over";
   currentQuestion?: {
     id: string;
+    index: number;
     text: string;
     correctAnswer?: Question;
     givenAnswers?: GivenAnswer[];

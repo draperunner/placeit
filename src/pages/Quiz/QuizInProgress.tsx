@@ -241,10 +241,15 @@ export default function QuizSessionInProgress({ quiz, user }: Props) {
 
     return (
       <div className={styles.quizPanel}>
+        {quiz.currentQuestion && (
+          <span className={styles.secondaryText}>
+            {`${quiz.currentQuestion.index + 1} / ${quiz.quizDetails.numberOfQuestions}`}
+          </span>
+        )}
         <div className={styles.quizPanelTop}>
           <div>
             <p>{question}</p>
-            <p style={{ fontSize: 14, color: "dimgray" }}>{helpText}</p>
+            <p className={styles.secondaryText}>{helpText}</p>
           </div>
           <div>
             {countDown ? (

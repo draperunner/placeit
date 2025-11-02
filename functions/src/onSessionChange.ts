@@ -38,6 +38,7 @@ async function startSession(
     startedAt: FieldValue.serverTimestamp(),
     currentQuestion: {
       id: firstQuestion.id,
+      index: 0,
       text: firstQuestion.properties.text,
       deadline: getDeadline(newValue.answerTimeLimit),
     },
