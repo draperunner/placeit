@@ -28,11 +28,11 @@
     "@turf/turf": "^7.3.1",
     "blobs": "^2.2.0",
     "firebase": "^12.6.0",
-    "maplibre-gl": "^5.13.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "maplibre-gl": "^5.14.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "react-map-gl": "^8.1.0",
-    "react-router-dom": "^7.9.6"
+    "react-router-dom": "^7.10.1"
   },
   "devDependencies": {
     "@types/jest": "^27.5.2",
@@ -45,9 +45,9 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
-    "prettier": "^3.7.2",
+    "prettier": "^3.7.4",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.48.0",
-    "vite": "^7.2.4"
+    "typescript-eslint": "^8.48.1",
+    "vite": "^7.2.6"
   }
 }
