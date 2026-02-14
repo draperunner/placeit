@@ -300,7 +300,7 @@ export default function Lobby({ quiz, user }: Props) {
                 className={styles.mapRadioGroup}
                 onChange={(e) => {
                   e.preventDefault();
-                  const target = e.target as HTMLInputElement;
+                  const target = e.target as unknown as HTMLInputElement;
                   void updateQuizSession(
                     quiz.id,
                     hostIsParticipating,

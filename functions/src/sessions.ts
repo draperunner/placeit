@@ -1,5 +1,5 @@
 import { onRequest } from "firebase-functions/v2/https";
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import * as turf from "@turf/turf";
 
 import cors from "./cors.js";
@@ -579,19 +579,23 @@ app.post("/:id/start", verifyToken(), async (req, res, next) => {
   }
 });
 
-app.post("/:id/ping", verifyToken(), async (req, res, next) => {
-  try {
-    const { id } = req.params;
+app.post(
+  "/:id/ping",
+  verifyToken(),
+  async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
 
-    await db.quizStates.doc(id).update({
-      lastPing: FieldValue.serverTimestamp(),
-    });
+      await db.quizStates.doc(id).update({
+        lastPing: FieldValue.serverTimestamp(),
+      });
 
-    res.json({});
-  } catch (error) {
-    next(error);
-  }
-});
+      res.json({});
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 app.use("/{*splat}", (req, res) => {
   res.status(404).json({ message: "Not Found" });
