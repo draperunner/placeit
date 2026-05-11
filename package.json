@@ -27,16 +27,16 @@
   "dependencies": {
     "@turf/turf": "^7.3.5",
     "blobs": "^2.2.0",
-    "firebase": "^12.12.0",
-    "maplibre-gl": "^5.23.0",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "firebase": "^12.13.0",
+    "maplibre-gl": "^5.24.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "react-map-gl": "^8.1.1",
-    "react-router-dom": "^7.14.1"
+    "react-router-dom": "^7.15.0"
   },
   "devDependencies": {
     "@types/jest": "^27.5.2",
-    "@types/node": "^22.19.17",
+    "@types/node": "^22.19.18",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/react-router-dom": "^5.3.3",
@@ -47,7 +47,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "prettier": "^3.8.3",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.58.2",
-    "vite": "^7.3.2"
+    "typescript-eslint": "^8.59.3",
+    "vite": "^7.3.3"
   }
 }
