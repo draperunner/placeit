@@ -1,4 +1,4 @@
-import eslint from "@eslint/js";
+import eslint from "eslint";
 import { defineConfig } from "eslint/config";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";

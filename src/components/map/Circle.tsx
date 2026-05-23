@@ -1,7 +1,6 @@
 import { FC } from "react";
 import { Layer, Source } from "react-map-gl/maplibre";
-import circle from "@turf/circle";
-import { point } from "@turf/helpers";
+import { circle, point } from "@turf/turf";
 
 type Props = {
   coordinates: {

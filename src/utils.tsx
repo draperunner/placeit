@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { Feature, Point, Polygon } from "geojson";
+import type { Feature, Point, Polygon } from "geojson";
 
 import languages from "./languages";
 import {

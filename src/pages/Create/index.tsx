@@ -2,8 +2,8 @@ import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LngLat, Map, MapLayerMouseEvent, Marker } from "react-map-gl/maplibre";
 import "firebase/firestore";
-import { Feature, Polygon as GeoJSONPolygon } from "geojson";
-import circle from "@turf/circle";
+import type { Feature, Polygon as GeoJSONPolygon } from "geojson";
+import { circle } from "@turf/turf";
 
 import { useUser } from "../../auth";
 

@@ -34,7 +34,7 @@ interface MapData {
   attribution: string;
 }
 
-export interface GivenAnswer {
+interface GivenAnswer {
   questionId: string;
   participantId: string;
   answer: GeoPoint;

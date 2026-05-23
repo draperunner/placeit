@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { Layer, Source } from "react-map-gl/maplibre";
-import { Feature, Polygon as GeoJSONPolygon } from "geojson";
+import type { Feature, Polygon as GeoJSONPolygon } from "geojson";
 
 type Props = {
   feature: Feature<GeoJSONPolygon>;
