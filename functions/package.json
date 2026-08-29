@@ -14,12 +14,12 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "@turf/turf": "^7.3.5",
+    "@turf/turf": "^7.4.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "firebase-admin": "^13.9.0",
+    "firebase-admin": "^13.10.0",
     "firebase-functions": "^6.6.0",
-    "zod": "^4.4.3"
+    "zod": "^4.5.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
