@@ -28,7 +28,7 @@
     "@turf/turf": "^7.4.0",
     "blobs": "^2.2.0",
     "firebase": "^12.18.0",
-    "maplibre-gl": "^5.24.0",
+    "maplibre-gl": "^6.8.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-map-gl": "^8.1.2",
